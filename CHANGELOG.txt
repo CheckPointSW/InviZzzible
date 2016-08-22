@@ -1,0 +1,28 @@
+August 22nd, 2016:
+	[+] Cuckoo: raised exceptions detection implemented
+	[+] Cuckoo: WMI escape implemented
+
+August 19th, 2016:
+	[+] Cuckoo: detection by agent.py implemented
+	[+] Cuckoo: detection based on specific event presence implemented
+
+August 15th, 2016:
+	[+] Cuckoo: whitelisted process detection implemented
+
+July 28th, 2016:
+	[+] Cuckoo: reused pid detection implemented
+	[*] Unicode strings are mostly used now
+
+July 27th, 2016:
+	[+] Cuckoo: configuration artifacts detection implemented
+	[*] Helpers: UNICODE drives enumeration
+
+July 25th, 2016
+	[+] Cuckoo: unbalanced stack detection implemented
+	[+] Cuckoo: INFINITE delay skip detection implemented
+	[+] Cuckoo: delays accumulation detection implemented
+	[+] Cuckoo: functions hooking detection implemented
+	[+] Cuckoo: agent.py artifacts detection implemented
+	[+] JSON: skeleton added
+	[+] 3rd party: boost headers added
+	[+] gitignore: added
