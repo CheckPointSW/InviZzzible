@@ -89,7 +89,13 @@ bool get_envvar(const char *env, char **out);
 bool get_envvar_w(const wchar_t *env, wchar_t **out);
 bool run_self_susp(const wchar_t *app_params, PROCESS_INFORMATION *ppi);
 bool run_self_susp_wmi(const wchar_t *app_params, DWORD *ppid);
+bool run_self_tsched(const wchar_t *app_params, DWORD *ppid);
+bool run_self_tsched_vista_up(const wchar_t *app_params, DWORD *ppid);
+bool run_self_tsched_xp_down(const wchar_t *app_params, DWORD *ppid);
 bool get_all_tids_by_pid(DWORD pid, std::vector<DWORD> &tids);
+
+bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
+bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);
 
 
 template <typename T> bool match_regexp(const std::basic_string<T> &regexp, const std::basic_string<T> &str, std::vector<std::basic_string<T>> *matches = NULL);

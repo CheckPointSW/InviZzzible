@@ -5,12 +5,17 @@
 #include <ntstatus.h>
 #include <WbemCli.h>
 #include <atlbase.h>
+#include <comdef.h>
+#include <taskschd.h>
+#include <MSTask.h>
 
 
 #pragma comment(lib, "Shlwapi")
 #pragma comment(lib, "Iphlpapi")
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "wbemuuid.lib")
+#pragma comment(lib, "taskschd.lib")
+#pragma comment(lib, "Mstask.lib")
 
 
 extern "C" BOOL cdtors(TORS_ROUTINE *p_ir, size_t ir_count) {
@@ -63,7 +68,6 @@ extern "C" BOOL dtors(TORS_ROUTINE *p_ir, size_t ir_count) {
 extern "C" LPVOID ctors_wsa(LPVOID arg) {
 	WORD wVersionRequested;
 	WSADATA wsaData;
-	int err;
 
 	wVersionRequested = MAKEWORD(2, 2);
 
@@ -148,7 +152,7 @@ extern "C" BOOL terminate_process(HANDLE proc) {
 
 extern "C" BOOL check_if_path_exists(LPCSTR path, DWORD *err_code) {
 	// TODO: implement
-	HANDLE hFile;
+	// HANDLE hFile;
 
 	/*
 	if (!(hFile = CreateFileA(
@@ -383,17 +387,6 @@ extern "C" BOOL thread_context_execute_code(HANDLE hThread, LPTHREAD_START_ROUTI
 
 
 /*
- * Assembly check if function has a trampoline at the beggining
- * esp ---> ------------------------
- *			-pointer to code       -
- *			-pointer to code's size-
- *			------------------------
- * esi <--- contains pointer to code
- * ecx <--- contains pointer to code's size
- */
-
-
-/*
  * Retrieve specified environment variable
  * Achieved data should be freed later in case function succeeded
  */
@@ -513,6 +506,8 @@ void* __memchr(const void *s, unsigned char c, size_t n) {
 	return NULL;
 }
 
+
+// https://sourceware.org/ml/libc-alpha/2007-12/msg00000.html
 extern "C" unsigned char* __memmem(const unsigned char* haystack, size_t hlen, const unsigned char* needle, size_t nlen) {
 	if (nlen > hlen) 
 		return 0;
@@ -658,6 +653,20 @@ bool match_regexp(const std::basic_string<T> &regexp, const std::basic_string<T>
 	return TRUE;
 }
 
+bool get_app_full_name(const wchar_t *app_params, wchar_t *app_name, size_t app_name_size, wchar_t *cur_dir, size_t cur_dir_size) {
+	if (!GetCurrentDirectoryW(cur_dir_size, cur_dir))
+		return false;
+
+	if (!GetModuleFileNameW(NULL, app_name, app_name_size))
+		return false;
+
+	wcscat_s(app_name, app_name_size, L" ");
+	if (app_params)
+		wcscat_s(app_name, app_name_size, app_params);
+
+	return true;
+}
+
 bool run_self_susp(const wchar_t *app_params, PROCESS_INFORMATION *ppi) {
 	STARTUPINFOW si = {};
 	si.cb = sizeof(si);
@@ -684,20 +693,6 @@ bool run_self_susp(const wchar_t *app_params, PROCESS_INFORMATION *ppi) {
 		);
 }
 
-bool get_app_full_name(const wchar_t *app_params, wchar_t *app_name, size_t app_name_size, wchar_t *cur_dir, size_t cur_dir_size) {
-	if (!GetCurrentDirectoryW(cur_dir_size, cur_dir))
-		return false;
-
-	if (!GetModuleFileNameW(NULL, app_name, app_name_size))
-		return false;
-
-	wcscat_s(app_name, app_name_size, L" ");
-	if (app_params)
-		wcscat_s(app_name, app_name_size, app_params);
-
-	return true;
-}
-
 bool run_self_susp_wmi(const wchar_t *app_params, DWORD *ppid) {
 	CComPtr<IWbemLocator> wbemLocator;
 	CComPtr<IWbemServices> wbemServices;
@@ -709,9 +704,11 @@ bool run_self_susp_wmi(const wchar_t *app_params, DWORD *ppid) {
 	CComPtr<IWbemClassObject> instWin32ProcessStartup;
 	CComVariant varCreateFlags(CREATE_SUSPENDED);
 	CComPtr<IWbemClassObject> pOutParams;
-
 	wchar_t	app_name[MAX_PATH + 1] = {},
 		cur_dir[MAX_PATH + 1] = {};
+
+	if (!ppid)
+		return false;
 
 	if (!get_app_full_name(app_params, app_name, _countof(app_name), cur_dir, _countof(cur_dir)))
 		return false;
@@ -719,28 +716,35 @@ bool run_self_susp_wmi(const wchar_t *app_params, DWORD *ppid) {
 	CComVariant varCmdLine(app_name);
 	CComVariant varCurDir(cur_dir);
 	bool succ = false;
+	HRESULT hres;
 
 	do {
-		CoInitializeEx(NULL, 0);
-
-		if (!ppid)
+		// Initialize COM
+		if (FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED)))
 			break;
 
-		if (FAILED(CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, 0, NULL)))
+		//  Set general COM security levels
+		hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, 0, NULL);
+		if (FAILED(hres) && hres != RPC_E_TOO_LATE)
 			break;
 
+		// create an instance of WbemLocator
 		if (FAILED(CoCreateInstance(CLSID_WbemLocator, NULL, CLSCTX_INPROC_SERVER, IID_IWbemLocator, (LPVOID*)&wbemLocator)) || !wbemLocator)
 			break;
 
+		// get services
 		if (FAILED(wbemLocator->ConnectServer(CComBSTR("ROOT\\CIMV2"), NULL, NULL, NULL, 0, NULL, NULL, &wbemServices)) || !wbemServices)
 			break;
 
+		// set proxy blanket for services
 		if (FAILED(CoSetProxyBlanket(wbemServices, RPC_C_AUTHN_WINNT, 0, NULL, RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, 0)))
 			break;
 
+		// get Win32_Process object
 		if (FAILED(wbemServices->GetObject(CComBSTR("Win32_Process"), 0, NULL, &oWin32Process, &callResult)) || !oWin32Process)
 			break;
 
+		// get Win32_ProcessStartup object
 		if (FAILED(wbemServices->GetObject(CComBSTR("Win32_ProcessStartup"), 0, NULL, &oWin32ProcessStartup, &callResult)) || !oWin32ProcessStartup)
 			break;
 
@@ -753,6 +757,7 @@ bool run_self_susp_wmi(const wchar_t *app_params, DWORD *ppid) {
 		if (FAILED(oWin32ProcessStartup->SpawnInstance(0, &instWin32ProcessStartup)) || !instWin32ProcessStartup)
 			break;
 
+		// set startup information for process
 		if (FAILED(instWin32ProcessStartup->Put(CComBSTR("CreateFlags"), 0, &varCreateFlags, 0)))
 			break;
 
@@ -766,12 +771,14 @@ bool run_self_susp_wmi(const wchar_t *app_params, DWORD *ppid) {
 		if (FAILED(instWin32Process->Put(CComBSTR("ProcessStartupInformation"), 0, &varStartupInfo, 0)))
 			break;
 
+		// start process
 		if (FAILED(wbemServices->ExecMethod(CComBSTR("Win32_Process"), CComBSTR("Create"), 0, NULL, instWin32Process, &pOutParams, &callResult)))
 			break;
 
 		CComVariant pid(0);
 		CIMTYPE pid_type(CIM_UINT32);
 
+		// collect PID
 		if (FAILED(pOutParams->Get(CComBSTR("ProcessId"), 0, &pid, &pid_type, NULL)))
 			break;
 
@@ -786,6 +793,346 @@ bool run_self_susp_wmi(const wchar_t *app_params, DWORD *ppid) {
 
 	return succ;
 }
+
+bool run_self_tsched(const wchar_t *app_params, DWORD *ppid) {
+	bool succ;
+	DWORD major_version;
+
+	major_version = (DWORD)(LOBYTE(LOWORD(GetVersion())));
+
+	if (major_version == 5) 
+		return run_self_tsched_xp_down(app_params, ppid);
+	else if (major_version > 5)
+		return run_self_tsched_vista_up(app_params, ppid);
+
+	return false;
+}
+
+
+bool run_self_tsched_vista_up(const wchar_t *app_params, DWORD *ppid) {
+	ITaskService *pService = NULL;
+	ITaskFolder *pTaskRootFolder = NULL;
+	ITaskDefinition *pTask = NULL;
+	IRegistrationInfo *pRegInfo = NULL;
+	IPrincipal *pPrincipal = NULL;
+	ITaskSettings *pSettings = NULL;
+	ITriggerCollection *pTriggerCollection = NULL;
+	ITrigger *pTrigger = NULL;
+	IRegistrationTrigger *pRegistrationTrigger = NULL;
+	IActionCollection *pActionCollection = NULL;
+	IAction *pAction = NULL;
+	IExecAction *pExecAction = NULL;
+	IRegisteredTask *pRegisteredTask = NULL;
+
+	bool succ = false;
+	wchar_t task_name[] = L"sandbox evasion tsrv";
+
+	wchar_t	app_name[MAX_PATH + 1] = {},
+		cur_dir[MAX_PATH + 1] = {};
+	HRESULT hres;
+
+	if (!ppid)
+		return false;
+
+	if (!get_app_full_name(NULL, app_name, _countof(app_name), cur_dir, _countof(cur_dir)))
+		return false;
+
+	do {
+		// Initialize COM
+		if (FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED)))
+			break;
+
+		//  Set general COM security levels
+		hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, 0, NULL);
+		if (FAILED(hres) && hres != RPC_E_TOO_LATE)
+			break;
+
+		// create an instance of the Task Service
+		if (FAILED(CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService)))
+			break;
+
+		// connect to task service
+		if (FAILED(pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t())))
+			break;
+
+		// get task root folder
+		if (FAILED(pService->GetFolder(_bstr_t(L"\\"), &pTaskRootFolder)))
+			break;
+
+		// delete task if already exists
+		pTaskRootFolder->DeleteTask(_bstr_t(task_name), 0);
+
+		// create task object
+		if (FAILED(pService->NewTask(0, &pTask)))
+			break;
+
+		// get task registration info
+		if (FAILED(pTask->get_RegistrationInfo(&pRegInfo)))
+			break;
+
+		// set info
+		if (FAILED(pRegInfo->put_Author(L"Sandbox Evasion")))
+			break;
+
+		// create principal for the task
+		if (FAILED(pTask->get_Principal(&pPrincipal)))
+			break;
+
+		// setup principal information
+		pPrincipal->put_Id(_bstr_t(L"Principal Sandbox Evasion"));
+		pPrincipal->put_LogonType(TASK_LOGON_INTERACTIVE_TOKEN);
+
+		// run task with the least privileges
+		if (FAILED(pPrincipal->put_RunLevel(TASK_RUNLEVEL_LUA)))
+			break;
+
+		// create settings for the task
+		if (FAILED(pTask->get_Settings(&pSettings)))
+			break;
+
+		// set starting values for the task
+		if (FAILED(pSettings->put_StartWhenAvailable(VARIANT_TRUE)))
+			break;
+
+		// get triggers collection
+		if (FAILED(pTask->get_Triggers(&pTriggerCollection)))
+			break;
+
+		// add registration trigger to the task
+		if (FAILED(pTriggerCollection->Create(TASK_TRIGGER_REGISTRATION, &pTrigger)))
+			break;
+
+		if (FAILED(pTrigger->QueryInterface(IID_IRegistrationTrigger, (void **)&pRegistrationTrigger)))
+			break;
+
+		pRegistrationTrigger->put_Id(_bstr_t(L"Trigger Sandbox Evasion"));
+
+		if (FAILED(pRegistrationTrigger->put_Delay(_bstr_t(L"PT0S"))))
+			break;
+
+		// add action to created task
+		if (FAILED(pTask->get_Actions(&pActionCollection)))
+			break;
+
+		if (FAILED(pActionCollection->Create(TASK_ACTION_EXEC, &pAction)))
+			break;
+
+		// get executable task pointer
+		if (FAILED(pAction->QueryInterface(IID_IExecAction, (void**)&pExecAction)))
+			break;
+
+		// set path & working directory for executable	
+		if (FAILED(pExecAction->put_Path(_bstr_t(app_name))))
+			break;
+
+		if (FAILED(pExecAction->put_Arguments(_bstr_t(app_params))))
+			break;
+
+		if (FAILED(pExecAction->put_WorkingDirectory(_bstr_t(cur_dir))))
+			break;
+
+		// save task in task root folder
+		if (FAILED(pTaskRootFolder->RegisterTaskDefinition(_bstr_t(task_name), pTask, TASK_CREATE_OR_UPDATE, _variant_t(), _variant_t(), TASK_LOGON_INTERACTIVE_TOKEN, _variant_t(L""), &pRegisteredTask)))
+			break;
+
+		succ = true;
+
+	} while (false);
+
+	// Clean up
+	if (pService) pService->Release();
+	if (pTaskRootFolder) pTaskRootFolder->Release();
+	if (pTask) pTask->Release();
+	if (pRegInfo) pRegInfo->Release();
+	if (pPrincipal) pPrincipal->Release();
+	if (pSettings) pSettings->Release();
+	if (pTriggerCollection) pTriggerCollection->Release();
+	if (pTrigger) pTrigger->Release();
+	if (pRegistrationTrigger) pRegistrationTrigger->Release();
+	if (pActionCollection) pActionCollection->Release();
+	if (pAction) pAction->Release();
+	if (pExecAction) pExecAction->Release();
+	if (pRegisteredTask) pRegisteredTask->Release();
+
+	CoUninitialize();
+
+	return succ;
+}
+
+
+bool run_self_tsched_xp_down(const wchar_t *app_params, DWORD *ppid) {
+	ITaskScheduler *pTaskScheduler = NULL;
+	ITask *pTask = NULL;
+	IPersistFile *pPersistFile = NULL;
+	ITrigger *pTrigger = NULL;
+	ITaskTrigger *pTaskTrigger = NULL;
+	WORD piNewTrigger;
+
+	bool succ = false;
+	wchar_t task_name[] = L"sandbox evasion tsched";
+
+	wchar_t	app_name[MAX_PATH + 1] = {},
+		cur_dir[MAX_PATH + 1] = {};
+	HRESULT hres;
+
+	if (!ppid)
+		return false;
+
+	if (!get_app_full_name(NULL, app_name, _countof(app_name), cur_dir, _countof(cur_dir)))
+		return false;
+
+	TASK_TRIGGER tt = {};
+
+	tt.wBeginDay = 1;
+	tt.wBeginMonth = 1;
+	tt.wBeginYear = 1900;
+	tt.cbTriggerSize = 0x30;
+	tt.MinutesDuration = -1;
+	tt.TriggerType = TASK_TIME_TRIGGER_ONCE;
+
+	do {
+		// Initialize COM
+		if (FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED)))
+			break;
+
+		//  Set general COM security levels
+		hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, 0, NULL);
+		if (FAILED(hres) && hres != RPC_E_TOO_LATE)
+			break;
+
+		// create an instance of Task Scheduler
+		if (FAILED(CoCreateInstance(CLSID_CTaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskScheduler, (void **)&pTaskScheduler)))
+			break;
+
+		// delete previous task
+		pTaskScheduler->Delete(task_name);
+
+		// create a new task
+		if (FAILED(pTaskScheduler->NewWorkItem(task_name, CLSID_CTask, IID_ITask, (IUnknown**)&pTask)))
+			break;
+
+		// specify application & parametres to run
+		if (FAILED(pTask->SetApplicationName(app_name)))
+			break;
+
+		if (FAILED(pTask->SetParameters(app_params)))
+			break;
+
+		if (FAILED(pTask->SetWorkingDirectory(cur_dir)))
+			break;
+
+		if (FAILED(pTask->SetFlags(TASK_FLAG_RUN_ONLY_IF_LOGGED_ON)))
+			break;
+		/*
+		if (FAILED(pTask->SetApplicationName(L"notepad.exe")))
+			break;
+		*/
+		// save task to the disk
+		if (FAILED(pTask->QueryInterface(IID_IPersistFile, (void **)&pPersistFile)))
+			break;
+
+		hres = pPersistFile->Save(NULL, TRUE);
+		if (FAILED(hres))
+			break;
+
+		hres = pTask->Run();
+		if (FAILED(hres))
+			break;
+
+		// FIXME: remove Sleep
+		HRESULT phrStatus;
+		hres = pTask->GetStatus(&phrStatus);
+		fprintf(stdout, "{+} Task status: 0x%x\n", phrStatus);
+
+		succ = true;
+
+	} while (false);
+
+	// cleanup
+	if (pTaskScheduler) pTaskScheduler->Release();
+	if (pTask) pTask->Release();
+	if (pPersistFile) pPersistFile->Release();
+	if (pTrigger) pTrigger->Release();
+	if (pTaskTrigger) pTaskTrigger->Release();
+
+	CoUninitialize();
+
+	return succ;
+}
+
+
+bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid) {
+	HANDLE hPipe;
+	char buffer[sizeof(DWORD)] = {};
+	DWORD dwRead;
+	DWORD dwTotalRead = 0;
+	const uint32_t max_retries_count = 10;
+	uint32_t retries_count;
+	BOOL cnp;
+	DWORD dwWritten = 0;
+	const BOOL status = TRUE;
+	BOOL write_status = FALSE;
+
+	if (!max_retries_count)
+		return false;
+
+	if (!pid)
+		return false;
+
+	hPipe = CreateNamedPipeW(
+		pipe_name,
+		PIPE_ACCESS_DUPLEX,
+		PIPE_NOWAIT | PIPE_TYPE_MESSAGE | PIPE_READMODE_BYTE,
+		1,
+		sizeof(buffer),
+		sizeof(buffer),
+		wait_timeout,
+		NULL
+	);
+
+	if (hPipe == INVALID_HANDLE_VALUE)
+		return false;
+
+	// wait for connecting in non-blocking loop
+	retries_count = 0;
+	while (retries_count++ < max_retries_count) {
+		cnp = ConnectNamedPipe(hPipe, NULL);
+		if (cnp || (!cnp && GetLastError() == ERROR_PIPE_CONNECTED)) {
+			// read input message packet
+
+			dwTotalRead = 0;
+			while (ReadFile(hPipe, buffer + dwTotalRead, sizeof(buffer) - dwTotalRead, &dwRead, NULL) && dwRead)
+				dwTotalRead += dwRead;
+
+			// write response back
+			write_status = WriteFile(hPipe, &status, sizeof(status), &dwWritten, NULL);
+			break;
+		}
+
+		Sleep(wait_timeout / max_retries_count);
+	}
+
+	DisconnectNamedPipe(hPipe);
+	
+	if (dwTotalRead != sizeof(buffer) || dwWritten != sizeof(BOOL) || !write_status)
+		return false;
+
+	memcpy(pid, buffer, sizeof(buffer));
+
+	return true;
+}
+
+
+bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid) {
+	char buffer_write[sizeof(DWORD)] = {};
+	BOOL buffer_read;
+	DWORD dwRead;
+
+	memcpy(buffer_write, &pid, sizeof(buffer_write));
+
+	return CallNamedPipeW(pipe_name, buffer_write, sizeof(buffer_write), &buffer_read, sizeof(buffer_read), &dwRead, NMPWAIT_USE_DEFAULT_WAIT);
+}
+
 
 bool get_all_tids_by_pid(DWORD pid, std::vector<DWORD> &tids) {
 	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);

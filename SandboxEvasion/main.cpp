@@ -22,6 +22,26 @@ int main(int argc, char **argv, char **env) {
 		return 1;
 	}
 
+
+	// FIXME: delete
+	/*
+	wchar_t fname[64] = {};
+	wsprintfW(fname, L"E:\\tmp\\s_%d", GetCurrentProcessId());
+	HANDLE hFile;
+	DWORD written;
+
+	if ((hFile = CreateFileW(fname, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE) {
+		fprintf(stdout, "file error: %x\n", GetLastError());
+	}
+
+	WriteFile(hFile, argv[0], strlen(argv[0]), &written, NULL);
+	if (argc > 1) {
+		WriteFile(hFile, "\r\n", 2, &written, NULL);
+		WriteFile(hFile, argv[1], strlen(argv[1]), &written, NULL);
+	}
+	CloseHandle(hFile);
+	*/
+
 	// checking mode
 	if (argc < 2) {
 		fprintf(stdout, "[+] Unbalanced stack detected: %u\n", cd.CheckUnbalancedStack());
@@ -35,6 +55,7 @@ int main(int argc, char **argv, char **env) {
 		fprintf(stdout, "[+] Event name detected: %u\n", cd.CheckEventName());
 		fprintf(stdout, "[+] Exceptions escape detected: %u\n", cd.CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::MASTER));
 		fprintf(stdout, "[+] WMI escape detected: %u\n", cd.IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::MASTER));
+		fprintf(stdout, "[+] Task Scheduler escape detected: %u\n", cd.IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER));
 		fprintf(stdout, "[+] Agent detected: %u\n", cd.IsAgentPresent());
 		fflush(stdout);
 
@@ -57,7 +78,13 @@ int main(int argc, char **argv, char **env) {
 			else if (!strncmp(argv[1], "--wmi", 5)) {
 				cd.IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::SLAVE);
 			}
-
+			else if (!strncmp(argv[1], "--tsh", 5)) {
+				/*
+				wsprintfW(fname, L"E:\\tmp\\tsh_%d", GetCurrentProcessId());
+				CreateFileW(fname, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				*/
+				cd.IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::SLAVE);
+			}
 		}
 
 	}

@@ -12,6 +12,8 @@ namespace SandboxEvasion {
 	const uint32_t MAGIC_WHTL_PROC_ARGS = 0xBAADF00D;
 	const unsigned char I_magic[] = { 0x0F, 0x0B, 0x0F, 0x0B, 0xCC, 0xCC, 0xCC, 0xCC, 0x0F, 0x0B, 0x0F, 0x0B, 0xCC, 0xCC, 0xCC, 0xCC };
 	const uint32_t EXCEPTION_MAXCOUNT = 0x10000;
+	const wchar_t task_pipe_name[] = L"\\\\.\\pipe\\task_sched_se";
+	const uint32_t task_proc_wait_timeout = 2500;
 
 	class Cuckoo : public VEDetection {
 	public:
@@ -29,7 +31,7 @@ namespace SandboxEvasion {
 		bool CheckAgentArtifacts() const;
 		bool IsPidReusedNotTracked(ProcessWorkingMode) const;
 		bool IsWMINotTracked(ProcessWorkingMode) const;
-		bool IsCOMNotTracked() const;
+		bool IsTaskSchedNotTracked(ProcessWorkingMode) const;
 		bool IsServiceNotTracked() const;
 		bool IsWhitelistedNotTracked() const;
 		bool CheckExceptionsNumber(ProcessWorkingMode) const;
@@ -61,6 +63,9 @@ namespace SandboxEvasion {
 
 		bool IsWMINotTrackedMaster() const;
 		bool IsWMINotTrackedSlave() const;
+
+		bool IsTaskSchedNotTrackedMaster() const;
+		bool IsTaskSchedNotTrackedSlave() const;
 
 		bool WaitForNotificationFromSlaveUsingEvent(const event_name_t &, HANDLE, HANDLE, DWORD) const;
 
@@ -109,7 +114,6 @@ namespace SandboxEvasion {
 	typedef struct proc_check_hooks_thread_arg {
 		wchar_t event_name[EVENT_NAME_MAX_LEN];															// event name used for notification
 		FARPROC __func_ptrs[static_cast<unsigned int>(SandboxEvasion::ProcessCheckHooksFunc::Count)];	// pointers to functions that are used in injected process space
-																										// FIXME: hardcoded number of procedures hsould be fixed
 	} pchta;
 
 	bool resolve_func_addresses(const func_hooked_t &fn, pchta *pta_args);

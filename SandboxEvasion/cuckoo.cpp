@@ -18,6 +18,9 @@
 #define SLAVE_EXIT_CODE_FAILED	1
 #define EXCEPTION_CHECK_EXC		0xE0000001
 
+#define TASK_HOOKS_NOT_DETECTED 0x40035000
+#define TASK_HOOKS_DETECTED		0x40035001
+
 #define LOCALHOST				0x0100007f
 
 #pragma comment(lib, "wininet.lib")
@@ -407,9 +410,15 @@ bool Cuckoo::IsWMINotTracked(ProcessWorkingMode wm) const {
 }
 
 
-bool Cuckoo::IsCOMNotTracked() const {
-	// TODO: implement
-	return false;
+bool Cuckoo::IsTaskSchedNotTracked(ProcessWorkingMode wm) const {
+	switch (wm) {
+	case SandboxEvasion::ProcessWorkingMode::MASTER:
+		return IsTaskSchedNotTrackedMaster();
+	case SandboxEvasion::ProcessWorkingMode::SLAVE:
+		return IsTaskSchedNotTrackedSlave();
+	default:
+		return false;
+	}
 }
 
 
@@ -802,9 +811,6 @@ bool Cuckoo::RunMasterSlaveThreadsEventName(DWORD(WINAPI SandboxEvasion::Cuckoo:
 	PROCESS_INFORMATION pi = {};
 	wchar_t app_params[] = L"--evt";
 
-	HANDLE hThread;
-	DWORD wait_status;
-
 	DWORD event_name_detected = false;
 
 	if (!run_self_susp(app_params, &pi))
@@ -1033,11 +1039,10 @@ bool Cuckoo::CheckExceptionsNumberMaster() const {
 
 
 bool Cuckoo::CheckExceptionsNumberSlave() const {
-	HANDLE hEvent;
 	uint32_t exceptions_count;
 
 	// disable message boxes
-	SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+	SetErrorMode(SEM_NOGPFAULTERRORBOX | SEM_FAILCRITICALERRORS);
 
 	// generate specific number of exceptions in order to ExitProcess and thus check if we are running in sandbox environment
 	for (exceptions_count = 0; exceptions_count < SandboxEvasion::EXCEPTION_MAXCOUNT; ++exceptions_count) {
@@ -1108,6 +1113,50 @@ bool Cuckoo::IsWMINotTrackedSlave() const {
 	CloseHandle(hEvent);
 
 	return false;
+}
+
+
+bool Cuckoo::IsTaskSchedNotTrackedMaster() const {
+	wchar_t app_params[] = L"--tsh";
+	DWORD pid;
+	HANDLE hProc;
+	DWORD ec;
+
+	if (!run_self_tsched(app_params, &pid))
+		return false;
+
+	// waiting for the task notification
+	if (!pipe_server_get_pid(se::task_pipe_name, se::task_proc_wait_timeout, &pid))
+		return false;
+
+	hProc = open_process_by_pid(pid, PROCESS_QUERY_INFORMATION);
+	if (hProc == INVALID_HANDLE_VALUE)
+		return false;
+
+	// check process exit code
+	do {
+		if (!GetExitCodeProcess(hProc, &ec)) {
+			CloseHandle(hProc);
+			return false;
+		}
+	} while (ec == STILL_ACTIVE);
+
+	return ec == TASK_HOOKS_NOT_DETECTED;
+}
+
+
+bool Cuckoo::IsTaskSchedNotTrackedSlave() const {
+	const DWORD delay_timeout = 5000;
+
+	if (!pipe_server_send_pid(se::task_pipe_name, se::task_proc_wait_timeout, GetCurrentProcessId())) {
+		Sleep(delay_timeout);
+		ExitProcess(0xFEEDDCCB); // just random exit code
+	}
+
+	Sleep(delay_timeout);
+	ExitProcess(CheckFunctionHooks() ? TASK_HOOKS_DETECTED : TASK_HOOKS_NOT_DETECTED);
+
+	return true;
 }
 
 
