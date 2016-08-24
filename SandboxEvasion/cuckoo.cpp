@@ -287,9 +287,15 @@ bool Cuckoo::IsAgentPresent() const {
 	get_tcp_entries(p_tcp_table, net_endpoints, MIB_TCP_STATE_LISTEN);
 	free(const_cast<MIB_TCPTABLE *>(p_tcp_table));
 
+	/*
+	size_t nep_c = net_endpoints.size();
+	size_t i = 1;
+	*/
+
 	for (auto & ne : net_endpoints) {
 		http_resp_size = http_response_size;
 
+		// fprintf(stdout, "{+} Communicating with %u/%u endpoints\n", i++, nep_c);
 		// establish connection & send crafted requests and wait for response
 		if (!CommunicateWithAgent(ne, agent_response, &http_resp_size))
 			continue;
@@ -1265,6 +1271,7 @@ bool Cuckoo::CommunicateWithAgent(const network_endpoint_t &net_endpoint, unsign
 
 	DWORD bytes_read;
 	DWORD bytes_total_read;
+	const DWORD net_timeout = 3000;
 
 	struct in_addr ia;
 	ia.S_un.S_addr = net_endpoint.first ? net_endpoint.first : LOCALHOST;
@@ -1275,8 +1282,15 @@ bool Cuckoo::CommunicateWithAgent(const network_endpoint_t &net_endpoint, unsign
 
 	const INTERNET_PORT port = ntohs(static_cast<INTERNET_PORT>(net_endpoint.second));
 
+	// fprintf(stdout, "{+}\t%s:%u\n", addr, port);
+
 	if (!(hInternet = InternetOpenA("xmlrpclib.py/1.0.1 (by www.pythonware.com)", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0)))
 		return false;
+
+	// set timeout options for the connection and send operations
+	InternetSetOptionA(hInternet, INTERNET_OPTION_RECEIVE_TIMEOUT, const_cast<DWORD *>(&net_timeout), sizeof(net_timeout));
+	InternetSetOptionA(hInternet, INTERNET_OPTION_SEND_TIMEOUT, const_cast<DWORD *>(&net_timeout), sizeof(net_timeout));
+	InternetSetOptionA(hInternet, INTERNET_OPTION_CONNECT_TIMEOUT, const_cast<DWORD *>(&net_timeout), sizeof(net_timeout));
 
 	// connect to service
 	if (!(hSession = InternetConnectA(hInternet, addr, port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, NULL))) {
