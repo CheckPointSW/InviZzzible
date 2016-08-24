@@ -51,11 +51,11 @@ int main(int argc, char **argv, char **env) {
 		fprintf(stdout, "[+] Agent artifacts detected: %u\n", cd.CheckAgentArtifacts());
 		fprintf(stdout, "[+] Cuckoomon configuration detected: %u\n", cd.IsConfigurationPresent());
 		fprintf(stdout, "[+] Whitelisted process escape detected: %u\n", cd.IsWhitelistedNotTracked());
-		fprintf(stdout, "[+] Pid reusage escape detected: %u\n", cd.IsPidReusedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER));
 		fprintf(stdout, "[+] Event name detected: %u\n", cd.CheckEventName());
 		fprintf(stdout, "[+] Exceptions escape detected: %u\n", cd.CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::MASTER));
 		fprintf(stdout, "[+] WMI escape detected: %u\n", cd.IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::MASTER));
 		fprintf(stdout, "[+] Task Scheduler escape detected: %u\n", cd.IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER));
+		fprintf(stdout, "[+] Pid reusage escape detected: %u\n", cd.IsPidReusedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER));
 		fprintf(stdout, "[+] Agent detected: %u\n", cd.IsAgentPresent());
 		fflush(stdout);
 

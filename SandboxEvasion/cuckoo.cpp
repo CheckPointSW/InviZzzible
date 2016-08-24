@@ -1074,7 +1074,7 @@ bool Cuckoo::IsWMINotTrackedMaster() const {
 	if (hThread == INVALID_HANDLE_VALUE)
 		return false;
 
-	hProcess = open_process_by_pid(pid, PROCESS_SUSPEND_RESUME);
+	hProcess = open_process_by_pid(pid, PROCESS_QUERY_INFORMATION);
 	if (hProcess == INVALID_HANDLE_VALUE) {
 		// FIXME: try to open for termination ???
 		CloseHandle(hThread);

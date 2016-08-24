@@ -1011,6 +1011,13 @@ bool run_self_tsched_xp_down(const wchar_t *app_params, DWORD *ppid) {
 		if (FAILED(pTaskScheduler->NewWorkItem(task_name, CLSID_CTask, IID_ITask, (IUnknown**)&pTask)))
 			break;
 
+		// set trigger for task
+		if (FAILED(pTask->CreateTrigger(&piNewTrigger, &pTaskTrigger)))
+			break;
+
+		if (FAILED(pTaskTrigger->SetTrigger(&tt)))
+			break;
+
 		// specify application & parametres to run
 		if (FAILED(pTask->SetApplicationName(app_name)))
 			break;
