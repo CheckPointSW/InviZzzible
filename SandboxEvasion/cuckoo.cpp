@@ -1039,6 +1039,8 @@ bool Cuckoo::CheckExceptionsNumberMaster() const {
 	CloseHandle(pi.hThread);
 	CloseHandle(pi.hProcess);
 
+	fprintf(stdout, "{+} Exceptions process exit code: 0x%x\n", ec);
+
 	// check if exit code is a specific one
 	return ec == SLAVE_EXIT_CODE_FAILED;
 }
@@ -1052,7 +1054,12 @@ bool Cuckoo::CheckExceptionsNumberSlave() const {
 
 	// generate specific number of exceptions in order to ExitProcess and thus check if we are running in sandbox environment
 	for (exceptions_count = 0; exceptions_count < SandboxEvasion::EXCEPTION_MAXCOUNT; ++exceptions_count) {
-		RaiseException(EXCEPTION_CHECK_EXC, 0, 0, NULL);
+		__try {
+			RaiseException(EXCEPTION_CHECK_EXC + exceptions_count, 0, 0, NULL);
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER) {
+			// fprintf(stdout, "[+] Exception raised for %u time\n", exceptions_count + 1);
+		}
 	}
 
 	ExitProcess(SLAVE_EXIT_CODE_SUCCESS);
