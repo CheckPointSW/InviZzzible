@@ -1,57 +1,20 @@
 #include "json.h"
 
-bool JSON::load(file_name_t &file_name) {
-	parsed = false;
+
+json_tiny* json_tiny::load(const char *pfn) {
+	pt::ptree jroot;
 
 	try {
-		pt::read_json(file_name.c_str(), root);
+		pt::read_json(pfn, jroot);
+		return new(std::nothrow) json_tiny(jroot);
 	}
-	catch (const pt::json_parser::json_parser_error &) {
-		return false;
+	catch (const pt::json_parser::json_parser_error &e) {
+		return nullptr;
 	}
+}
 
-	parsed = true;
+bool json_tiny::dump(const json_tiny &, const char *pfn) {
+	// FIXME: implement do we need it???
 
 	return true;
-}
-
-bool JSON::dump(file_name_t &file_name) const {
-	// FIXME: implement
-
-	if (!parsed)
-		return false;
-
-	return true;
-}
-
-template <typename T>
-const T& JSON::get(const std::string &field, const T &_def) const {
-	if (!parsed)
-		return _def;
-
-	try {
-		return _get(field);
-	}
-	catch (const pt::ptree_bad_path &e) {
-		return _def;
-	}
-}
-
-bool JSON::add() {
-	// FIXME: implement
-
-	if (!parsed)
-		return false;
-
-	return true;
-}
-
-template <typename T>
-const T& JSON::operator[](const std::string &field) const {
-	return _get(field);
-}
-
-template <typename T>
-const T& JSON::_get(const std::string &field) const {
-	return root.get<T>(field);
 }

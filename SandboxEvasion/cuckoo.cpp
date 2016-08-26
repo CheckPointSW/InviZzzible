@@ -173,6 +173,71 @@ namespace {
 
 namespace SandboxEvasion {
 
+VEDetection* Cuckoo::create_instance(const json_tiny &j) {
+	return new Cuckoo(j);
+}
+
+void Cuckoo::CheckAll() {
+	bool d;
+	std::pair<std::string, std::string> report;
+
+	d = CheckUnbalancedStack();
+	report = GenerateReportEntry("UnbalancedStack", json_tiny(conf.get("UnbalancedStack", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = CheckInfiniteSleep();
+	report = GenerateReportEntry("InfiniteDelay", json_tiny(conf.get("InfiniteDelay", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = CheckDelaysAccumulation();
+	report = GenerateReportEntry("DelaysAccumulation", json_tiny(conf.get("DelaysAccumulation", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = CheckFunctionHooks();
+	report = GenerateReportEntry("FunctionHooks", json_tiny(conf.get("FunctionHooks", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = CheckAgentArtifacts();
+	report = GenerateReportEntry("AgentArtifacts", json_tiny(conf.get("AgentArtifacts", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = IsConfigurationPresent();
+	report = GenerateReportEntry("CuckoomonConfiguration", json_tiny(conf.get("CuckoomonConfiguration", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = IsWhitelistedNotTracked();
+	report = GenerateReportEntry("WhitelistedProcess", json_tiny(conf.get("WhitelistedProcess", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = CheckEventName();
+	report = GenerateReportEntry("EventName", json_tiny(conf.get("EventName", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::MASTER);
+	report = GenerateReportEntry("RaisedExceptions", json_tiny(conf.get("RaisedExceptions", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
+	report = GenerateReportEntry("WMIProcess", json_tiny(conf.get("WMIProcess", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
+	report = GenerateReportEntry("TaskSchedulerProcess", json_tiny(conf.get("TaskSchedulerProcess", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = IsPidReusedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
+	report = GenerateReportEntry("PidReuse", json_tiny(conf.get("PidReuse", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+
+	d = IsAgentPresent();
+	report = GenerateReportEntry("AgentListener", json_tiny(conf.get("AgentListener", pt::ptree())), d);
+	log_message(LogMessageLevel::INFO, module_name, report.second);
+}
+
+std::string Cuckoo::GetReport() const {
+	return report;
+}
+
 /*
  * Check for the hooked functions using the canary on the lower addresses of stack
  */
@@ -815,7 +880,7 @@ bool Cuckoo::RunMasterSlaveThreadsEventName(DWORD(WINAPI SandboxEvasion::Cuckoo:
 											DWORD(WINAPI SandboxEvasion::Cuckoo::*thread_slave)(LPVOID)) {
 
 	PROCESS_INFORMATION pi = {};
-	wchar_t app_params[] = L"--evt";
+	wchar_t app_params[] = L"--action --evt";
 
 	DWORD event_name_detected = false;
 
@@ -957,7 +1022,7 @@ bool Cuckoo::IsCodePushRet(const BYTE *code, SIZE_T code_size) const {
 bool Cuckoo::IsPidReusedNotTrackedMaster() const {
 	std::set<DWORD> pids;
 	PROCESS_INFORMATION pi = {};
-	wchar_t app_params[] = L"--pid";
+	wchar_t app_params[] = L"--action --pid";
 
 	event_name_t event_name;
 	bool pid_escape_detected = false;
@@ -1014,7 +1079,7 @@ bool Cuckoo::IsPidReusedNotTrackedSlave() const {
 
 bool Cuckoo::CheckExceptionsNumberMaster() const {
 	PROCESS_INFORMATION pi = {};
-	wchar_t app_params[] = L"--exc";
+	wchar_t app_params[] = L"--action --exc";
 	DWORD ec;
 
 	bool exception_escape_detected = false;
@@ -1068,7 +1133,7 @@ bool Cuckoo::CheckExceptionsNumberSlave() const {
 
 
 bool Cuckoo::IsWMINotTrackedMaster() const {
-	wchar_t app_params[] = L"--wmi";
+	wchar_t app_params[] = L"--action --wmi";
 	DWORD pid;
 	HANDLE hProcess;
 	HANDLE hThread;
@@ -1130,7 +1195,7 @@ bool Cuckoo::IsWMINotTrackedSlave() const {
 
 
 bool Cuckoo::IsTaskSchedNotTrackedMaster() const {
-	wchar_t app_params[] = L"--tsh";
+	wchar_t app_params[] = L"--action --tsh";
 	DWORD pid;
 	HANDLE hProc;
 	DWORD ec;

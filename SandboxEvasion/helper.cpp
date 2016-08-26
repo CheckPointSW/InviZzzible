@@ -17,6 +17,34 @@
 #pragma comment(lib, "taskschd.lib")
 #pragma comment(lib, "Mstask.lib")
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
+
+std::map<LogMessageLevel, std::string> log_msg_levels = {
+	{ LogMessageLevel::DEBUG, std::string("DEBUG") },
+	{ LogMessageLevel::INFO, std::string("INFO") },
+	{ LogMessageLevel::WARNING, std::string("WARNING") },
+	{ LogMessageLevel::ERR, std::string("ERROR") },
+	{ LogMessageLevel::PANIC, std::string("PANIC") }
+};
+
+bool g_verbose_mode = false;
+
+void enable_verbose_mode() {
+	g_verbose_mode = true;
+}
+
+void log_message(LogMessageLevel msg_l, const std::string &module, const std::string &msg) {
+	if (!g_verbose_mode)
+		return;
+
+	if (log_msg_levels.find(msg_l) == log_msg_levels.end())
+		return;
+
+	cout << "[" << log_msg_levels[msg_l] << "] " << module << ": " << msg << std::endl;
+}
 
 extern "C" BOOL cdtors(TORS_ROUTINE *p_ir, size_t ir_count) {
 	size_t i;
@@ -35,26 +63,6 @@ extern "C" BOOL cdtors(TORS_ROUTINE *p_ir, size_t ir_count) {
 	}
 
 	return success;
-}
-
-extern "C" BOOL send_all(SOCKET s, const char *buf, int len, int flags) {
-	int bytes_sent_total = 0,
-		bytes_sent;
-
-	while ((bytes_sent = send(s, buf + bytes_sent_total, len - bytes_sent_total, flags)) != SOCKET_ERROR) {
-		if (!bytes_sent)
-			break;
-
-		bytes_sent_total += bytes_sent;
-	}
-	
-	return bytes_sent_total == len;
-}
-
-extern "C" BOOL recv_all(SOCKET s, char *buf, int len, int flags) {
-	// FIXME: implement
-
-	return TRUE;
 }
 
 extern "C" BOOL ctors(TORS_ROUTINE *p_ir, size_t ir_count) {
@@ -1163,22 +1171,3 @@ bool get_all_tids_by_pid(DWORD pid, std::vector<DWORD> &tids) {
 	CloseHandle(hSnapshot);
 	return true;
 }
-
-
-/*
-// TODO: does not work
-template <typename T>
-std::basic_string<T> escape_regexp(const std::basic_string<T> &str) {
-	const T esc_a[] = { '[', '.', '^', '$', '|', '(', ')', '\\', '[', '\\', ']', '{', '}', '*', '+', '?', '\\', '\\', 0 };
-	const T rep_a[] = { '\\', '\\', '&', 0 };
-	std::basic_string<T> estr;
-	// const std::basic_regex<T> esc(std::basic_string<T>("[.^$|()\\[\\]{}*+?\\\\]"));
-	// const std::basic_string<T> rep(std::basic_string<T>("\\\\&"));
-	const std::basic_regex<T> esc(esc_a);
-	const std::basic_string<T> rep(rep_a);
-
-	estr = std::regex_replace(str, esc, rep, std::regex_constants::match_default | std::regex_constants::format_sed);
-
-	return estr;
-}
-*/

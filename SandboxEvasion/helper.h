@@ -23,6 +23,7 @@ typedef std::wstring file_path_t;
 typedef std::wstring event_name_t;
 typedef unsigned char code_t;
 typedef unsigned char data_t;
+typedef char* arg_t;
 // typedef std::string regexp_t;
 // typedef std::string regexp_match_t;
 // typedef std::list<regexp_t> regexpl_t;
@@ -54,6 +55,13 @@ typedef LPVOID (*TORS_ROUTINE)(LPVOID);
 typedef std::pair<DWORD, DWORD> network_endpoint_t;
 typedef std::list<network_endpoint_t> network_endpoints_t;
 
+typedef std::map<arg_t, arg_t> args_t;
+
+enum class LogMessageLevel { DEBUG, INFO, WARNING, ERR, PANIC };
+
+void enable_verbose_mode();
+void log_message(LogMessageLevel msg_l, const std::string & module, const std::string &msg);
+
 extern "C" void* __memchr(const void *s, unsigned char c, size_t n);
 extern "C" unsigned char* __memmem(const unsigned char *haystack, size_t hlen, const unsigned char *needle, size_t nlen);
 
@@ -63,9 +71,6 @@ extern "C" BOOL dtors(TORS_ROUTINE *p_ir, size_t ir_count);
 
 extern "C" LPVOID ctors_wsa(LPVOID);
 extern "C" LPVOID dtors_wsa(LPVOID);
-
-extern "C" BOOL send_all(SOCKET s, const char *buf, int len, int flags);
-extern "C" BOOL recv_all(SOCKET s, char *buf, int len, int flags);
 
 extern "C" DWORD find_process_by_name(LPCSTR);
 extern "C" HANDLE open_process_by_pid(DWORD, DWORD);
@@ -101,9 +106,5 @@ bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD
 template <typename T> bool match_regexp(const std::basic_string<T> &regexp, const std::basic_string<T> &str, std::vector<std::basic_string<T>> *matches = NULL);
 template bool match_regexp<char>(const std::basic_string<char> &, const std::basic_string<char> &, std::vector<std::basic_string<char>> *);
 template bool match_regexp<wchar_t>(const std::basic_string<wchar_t> &, const std::basic_string<wchar_t> &, std::vector<std::basic_string<wchar_t>> *);
-
-//template <typename T> std::basic_string<T> escape_regexp(const std::basic_string<T> &str);
-//template std::basic_string<char> escape_regexp(const std::basic_string<char> &str);
-//template std::basic_string<wchar_t> escape_regexp(const std::basic_string<wchar_t> &str);
 
 #endif

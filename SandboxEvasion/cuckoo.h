@@ -4,6 +4,7 @@
 #include "ve_detection.h"
 #include <Windows.h>
 #include "helper.h"
+#include "json.h"
 
 
 namespace SandboxEvasion {
@@ -17,8 +18,17 @@ namespace SandboxEvasion {
 
 	class Cuckoo : public VEDetection {
 	public:
-		Cuckoo() : VEDetection() {}
-		//virtual ~Cuckoo();
+		Cuckoo(const json_tiny &j) : 
+			VEDetection(j) {
+			module_name = std::string("CUCKOO");
+		}
+		virtual ~Cuckoo() {}
+
+		static VEDetection* create_instance(const json_tiny &j);
+
+		// overriden
+		virtual void CheckAll();
+		virtual std::string GetReport() const;
 
 		bool CheckUnbalancedStack() const;
 		bool CheckInfiniteSleep();
