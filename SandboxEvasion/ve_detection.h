@@ -22,8 +22,7 @@ namespace SandboxEvasion {
 		std::string module_name;
 		std::string report;
 
-		void CheckAllRegistryExists() const;
-		void CheckAllRegistryValues() const;
+		void CheckAllRegistry() const;
 		void CheckAllFilesExist() const;
 		void CheckAllDevicesExists() const;
 		void CheckAllProcessRunning() const;
@@ -31,8 +30,17 @@ namespace SandboxEvasion {
 		void CheckAllAdaptersName() const;
 		virtual void CheckAllCustom() = 0;
 
+		// registry-related checks
+		void CheckAllRegistryKeyExists(const std::list<std::pair<std::string, json_tiny>> &jl) const;
+		void CheckAllRegistryKeyValueContains(const std::list<std::pair<std::string, json_tiny>> &jl) const;
+		void CheckAllRegistryEnumKeys(const std::list<std::pair<std::string, json_tiny>> &jl) const;
+		void CheckAllRegistryEnumValues(const std::list<std::pair<std::string, json_tiny>> &jl) const;
+
 		bool CheckRegKeyExists(const std::string &key_root, const std::string &key) const;
-		bool CheckRegKeySubkeyContains(const std::string &key_root, const std::string &key, const std::string &subkey, const std::string &value) const;
+		bool CheckRegKeyValueContains(const std::string &key_root, const std::string &key, const std::string &subkey, const std::string &value) const;
+		bool CheckRegKeyEnumKeys(const std::string &key_root, const std::string &key, const std::string &subkey) const;
+		bool CheckRegKeyEnumValues(const std::string &key_root, const std::string &key, const std::string &value) const;
+
 		bool CheckFileExists(const file_name_t &file_name) const;
 		bool CheckDeviceExists(const file_name_t &dev_name) const;
 		bool CheckProcessIsRunning(const process_name_t &proc_name) const;

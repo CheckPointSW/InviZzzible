@@ -1240,6 +1240,67 @@ bool check_regkey_subkey_value(HKEY h_key, const std::string &regkey, const std:
 	return true;
 }
 
+bool check_regkey_enum_keys(HKEY h_key, const std::string &key, const std::string &subkey) {
+	HKEY h_regkey;
+	LSTATUS status;
+	DWORD i;
+	char subkeyi[255] = {};
+	DWORD subkey_size;
+	FILETIME ftLast;
+	bool found;
+
+	if (RegOpenKeyExA(h_key, key.c_str(), 0, KEY_READ | (is_wow64() ? KEY_WOW64_64KEY : 0), &h_regkey) != ERROR_SUCCESS)
+		return false;
+
+	i = 0;
+	do {
+		subkey_size = _countof(subkeyi);
+		status = RegEnumKeyExA(h_regkey, i++, subkeyi, &subkey_size, NULL, NULL, NULL, &ftLast);
+		if (status == ERROR_SUCCESS)
+			if (StrStrIA(subkeyi, subkey.c_str())) {
+				found = true;
+				break;
+			}
+	} while (status == ERROR_SUCCESS);
+
+	RegCloseKey(h_regkey);
+
+	return found;
+}
+
+bool check_regkey_enum_values(HKEY h_key, const std::string &key, const std::string &value) {
+	/*
+	HKEY h_regkey;
+	LSTATUS status;
+	DWORD i;
+	char value_name[16383] = {};
+	DWORD value_size;
+	FILETIME ftLast;
+	bool found;
+
+	if (RegOpenKeyExA(h_key, key.c_str(), 0, KEY_READ | (is_wow64() ? KEY_WOW64_64KEY : 0), &h_regkey) != ERROR_SUCCESS)
+		return false;
+
+	i = 0;
+	do {
+		value_size = _countof(value_name);
+		status = RegEnumKeyExA(h_regkey, i++, value_name, &value_size, NULL, NULL, NULL, &ftLast);
+		if (status == ERROR_SUCCESS)
+			if (StrStrIA(value_name, value.c_str())) {
+				found = true;
+				break;
+			}
+	} while (status == ERROR_SUCCESS);
+
+	RegCloseKey(h_regkey);
+
+	return found;
+	*/
+
+	// TODO: implement
+	return false;
+}
+
 bool check_file_exists(const file_name_t &fname) {
 	if (!is_wow64)
 		return GetFileAttributesA(fname.c_str()) != INVALID_FILE_ATTRIBUTES;

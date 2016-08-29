@@ -40,15 +40,18 @@ namespace Config {
 		{ ConfigArgs::CHECK, "check" },
 		{ ConfigArgs::HKEY, "hkey" },
 		{ ConfigArgs::KEY, "key" },
-		{ ConfigArgs::KEY_VALUE, "key_value" },
-		{ ConfigArgs::NAME, "name" },
 		{ ConfigArgs::SUBKEY, "subkey" },
+		{ ConfigArgs::VALUE_NAME, "value_name" },
+		{ ConfigArgs::VALUE_DATA, "value_data" },
+		{ ConfigArgs::NAME, "name" },
 		{ ConfigArgs::VENDOR, "vendor" }
 	};
 
 	std::map<ConfigArgsRegCheckType, std::string> carct2s = {
 		{ ConfigArgsRegCheckType::EXISTS, "exists" },
-		{ ConfigArgsRegCheckType::CONTAINS, "contains" }
+		{ ConfigArgsRegCheckType::CONTAINS, "contains" },
+		{ ConfigArgsRegCheckType::ENUM_KEYS, "enum_keys" },
+		{ ConfigArgsRegCheckType::ENUM_VALUES, "enum_values" }
 	};
 
 } // Config

@@ -108,6 +108,8 @@ bool run_self_tsched_xp_down(const wchar_t *app_params, DWORD *ppid);
 bool get_all_tids_by_pid(DWORD pid, std::vector<DWORD> &tids);
 bool check_regkey_exists(HKEY h_key, const std::string &regkey);
 bool check_regkey_subkey_value(HKEY h_key, const std::string &regkey, const std::string &subkey, const std::string &value);
+bool check_regkey_enum_keys(HKEY h_key, const std::string & key, const std::string & subkey);
+bool check_regkey_enum_values(HKEY h_key, const std::string & key, const std::string & subkey);
 bool check_file_exists(const file_name_t &fname);
 bool check_device_exists(const file_name_t &fname);
 bool disable_wow64_fs_redirection(PVOID pOld);

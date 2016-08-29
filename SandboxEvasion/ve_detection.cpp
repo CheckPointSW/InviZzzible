@@ -26,8 +26,7 @@ namespace SandboxEvasion {
 
 	void VEDetection::CheckAll() {
 		CheckAllCustom();
-		CheckAllRegistryExists();
-		CheckAllRegistryValues();
+		CheckAllRegistry();
 		CheckAllFilesExist();
 		CheckAllDevicesExists();
 		CheckAllProcessRunning();
@@ -35,10 +34,18 @@ namespace SandboxEvasion {
 		CheckAllAdaptersName();
 	}
 
-	void VEDetection::CheckAllRegistryExists() const {
+	void VEDetection::CheckAllRegistry() const {
+		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::REGISTRY]);
+
+		CheckAllRegistryKeyExists(jl);
+		CheckAllRegistryKeyValueContains(jl);
+		CheckAllRegistryEnumKeys(jl);
+		CheckAllRegistryEnumValues(jl);
+	}
+
+	void VEDetection::CheckAllRegistryKeyExists(const std::list<std::pair<std::string, json_tiny>> &jl) const {
 		bool detected;
 		std::pair<std::string, std::string> report;
-		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::REGISTRY]);
 		json_tiny jt;
 
 		// iterate through all registry exists detections
@@ -55,26 +62,25 @@ namespace SandboxEvasion {
 		}
 	}
 
-	void VEDetection::CheckAllRegistryValues() const {
+	void VEDetection::CheckAllRegistryKeyValueContains(const std::list<std::pair<std::string, json_tiny>> &jl) const {
 		bool detected;
 		std::pair<std::string, std::string> report;
-		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::REGISTRY]);
 		json_tiny jt;
-		std::string key_value;
-		std::list<std::string> key_values;
+		std::string value_data;
+		std::list<std::string> vd;
 
 		// iterate through all registry keys contains specific values
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::CONTAINS]) {
-				key_value = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY_VALUE], "");
-				if (key_value == "") {
-					key_values = jt.get_array(Config::ca2s[Config::ConfigArgs::KEY_VALUE]);
-					for (auto &kv : key_values) {
-						detected = CheckRegKeySubkeyContains(
+				value_data = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_DATA], "");
+				if (value_data == "") {
+					vd = jt.get_array(Config::ca2s[Config::ConfigArgs::VALUE_DATA]);
+					for (auto &kv : vd) {
+						detected = CheckRegKeyValueContains(
 							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
 							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
-							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::SUBKEY], ""),
+							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_NAME], ""),
 							kv
 							);
 						if (detected)
@@ -82,11 +88,89 @@ namespace SandboxEvasion {
 					}
 				}
 				else {
-					detected = CheckRegKeySubkeyContains(
+					detected = CheckRegKeyValueContains(
 						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
 						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
-						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::SUBKEY], ""),
-						key_value
+						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_NAME], ""),
+						value_data
+						);
+				}
+
+				report = GenerateReportEntry(o.first, o.second, detected);
+				log_message(LogMessageLevel::INFO, module_name, report.second);
+			}
+		}
+	}
+
+	void VEDetection::CheckAllRegistryEnumKeys(const std::list<std::pair<std::string, json_tiny>>& jl) const {
+		bool detected;
+		std::pair<std::string, std::string> report;
+		json_tiny jt;
+		std::string subkey;
+		std::list<std::string> subkeys;
+
+		// iterate through all registry keys contains specific values
+		for each (auto &o in jl) {
+			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::ENUM_KEYS]) {
+				subkey = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::SUBKEY], "");
+				if (subkey == "") {
+					subkeys = jt.get_array(Config::ca2s[Config::ConfigArgs::SUBKEY]);
+					for (auto &sk : subkeys) {
+						detected = CheckRegKeyEnumKeys(
+							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
+							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
+							sk
+							);
+
+						if (detected)
+							break;
+					}
+				}
+				else {
+					detected = CheckRegKeyEnumKeys(
+						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
+						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
+						subkey
+						);
+				}
+
+				report = GenerateReportEntry(o.first, o.second, detected);
+				log_message(LogMessageLevel::INFO, module_name, report.second);
+			}
+		}
+	}
+
+	void VEDetection::CheckAllRegistryEnumValues(const std::list<std::pair<std::string, json_tiny>>& jl) const {
+		bool detected;
+		std::pair<std::string, std::string> report;
+		json_tiny jt;
+		std::string value;
+		std::list<std::string> values;
+
+		// iterate through all registry keys contains specific values
+		for each (auto &o in jl) {
+			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::ENUM_VALUES]) {
+				value = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_NAME], "");
+				if (value == "") {
+					values = jt.get_array(Config::ca2s[Config::ConfigArgs::VALUE_NAME]);
+					for (auto &v : values) {
+						detected = CheckRegKeyEnumValues(
+							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
+							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
+							v
+							);
+
+						if (detected)
+							break;
+					}
+				}
+				else {
+					detected = CheckRegKeyEnumValues(
+						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
+						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
+						value
 						);
 				}
 
@@ -244,12 +328,28 @@ namespace SandboxEvasion {
 		return check_regkey_exists(hRootKey, key);
 	}
 
-	bool VEDetection::CheckRegKeySubkeyContains(const std::string &key_root, const std::string &key, const std::string &subkey, const std::string &value) const {
+	bool VEDetection::CheckRegKeyValueContains(const std::string &key_root, const std::string &key, const std::string &subkey, const std::string &value) const {
 		HKEY hRootKey = get_hkey(key_root);
 		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
 			return false;
 
 		return check_regkey_subkey_value(hRootKey, key, subkey, value);
+	}
+
+	bool VEDetection::CheckRegKeyEnumKeys(const std::string & key_root, const std::string & key, const std::string & subkey) const {
+		HKEY hRootKey = get_hkey(key_root);
+		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
+			return false;
+
+		return check_regkey_enum_keys(hRootKey, key, subkey);
+	}
+
+	bool VEDetection::CheckRegKeyEnumValues(const std::string & key_root, const std::string & key, const std::string & value) const {
+		HKEY hRootKey = get_hkey(key_root);
+		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
+			return false;
+		
+		return check_regkey_enum_values(hRootKey, key, value);
 	}
 
 	bool VEDetection::CheckFileExists(const file_name_t &file_name) const {
