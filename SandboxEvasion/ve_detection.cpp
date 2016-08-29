@@ -32,6 +32,7 @@ namespace SandboxEvasion {
 		CheckAllDevicesExists();
 		CheckAllProcessRunning();
 		CheckAllMacVendors();
+		CheckAllAdaptersName();
 	}
 
 	void VEDetection::CheckAllRegistryExists() const {
@@ -207,6 +208,34 @@ namespace SandboxEvasion {
 		}
 	}
 
+	void VEDetection::CheckAllAdaptersName() const {
+		bool detected;
+		std::pair<std::string, std::string> report;
+		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::ADAPTER]);
+		json_tiny jt;
+		std::string adapter;
+		std::list<std::string> adapters;
+
+		// check for the presence of devices
+		for each (auto &o in jl) {
+			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+			adapter = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
+			if (adapter == "") {
+				adapters = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
+				for (auto &adp : adapters) {
+					detected = CheckAdapterName(adp);
+					if (detected)
+						break;
+				}
+			}
+			else {
+				detected = CheckAdapterName(adapter);
+			}
+			report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second);
+		}
+	}
+
 	bool VEDetection::CheckRegKeyExists(const std::string &key_root, const std::string &key) const {
 		HKEY hRootKey = get_hkey(key_root);
 		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
@@ -227,16 +256,20 @@ namespace SandboxEvasion {
 		return check_file_exists(file_name);
 	}
 
-	bool VEDetection::CheckDeviceExists(const file_name_t & dev_name) const {
+	bool VEDetection::CheckDeviceExists(const file_name_t &dev_name) const {
 		return check_device_exists(dev_name);
 	}
 
-	bool VEDetection::CheckProcessIsRunning(const process_name_t & proc_name) const {
+	bool VEDetection::CheckProcessIsRunning(const process_name_t &proc_name) const {
 		return check_process_is_running(proc_name);
 	}
 
 	bool VEDetection::CheckMacVendor(const std::string &ven_id) const {
 		return check_mac_vendor(ven_id);
+	}
+
+	bool VEDetection::CheckAdapterName(const std::string &adapter_name) const {
+		return check_adapter_name(adapter_name);
 	}
 
 } // SandboxEvasion

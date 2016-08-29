@@ -16,7 +16,8 @@ namespace Config {
 		{ ConfigGlobalType::REGISTRY, "registry" },
 		{ ConfigGlobalType::DEVICE, "device" },
 		{ ConfigGlobalType::PROCESS, "process" },
-		{ ConfigGlobalType::MAC, "mac" }
+		{ ConfigGlobalType::MAC, "mac" },
+		{ ConfigGlobalType::ADAPTER, "adapter" }
 	};
 
 	std::map<ConfigCuckoo, std::string> cc2s = {

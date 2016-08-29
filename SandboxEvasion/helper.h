@@ -114,6 +114,7 @@ bool disable_wow64_fs_redirection(PVOID pOld);
 bool revert_wow64_fs_redirection(PVOID pOld);
 bool check_process_is_running(const process_name_t &proc_name);
 bool check_mac_vendor(const std::string &ven_id);
+bool check_adapter_name(const std::string &adapter_name);
 PIP_ADAPTER_ADDRESSES get_adapters_addresses();
 bool check_driver_object(const std::string &directory_object, const std::string &driver_object);
 

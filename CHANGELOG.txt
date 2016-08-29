@@ -1,5 +1,5 @@
 August 29th, 2016:
-	[+] VEDetection: generic interface for the registries, files, devices, processes, macs checks implemented
+	[+] VEDetection: generic interface for the registries, files, devices, processes, macs, adapters checks implemented
 	[+] VMWare: implementation of detection techniques using VEDetection interface
 	[+] Config: new fields added 
 	[+] Config: support for arrays added

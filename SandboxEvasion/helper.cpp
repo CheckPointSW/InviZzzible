@@ -1349,6 +1349,32 @@ bool check_mac_vendor(const std::string &ven_id) {
 }
 
 
+bool check_adapter_name(const std::string &adapter_name) {
+	bool found = false;
+	IP_ADAPTER_ADDRESSES *pl, *hpl;
+	std::wstring adapter_name_w;
+
+	adapter_name_w.assign(adapter_name.begin(), adapter_name.end());
+
+	pl = get_adapters_addresses();
+	if (!pl)
+		return false;
+
+	hpl = pl;
+	do {
+		if (StrStrIW(pl->Description, adapter_name_w.c_str())) {
+			found = true;
+			break;
+		}
+		pl = pl->Next;
+	} while (pl);
+
+	free(hpl);
+
+	return found;
+}
+
+
 PIP_ADAPTER_ADDRESSES get_adapters_addresses() {
 	ULONG size = 0;
 	IP_ADAPTER_ADDRESSES *l;
