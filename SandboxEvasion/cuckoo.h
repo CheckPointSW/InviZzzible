@@ -2,8 +2,8 @@
 #define _CUCKOO_H
 
 #include "ve_detection.h"
-#include <Windows.h>
 #include "helper.h"
+#include <Windows.h>
 #include "json.h"
 
 

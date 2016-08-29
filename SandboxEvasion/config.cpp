@@ -15,7 +15,8 @@ namespace Config {
 		{ ConfigGlobalType::FILE, "file" },
 		{ ConfigGlobalType::REGISTRY, "registry" },
 		{ ConfigGlobalType::DEVICE, "device" },
-		{ ConfigGlobalType::PROCESS, "process" }
+		{ ConfigGlobalType::PROCESS, "process" },
+		{ ConfigGlobalType::MAC, "mac" }
 	};
 
 	std::map<ConfigCuckoo, std::string> cc2s = {
@@ -40,7 +41,8 @@ namespace Config {
 		{ ConfigArgs::KEY, "key" },
 		{ ConfigArgs::KEY_VALUE, "key_value" },
 		{ ConfigArgs::NAME, "name" },
-		{ ConfigArgs::SUBKEY, "subkey" }
+		{ ConfigArgs::SUBKEY, "subkey" },
+		{ ConfigArgs::VENDOR, "vendor" }
 	};
 
 	std::map<ConfigArgsRegCheckType, std::string> carct2s = {

@@ -3,12 +3,14 @@
 
 #include <stdint.h>
 #include <string>
+#include <WinSock2.h>
 #include <Windows.h>
 #include <map>
 #include <vector>
 #include <list>
 #include <regex>
 #include <Iphlpapi.h>
+
 
 #define INVALID_PID_VALUE	0xFFFFFFFF
 #define SEED_DEFAULT		0xFFFFFFFF
@@ -111,6 +113,9 @@ bool check_device_exists(const file_name_t &fname);
 bool disable_wow64_fs_redirection(PVOID pOld);
 bool revert_wow64_fs_redirection(PVOID pOld);
 bool check_process_is_running(const process_name_t &proc_name);
+bool check_mac_vendor(const std::string &ven_id);
+PIP_ADAPTER_ADDRESSES get_adapters_addresses();
+bool check_driver_object(const std::string &directory_object, const std::string &driver_object);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);

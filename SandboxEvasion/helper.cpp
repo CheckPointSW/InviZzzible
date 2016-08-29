@@ -9,6 +9,8 @@
 #include <taskschd.h>
 #include <MSTask.h>
 #include <Winreg.h>
+#include <Iphlpapi.h>
+#include <Ntsecapi.h>
 
 
 #pragma comment(lib, "Shlwapi")
@@ -1302,4 +1304,73 @@ bool check_process_is_running(const process_name_t &proc_name) {
 
 	CloseHandle(hSnapshot);
 	return present;
+}
+
+
+bool check_mac_vendor(const std::string &ven_id) {
+	// vendor id contains 3 bytes => 
+	if (ven_id.length() != 3 * 2)
+		return false;
+
+	unsigned char b;
+	unsigned char vendor_id[3] = {};
+	std::string s;
+	char *p = NULL;
+	IP_ADAPTER_ADDRESSES *pl, *hpl;
+	bool found = false;
+
+	for (unsigned char i = 0; i < _countof(vendor_id); ++i) {
+		s = "";
+		s += ven_id[i * 2];
+		s += ven_id[i * 2 + 1];
+		vendor_id[i] = strtol(s.c_str(), &p, 16);
+		if (!p || *p != 0)
+			return false;
+	}
+
+	// check if mac id is one of forbidden
+	pl = get_adapters_addresses();
+	if (!pl)
+		return false;
+
+	hpl = pl;
+	do {
+		if (pl->PhysicalAddressLength == 6) {
+			if (!memcmp(pl->PhysicalAddress, vendor_id, sizeof(vendor_id))) {
+				found = true;
+				break;
+			}
+		}
+		pl = pl->Next;
+	} while (pl);
+
+	free(hpl);
+
+	return found;
+}
+
+
+PIP_ADAPTER_ADDRESSES get_adapters_addresses() {
+	ULONG size = 0;
+	IP_ADAPTER_ADDRESSES *l;
+
+	// get size for the structure
+	if (GetAdaptersAddresses(AF_UNSPEC, 0, 0, 0, &size) != ERROR_BUFFER_OVERFLOW)
+		return NULL;
+
+	l = reinterpret_cast<IP_ADAPTER_ADDRESSES *>(calloc(size, sizeof(char)));
+	if (!l)
+		return NULL;
+
+	if (GetAdaptersAddresses(AF_UNSPEC, 0, 0, l, &size) != ERROR_SUCCESS) {
+		free(l);
+		return NULL;
+	}
+
+	return l;
+}
+
+
+bool check_driver_object(const std::string &directory_object, const std::string &driver_object) {
+	return false;
 }

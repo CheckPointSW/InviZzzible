@@ -1,3 +1,4 @@
+#include <WinSock2.h>
 #include <Windows.h>
 #include "cuckoo.h"
 #include "vmware.h"
