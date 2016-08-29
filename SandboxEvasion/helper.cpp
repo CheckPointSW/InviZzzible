@@ -1245,8 +1245,7 @@ bool check_file_exists(const file_name_t &fname) {
 		return GetFileAttributesA(fname.c_str()) != INVALID_FILE_ATTRIBUTES;
 
 	PVOID pOld = NULL;
-	if (!disable_wow64_fs_redirection(&pOld))
-		return false;
+	disable_wow64_fs_redirection(&pOld);
 
 	bool present = GetFileAttributesA(fname.c_str()) != INVALID_FILE_ATTRIBUTES;
 	revert_wow64_fs_redirection(pOld);
