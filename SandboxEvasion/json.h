@@ -7,6 +7,8 @@
 #include <type_traits>
 #include "helper.h"
 
+#include <iostream>
+
 namespace pt = boost::property_tree;
 
 // tiny json implementation
@@ -40,7 +42,37 @@ public:
 			return _def;
 		}
 	}
-	
+
+	/*
+	template <typename T>
+	const std::list<T> get_array(const std::string &field) const {
+		std::list<T> jl;
+
+		BOOST_FOREACH(const pt::ptree::value_type &obj, root) {
+			jl.push_back(obj.second.data());
+		}
+
+		return jl;
+	}
+	*/
+
+	const std::list<std::string> get_array(const std::string &field) const {
+		std::list<std::string> jl;
+		pt::ptree r;
+		try {
+			r = root.get_child(field);
+		}
+		catch (const pt::ptree_bad_path &e) {
+			return jl;
+		}
+
+		BOOST_FOREACH(const pt::ptree::value_type &obj, r) {
+			jl.push_back(obj.second.data());
+		}
+
+		return jl;
+	}
+
 	template <typename T>
 	const T operator[](const std::string &) const {
 		return _get(field);
