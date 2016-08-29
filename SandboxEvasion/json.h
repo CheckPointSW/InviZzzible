@@ -3,6 +3,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
 #include <type_traits>
 #include "helper.h"
 
@@ -43,6 +44,17 @@ public:
 	template <typename T>
 	const T operator[](const std::string &) const {
 		return _get(field);
+	}
+
+	const std::list<std::pair<std::string, json_tiny>> get_objects(const std::string &type_key, const std::string &type_value) const {
+		std::list<std::pair<std::string, json_tiny>> jl;
+		BOOST_FOREACH(const pt::ptree::value_type &obj, root) {
+			if (obj.second.get<std::string>(type_key, "") == type_value) {
+				jl.push_back(std::pair<std::string, json_tiny>(obj.first, obj.second));
+			}
+		}
+
+		return jl;
 	}
 
 private:

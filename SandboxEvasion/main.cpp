@@ -1,9 +1,11 @@
 #include <Windows.h>
 #include "cuckoo.h"
+#include "vmware.h"
 #include <conio.h>
 #include <iostream>
 #include "ve_detection.h"
 #include <map>
+//#include <boost\foreach.hpp>
 
 
 #if defined(_WIN32) && defined(_WIN64)
@@ -13,12 +15,14 @@
 
 using SandboxEvasion::Cuckoo;
 using SandboxEvasion::VEDetection;
+using SandboxEvasion::VMWare;
 using std::iostream;
 
 typedef VEDetection* (*fact_meth)(const json_tiny &);
 
 static std::map<std::string, fact_meth> k_fm = {
-	{ "--cuckoo", Cuckoo::create_instance }
+	{ "--cuckoo", Cuckoo::create_instance },
+	{ "--vmware", VMWare::create_instance }
 	// FIXME: add other
 };
 
@@ -40,7 +44,11 @@ void test() {
 	pt::read_json("cuckoo.conf", root);
 	}
 	catch (const std::exception &e) {
-	return 0;
+	return;
+	}
+
+	BOOST_FOREACH(pt::ptree::value_type &p, root) {
+		std::cout << p.first << std::endl;
 	}
 
 	// Read values
@@ -107,6 +115,11 @@ void perform_action(const char *action) {
 }
 
 
+void banner() {
+	// FIXME: implement
+}
+
+
 int main(int argc, char **argv, char **env) {
 	int arg_no;
 	args_t args;
@@ -119,12 +132,17 @@ int main(int argc, char **argv, char **env) {
 	bool action = false;
 	char *chosen_action = NULL;
 
+	banner();
+
+	// test();
+
 	// TODO: RAR SFX problem
+	// TODO: do we need to disable FsRedirection
 
 	if (argc < 2)
 		return 0;
 
-	TORS_ROUTINE ctors_r[] = { ctors_wsa };
+	TORS_ROUTINE ctors_r[] = { ctors_wsa, ctors_check_wow64 };
 	TORS_ROUTINE dtors_r[] = { dtors_wsa };
 
 	if (!ctors(ctors_r, _countof(ctors_r))) {
@@ -171,15 +189,16 @@ int main(int argc, char **argv, char **env) {
 		}
 	}
 
-	// printf debug info
-	// log_message(LogMessageLevel::INFO, module_name, std::string("Initialize virtual environment detection modules..."));
+	// printf info
 	for (auto &d : detects) {
+		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Starting checks..."));
 		d->CheckAll();
+		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Checks finished\n") + std::string(100, '*') + std::string("\n"));
 	}
 
 	// TODO: implement get reports
 
-	// free all information
+	// free all data
 	for (auto &d : detects)
 		delete[]d;
 

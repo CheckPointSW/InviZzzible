@@ -12,6 +12,7 @@
 
 #define INVALID_PID_VALUE	0xFFFFFFFF
 #define SEED_DEFAULT		0xFFFFFFFF
+#define INVALID_HKEY		0xFFFFFFFF
 #define EVENT_NAME_MAX_LEN	0x10
 
 
@@ -21,12 +22,10 @@ typedef std::string file_name_t;
 typedef std::wstring file_name_w_t;
 typedef std::wstring file_path_t;
 typedef std::wstring event_name_t;
+typedef std::string process_name_t;
 typedef unsigned char code_t;
 typedef unsigned char data_t;
 typedef char* arg_t;
-// typedef std::string regexp_t;
-// typedef std::string regexp_match_t;
-// typedef std::list<regexp_t> regexpl_t;
 
 
 typedef struct unbalanced_stack_func_info {
@@ -62,6 +61,11 @@ enum class LogMessageLevel { DEBUG, INFO, WARNING, ERR, PANIC };
 void enable_verbose_mode();
 void log_message(LogMessageLevel msg_l, const std::string & module, const std::string &msg);
 
+void enable_wow64();
+bool is_wow64();
+
+HKEY get_hkey(const std::string &key);
+
 extern "C" void* __memchr(const void *s, unsigned char c, size_t n);
 extern "C" unsigned char* __memmem(const unsigned char *haystack, size_t hlen, const unsigned char *needle, size_t nlen);
 
@@ -71,6 +75,8 @@ extern "C" BOOL dtors(TORS_ROUTINE *p_ir, size_t ir_count);
 
 extern "C" LPVOID ctors_wsa(LPVOID);
 extern "C" LPVOID dtors_wsa(LPVOID);
+
+extern "C" LPVOID ctors_check_wow64(LPVOID);
 
 extern "C" DWORD find_process_by_name(LPCSTR);
 extern "C" HANDLE open_process_by_pid(DWORD, DWORD);
@@ -98,6 +104,13 @@ bool run_self_tsched(const wchar_t *app_params, DWORD *ppid);
 bool run_self_tsched_vista_up(const wchar_t *app_params, DWORD *ppid);
 bool run_self_tsched_xp_down(const wchar_t *app_params, DWORD *ppid);
 bool get_all_tids_by_pid(DWORD pid, std::vector<DWORD> &tids);
+bool check_regkey_exists(HKEY h_key, const std::string &regkey);
+bool check_regkey_subkey_value(HKEY h_key, const std::string &regkey, const std::string &subkey, const std::string &value);
+bool check_file_exists(const file_name_t &fname);
+bool check_device_exists(const file_name_t &fname);
+bool disable_wow64_fs_redirection(PVOID pOld);
+bool revert_wow64_fs_redirection(PVOID pOld);
+bool check_process_is_running(const process_name_t &proc_name);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);

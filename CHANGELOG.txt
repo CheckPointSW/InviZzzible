@@ -1,4 +1,10 @@
+August 29th, 2016:
+	[+] VEDetection: generic interface for the registries, files, devices, processes checks implemented
+	[+] VMWare: implementation of detection techniques using VEDetection interface
+	[+] Config: new fields added 
+
 August 26th, 2016:
+	[+] Config: initial configuration implemented
 	[+] JSON: tiny json implemented
 	[+] VEDetection: generic interface for reports grabbing and sandbox/virtual environments implemented
 	[+] Logger: simple logger implemented

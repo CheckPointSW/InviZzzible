@@ -12,6 +12,7 @@
 #include <Iphlpapi.h>
 #include <WinInet.h>
 #include <iostream>
+#include "config.h"
 
 
 #define SLAVE_EXIT_CODE_SUCCESS 0
@@ -177,65 +178,75 @@ VEDetection* Cuckoo::create_instance(const json_tiny &j) {
 	return new Cuckoo(j);
 }
 
-void Cuckoo::CheckAll() {
+void Cuckoo::CheckAllCustom() {
 	bool d;
 	std::pair<std::string, std::string> report;
+	std::string ce_name;
 
 	d = CheckUnbalancedStack();
-	report = GenerateReportEntry("UnbalancedStack", json_tiny(conf.get("UnbalancedStack", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::UNBALANCED_STACK];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = CheckInfiniteSleep();
-	report = GenerateReportEntry("InfiniteDelay", json_tiny(conf.get("InfiniteDelay", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::INFINITE_DELAY];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = CheckDelaysAccumulation();
-	report = GenerateReportEntry("DelaysAccumulation", json_tiny(conf.get("DelaysAccumulation", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::DELAYS_ACCUMULATION];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = CheckFunctionHooks();
-	report = GenerateReportEntry("FunctionHooks", json_tiny(conf.get("FunctionHooks", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::FUNCTION_HOOKS];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = CheckAgentArtifacts();
-	report = GenerateReportEntry("AgentArtifacts", json_tiny(conf.get("AgentArtifacts", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::AGENT_ARTIFACTS];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = IsConfigurationPresent();
-	report = GenerateReportEntry("CuckoomonConfiguration", json_tiny(conf.get("CuckoomonConfiguration", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::CUCKOOMON_CONFIGURATION];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = IsWhitelistedNotTracked();
-	report = GenerateReportEntry("WhitelistedProcess", json_tiny(conf.get("WhitelistedProcess", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::WHITELISTED_PROCESS];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = CheckEventName();
-	report = GenerateReportEntry("EventName", json_tiny(conf.get("EventName", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::EVENT_NAME];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::MASTER);
-	report = GenerateReportEntry("RaisedExceptions", json_tiny(conf.get("RaisedExceptions", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::RAISED_EXCEPTIONS];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
-	report = GenerateReportEntry("WMIProcess", json_tiny(conf.get("WMIProcess", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::WMI_PROCESS];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
-	report = GenerateReportEntry("TaskSchedulerProcess", json_tiny(conf.get("TaskSchedulerProcess", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::TASK_SCHED_PROCESS];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = IsPidReusedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
-	report = GenerateReportEntry("PidReuse", json_tiny(conf.get("PidReuse", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::PID_REUSE];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
 
 	d = IsAgentPresent();
-	report = GenerateReportEntry("AgentListener", json_tiny(conf.get("AgentListener", pt::ptree())), d);
+	ce_name = Config::cc2s[Config::ConfigCuckoo::AGENT_LISTENER];
+	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 	log_message(LogMessageLevel::INFO, module_name, report.second);
-}
-
-std::string Cuckoo::GetReport() const {
-	return report;
 }
 
 /*

@@ -8,6 +8,7 @@
 #include <comdef.h>
 #include <taskschd.h>
 #include <MSTask.h>
+#include <Winreg.h>
 
 
 #pragma comment(lib, "Shlwapi")
@@ -30,10 +31,33 @@ std::map<LogMessageLevel, std::string> log_msg_levels = {
 	{ LogMessageLevel::PANIC, std::string("PANIC") }
 };
 
+const std::map<std::string, HKEY> str2hkey = {
+	{ "HKCR", HKEY_CLASSES_ROOT },
+	{ "HKCC", HKEY_CURRENT_CONFIG },
+	{ "HKCU", HKEY_CURRENT_USER },
+	{ "HKLM", HKEY_LOCAL_MACHINE },
+	{ "HKUS", HKEY_USERS }
+};
+
 bool g_verbose_mode = false;
+bool g_is_wow64 = false;
 
 void enable_verbose_mode() {
 	g_verbose_mode = true;
+}
+
+void enable_wow64() {
+	g_is_wow64 = true;
+}
+
+bool is_wow64() {
+	return g_is_wow64;
+}
+
+HKEY get_hkey(const std::string &key) {
+	const std::map<std::string, HKEY>::const_iterator it = str2hkey.find(key);
+
+	return it == str2hkey.end() ? reinterpret_cast<HKEY>(INVALID_HKEY) : it->second;
 }
 
 void log_message(LogMessageLevel msg_l, const std::string &module, const std::string &msg) {
@@ -89,6 +113,17 @@ extern "C" LPVOID ctors_wsa(LPVOID arg) {
 	}
 
 	return NULL;
+}
+
+extern "C" LPVOID ctors_check_wow64(LPVOID arg) {
+	FARPROC fpIsWow64Process = NULL;
+	BOOL isWoW64 = FALSE;
+
+	fpIsWow64Process = GetProcAddress(GetModuleHandleW(L"kernel32"), "IsWow64Process");
+	if (fpIsWow64Process && ((BOOL (WINAPI*)(HANDLE, PBOOL))fpIsWow64Process)(GetCurrentProcess(), &isWoW64) && isWoW64)
+		enable_wow64();
+
+	return reinterpret_cast<LPVOID>(0);
 }
 
 extern "C" LPVOID dtors_wsa(LPVOID arg) {
@@ -1170,4 +1205,101 @@ bool get_all_tids_by_pid(DWORD pid, std::vector<DWORD> &tids) {
 
 	CloseHandle(hSnapshot);
 	return true;
+}
+
+
+bool check_regkey_exists(HKEY h_key, const std::string &regkey) {
+	HKEY h_regkey;
+
+	if (RegOpenKeyExA(h_key, regkey.c_str(), 0, KEY_READ | (is_wow64() ? KEY_WOW64_64KEY : 0), &h_regkey) != ERROR_SUCCESS)
+		return false;
+
+	RegCloseKey(h_regkey);
+	return true;
+}
+
+bool check_regkey_subkey_value(HKEY h_key, const std::string &regkey, const std::string &subkey, const std::string &value) {
+	HKEY h_regkey;
+	unsigned char regkey_buff[512] = {};
+	DWORD regkey_buff_size = sizeof(regkey_buff);
+
+	if (RegOpenKeyExA(h_key, regkey.c_str(), 0, KEY_READ | (is_wow64() ? KEY_WOW64_64KEY : 0), &h_regkey) != ERROR_SUCCESS)
+		return false;
+
+	if (RegQueryValueExA(h_regkey, subkey.c_str(), NULL, NULL, regkey_buff, &regkey_buff_size) != ERROR_SUCCESS) {
+		RegCloseKey(h_regkey);
+		return false;
+	}
+
+	RegCloseKey(h_regkey);
+
+	if (StrStrIA(reinterpret_cast<LPCSTR>(regkey_buff), value.c_str()))
+
+	return true;
+}
+
+bool check_file_exists(const file_name_t &fname) {
+	if (!is_wow64)
+		return GetFileAttributesA(fname.c_str()) != INVALID_FILE_ATTRIBUTES;
+
+	PVOID pOld = NULL;
+	if (!disable_wow64_fs_redirection(&pOld))
+		return false;
+
+	bool present = GetFileAttributesA(fname.c_str()) != INVALID_FILE_ATTRIBUTES;
+	revert_wow64_fs_redirection(pOld);
+
+	return present;
+}
+
+bool check_device_exists(const file_name_t &devname) {
+	HANDLE hDevice;
+
+	if ((hDevice = CreateFileA(devname.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) != INVALID_HANDLE_VALUE) {
+		CloseHandle(hDevice);
+		return true;
+	}
+
+	return false;
+}
+
+bool disable_wow64_fs_redirection(PVOID pOld) {
+	FARPROC fnWow64DisableWow64FsRedirection;
+
+	fnWow64DisableWow64FsRedirection = GetProcAddress(GetModuleHandleW(L"kernel32"), "Wow64DisableWow64FsRedirection");
+
+	return fnWow64DisableWow64FsRedirection && reinterpret_cast<BOOL(WINAPI *)(PVOID *)>(fnWow64DisableWow64FsRedirection)(&pOld);
+}
+
+
+bool revert_wow64_fs_redirection(PVOID pOld) {
+	FARPROC fnWow64RevertWow64FsRedirection;
+
+	fnWow64RevertWow64FsRedirection = GetProcAddress(GetModuleHandleW(L"kernel32"), "Wow64RevertWow64FsRedirection");
+
+	return fnWow64RevertWow64FsRedirection && reinterpret_cast<BOOL(WINAPI *)(PVOID)>(fnWow64RevertWow64FsRedirection)(pOld);
+}
+
+bool check_process_is_running(const process_name_t &proc_name) {
+	HANDLE hSnapshot;
+	PROCESSENTRY32 pe = {};
+	pe.dwSize = sizeof(pe);
+
+	bool present = false;
+
+	hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnapshot == INVALID_HANDLE_VALUE)
+		return false;
+
+	if (Process32First(hSnapshot, &pe)) {
+		do {
+			if (!StrCmpI(pe.szExeFile, proc_name.c_str())) {
+				present = true;
+				break;
+			}
+		} while (Process32Next(hSnapshot, &pe));
+	}
+
+	CloseHandle(hSnapshot);
+	return present;
 }

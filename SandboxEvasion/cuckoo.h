@@ -27,8 +27,7 @@ namespace SandboxEvasion {
 		static VEDetection* create_instance(const json_tiny &j);
 
 		// overriden
-		virtual void CheckAll();
-		virtual std::string GetReport() const;
+		virtual void CheckAllCustom();
 
 		bool CheckUnbalancedStack() const;
 		bool CheckInfiniteSleep();
