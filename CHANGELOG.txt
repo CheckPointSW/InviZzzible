@@ -1,4 +1,5 @@
 August 30th, 2016:
+	[+] VBOX: implementation of detection techniques using VEDetection interface
 	[+] VEDetection: VEDetection: generic interface for different firmware types, directory objects checks implemented
 	[+] VMWare: custom checks implemented (port, NDIS_WanIP)
 	[+] Config: enabled field added

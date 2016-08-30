@@ -49,6 +49,8 @@ namespace SandboxEvasion {
 		bool detected;
 		std::pair<std::string, std::string> report;
 		json_tiny jt;
+		std::string key;
+		std::list<std::string> keys;
 
 		// iterate through all registry exists detections
 		for each (auto &o in jl) {
@@ -57,9 +59,24 @@ namespace SandboxEvasion {
 				continue;
 
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::EXISTS]) {
-				detected = CheckRegKeyExists(
-					jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
-					jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""));
+				key = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], "");
+				if (key == "") {
+					keys = jt.get_array(Config::ca2s[Config::ConfigArgs::KEY]);
+					for (auto &k : keys) {
+						detected = CheckRegKeyExists(
+							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
+							k
+							);
+						if (detected)
+							break;
+					}
+				}
+				else {
+					detected = CheckRegKeyExists(
+						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
+						key
+						);
+				}
 
 				report = GenerateReportEntry(o.first, o.second, detected);
 				log_message(LogMessageLevel::INFO, module_name, report.second);

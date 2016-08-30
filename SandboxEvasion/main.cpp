@@ -2,11 +2,11 @@
 #include <Windows.h>
 #include "cuckoo.h"
 #include "vmware.h"
+#include "vbox.h"
 #include <conio.h>
 #include <iostream>
 #include "ve_detection.h"
 #include <map>
-//#include <boost\foreach.hpp>
 
 
 #if defined(_WIN32) && defined(_WIN64)
@@ -14,24 +14,26 @@
 #endif // _WIN32
 
 
-using SandboxEvasion::Cuckoo;
 using SandboxEvasion::VEDetection;
+using SandboxEvasion::Cuckoo;
 using SandboxEvasion::VMWare;
+using SandboxEvasion::VBOX;
 using std::iostream;
 
 typedef VEDetection* (*fact_meth)(const json_tiny &);
 
 static std::map<std::string, fact_meth> k_fm = {
-	{ "--cuckoo", Cuckoo::create_instance },
-	{ "--vmware", VMWare::create_instance }
+	{ "--cuckoo",	Cuckoo::create_instance },
+	{ "--vmware",	VMWare::create_instance },
+	{ "--vbox",		VBOX::create_instance }
 	// FIXME: add other
 };
 
 static args_t k_args = {
-	{ "--cuckoo", NULL },
-	{ "--generic", NULL },
-	{ "--vmware", NULL },
-	{ "--vbox", NULL }
+	{ "--cuckoo",	NULL },
+	{ "--generic",	NULL },
+	{ "--vmware",	NULL },
+	{ "--vbox",		NULL }
 };
 
 void test() {

@@ -36,6 +36,9 @@
     <ClCompile Include="vmware.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ve_detection.h">
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -85,6 +85,7 @@
     <ClCompile Include="helper.cpp" />
     <ClCompile Include="json.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="vbox.cpp" />
     <ClCompile Include="ve_detection.cpp" />
     <ClCompile Include="vmware.cpp" />
   </ItemGroup>
@@ -94,6 +95,7 @@
     <ClInclude Include="helper.h" />
     <ClInclude Include="json.h" />
     <ClInclude Include="nt.h" />
+    <ClInclude Include="vbox.h" />
     <ClInclude Include="ve_detection.h" />
     <ClInclude Include="vmware.h" />
   </ItemGroup>
