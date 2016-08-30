@@ -7,6 +7,7 @@ namespace Config {
 		{ ConfigGlobal::DESCRIPTION, "description" },
 		{ ConfigGlobal::COUNTERMEASURES, "countermeasures" },
 		{ ConfigGlobal::TYPE, "type" },
+		{ ConfigGlobal::ENABLED, "enabled" },
 		{ ConfigGlobal::ARGUMENTS, "arguments" }
 	};
 
@@ -20,6 +21,11 @@ namespace Config {
 		{ ConfigGlobalType::ADAPTER, "adapter" },
 		{ ConfigGlobalType::DISK, "disk" },
 		{ ConfigGlobalType::FIRMWARE, "firmware" }
+	};
+
+	std::map<ConfigGlobalEnabled, std::string> cge2s = {
+		{ ConfigGlobalEnabled::YES, "yes" },
+		{ ConfigGlobalEnabled::NO, "no" }
 	};
 
 	std::map<ConfigCuckoo, std::string> cc2s = {

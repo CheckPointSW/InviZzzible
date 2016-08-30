@@ -11,15 +11,19 @@ void VMWare::CheckAllCustom() {
 	std::pair<std::string, std::string> report;
 	std::string ce_name;
 
-	d = CheckHypervisorPort();
 	ce_name = Config::cvm2s[Config::ConfigVMWare::HYPERVISOR_PORT];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckHypervisorPort();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = CheckNDISFile();
 	ce_name = Config::cvm2s[Config::ConfigVMWare::DEVICE_NPF_NDIS];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckNDISFile();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 }
 
 bool VMWare::CheckHypervisorPort() const {

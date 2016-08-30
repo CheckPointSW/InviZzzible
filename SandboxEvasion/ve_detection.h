@@ -52,6 +52,8 @@ namespace SandboxEvasion {
 		bool CheckFirmwareTableFIRM(const std::string &vendor) const;
 		bool CheckFirmwareTableRSMB(const std::string &vendor) const;
 
+		bool IsEnabled(const std::string &detection_name, const std::string &enabled) const;
+
 		std::pair<std::string, std::string> GenerateReportEntry(const std::string &name, const json_tiny &j, bool detected) const;
 	};
 }

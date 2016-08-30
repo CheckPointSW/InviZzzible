@@ -183,70 +183,96 @@ void Cuckoo::CheckAllCustom() {
 	std::pair<std::string, std::string> report;
 	std::string ce_name;
 
-	d = CheckUnbalancedStack();
 	ce_name = Config::cc2s[Config::ConfigCuckoo::UNBALANCED_STACK];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckUnbalancedStack();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = CheckInfiniteSleep();
 	ce_name = Config::cc2s[Config::ConfigCuckoo::INFINITE_DELAY];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckInfiniteSleep();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = CheckDelaysAccumulation();
 	ce_name = Config::cc2s[Config::ConfigCuckoo::DELAYS_ACCUMULATION];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckDelaysAccumulation();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = CheckFunctionHooks();
 	ce_name = Config::cc2s[Config::ConfigCuckoo::FUNCTION_HOOKS];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckFunctionHooks();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = CheckAgentArtifacts();
 	ce_name = Config::cc2s[Config::ConfigCuckoo::AGENT_ARTIFACTS];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckAgentArtifacts();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = IsConfigurationPresent();
 	ce_name = Config::cc2s[Config::ConfigCuckoo::CUCKOOMON_CONFIGURATION];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsConfigurationPresent();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = IsWhitelistedNotTracked();
 	ce_name = Config::cc2s[Config::ConfigCuckoo::WHITELISTED_PROCESS];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsWhitelistedNotTracked();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = CheckEventName();
 	ce_name = Config::cc2s[Config::ConfigCuckoo::EVENT_NAME];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckEventName();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::MASTER);
 	ce_name = Config::cc2s[Config::ConfigCuckoo::RAISED_EXCEPTIONS];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::MASTER);
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
 	ce_name = Config::cc2s[Config::ConfigCuckoo::WMI_PROCESS];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
 	ce_name = Config::cc2s[Config::ConfigCuckoo::TASK_SCHED_PROCESS];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = IsPidReusedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
 	ce_name = Config::cc2s[Config::ConfigCuckoo::PID_REUSE];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsPidReusedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 
-	d = IsAgentPresent();
 	ce_name = Config::cc2s[Config::ConfigCuckoo::AGENT_LISTENER];
-	report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-	log_message(LogMessageLevel::INFO, module_name, report.second);
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsAgentPresent();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second);
+	}
 }
 
 /*

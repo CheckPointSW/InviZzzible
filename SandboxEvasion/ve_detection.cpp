@@ -52,6 +52,9 @@ namespace SandboxEvasion {
 		// iterate through all registry exists detections
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::EXISTS]) {
 				detected = CheckRegKeyExists(
 					jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
@@ -73,6 +76,10 @@ namespace SandboxEvasion {
 		// iterate through all registry keys contains specific values
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::CONTAINS]) {
 				value_data = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_DATA], "");
 				if (value_data == "") {
@@ -113,6 +120,10 @@ namespace SandboxEvasion {
 		// iterate through all registry keys contains specific values
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::ENUM_KEYS]) {
 				subkey = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::SUBKEY], "");
 				if (subkey == "") {
@@ -152,6 +163,10 @@ namespace SandboxEvasion {
 		// iterate through all registry keys contains specific values
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::ENUM_VALUES]) {
 				value = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_NAME], "");
 				if (value == "") {
@@ -192,6 +207,10 @@ namespace SandboxEvasion {
 		// check for the presence of all files
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			fname = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
 			if (fname == "") {
 				fnames = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
@@ -220,6 +239,10 @@ namespace SandboxEvasion {
 		// check for the presence of devices
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			devicename = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
 			if (devicename == "") {
 				devicenames = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
@@ -248,6 +271,10 @@ namespace SandboxEvasion {
 		// check for the presence of devices
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			procname = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
 			if (procname == "") {
 				procnames = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
@@ -276,6 +303,10 @@ namespace SandboxEvasion {
 		// check for the presence of devices
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			macaddr = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VENDOR], "");
 			if (macaddr == "") {
 				macaddrs = jt.get_array(Config::ca2s[Config::ConfigArgs::VENDOR]);
@@ -304,6 +335,10 @@ namespace SandboxEvasion {
 		// check for the presence of devices
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			adapter = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
 			if (adapter == "") {
 				adapters = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
@@ -332,6 +367,10 @@ namespace SandboxEvasion {
 		// check for the presence of all files
 		for each (auto &o in jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
 			firmware = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
 			if (firmware == "") {
 				firmwares = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
@@ -440,6 +479,10 @@ namespace SandboxEvasion {
 		LocalFree(sfti);
 
 		return found;
+	}
+
+	bool VEDetection::IsEnabled(const std::string &detection_name, const std::string &enabled) const {
+		return detection_name != "" && enabled == Config::cge2s[Config::ConfigGlobalEnabled::YES];
 	}
 
 } // SandboxEvasion
