@@ -33,6 +33,7 @@ namespace SandboxEvasion {
 		CheckAllMacVendors();
 		CheckAllAdaptersName();
 		CheckAllFirmwareTables();
+		CheckAllDirectoryObjects();
 	}
 
 	void VEDetection::CheckAllRegistry() const {
@@ -397,6 +398,38 @@ namespace SandboxEvasion {
 
 	}
 
+	void VEDetection::CheckAllDirectoryObjects() const {
+		bool detected;
+		std::pair<std::string, std::string> report;
+		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::OBJECT]);
+		json_tiny jt;
+		std::string dirobject;
+		std::list<std::string> dirobjects;
+
+		// check for the presence of specific directory objects
+		for each (auto &o in jl) {
+			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			dirobject = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
+			if (dirobject == "") {
+				dirobjects = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
+				for (auto &dir : dirobjects) {
+					detected = CheckDirectoryObject(jt.get<std::string>(Config::ca2s[Config::ConfigArgs::DIRECTORY], ""), dir);
+					if (detected)
+						break;
+				}
+			}
+			else {
+				detected = CheckDirectoryObject(jt.get<std::string>(Config::ca2s[Config::ConfigArgs::DIRECTORY], ""), dirobject);
+			}
+			report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second);
+		}
+	}
+
 	bool VEDetection::CheckRegKeyExists(const std::string &key_root, const std::string &key) const {
 		HKEY hRootKey = get_hkey(key_root);
 		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
@@ -479,6 +512,16 @@ namespace SandboxEvasion {
 		LocalFree(sfti);
 
 		return found;
+	}
+
+	bool VEDetection::CheckDirectoryObject(const std::string &directory, const std::string &object) const {
+		std::wstring directory_w;
+		std::wstring object_w;
+
+		directory_w.assign(directory.begin(), directory.end());
+		object_w.assign(object.begin(), object.end());
+
+		return check_system_objects(directory_w, object_w);
 	}
 
 	bool VEDetection::IsEnabled(const std::string &detection_name, const std::string &enabled) const {

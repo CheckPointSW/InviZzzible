@@ -43,11 +43,18 @@
 #define SE_CREATE_SYMBOLIC_LINK_PRIVILEGE (35L)
 #define SE_MAX_WELL_KNOWN_PRIVILEGE SE_CREATE_SYMBOLIC_LINK_PRIVILEGE
 
+#define DIRECTORY_QUERY                 (0x0001)
+#define DIRECTORY_TRAVERSE              (0x0002)
+#define DIRECTORY_CREATE_OBJECT         (0x0004)
+#define DIRECTORY_CREATE_SUBDIRECTORY   (0x0008)
+#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
+
 #ifndef NT_SUCCESS
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 #endif
 
 // enums
+
 typedef enum _MEMORY_INFORMATION_CLASS
 {
 	MemoryBasicInformation,
@@ -222,6 +229,12 @@ typedef enum _SYSTEM_INFORMATION_CLASS
 #endif
 
 // structures
+
+typedef struct _OBJECT_DIRECTORY_INFORMATION {
+	UNICODE_STRING Name;
+	UNICODE_STRING TypeName;
+} OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
+
 typedef struct _MEMORY_REGION_INFORMATION {
 	PVOID AllocationBase;
 	ULONG AllocationProtect;
@@ -268,6 +281,21 @@ typedef struct _SYSTEM_FIRMWARE_TABLE_INFORMATION {
     (p)->SecurityDescriptor = s;                        \
     (p)->SecurityQualityOfService = NULL;               \
     }
+
+//
+// Valid values for the Attributes field
+//
+
+#define OBJ_INHERIT             0x00000002L
+#define OBJ_PERMANENT           0x00000010L
+#define OBJ_EXCLUSIVE           0x00000020L
+#define OBJ_CASE_INSENSITIVE    0x00000040L
+#define OBJ_OPENIF              0x00000080L
+#define OBJ_OPENLINK            0x00000100L
+#define OBJ_KERNEL_HANDLE       0x00000200L
+#define OBJ_FORCE_ACCESS_CHECK  0x00000400L
+#define OBJ_VALID_ATTRIBUTES    0x000007F2L
+
 #endif
 
 NTSTATUS NTAPI NtOpenProcess(

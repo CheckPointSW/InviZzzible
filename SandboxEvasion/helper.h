@@ -125,6 +125,7 @@ bool check_driver_object(const std::string &directory_object, const std::string 
 extern "C" PVOID get_firmware_table(PULONG pdwDataSize, DWORD dwSignature, DWORD dwTableID);
 extern "C" BOOL enable_privilege(DWORD PrivilegeName, BOOL fEnable);
 extern "C" BOOL scan_mem(CHAR *Data, ULONG dwDataSize, CHAR *lpFindData, ULONG dwFindDataSize);
+extern "C" BOOL check_system_objects(const std::wstring &directory, const std::wstring &name);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);

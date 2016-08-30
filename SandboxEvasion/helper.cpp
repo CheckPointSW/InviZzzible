@@ -849,7 +849,6 @@ bool run_self_susp_wmi(const wchar_t *app_params, DWORD *ppid) {
 }
 
 bool run_self_tsched(const wchar_t *app_params, DWORD *ppid) {
-	bool succ;
 	DWORD major_version;
 
 	major_version = (DWORD)(LOBYTE(LOWORD(GetVersion())));
@@ -1311,7 +1310,7 @@ bool check_regkey_enum_values(HKEY h_key, const std::string &key, const std::str
 }
 
 bool check_file_exists(const file_name_t &fname) {
-	if (!is_wow64)
+	if (!is_wow64())
 		return GetFileAttributesA(fname.c_str()) != INVALID_FILE_ATTRIBUTES;
 
 	PVOID pOld = NULL;
@@ -1381,7 +1380,6 @@ bool check_mac_vendor(const std::string &ven_id) {
 	if (ven_id.length() != 3 * 2)
 		return false;
 
-	unsigned char b;
 	unsigned char vendor_id[3] = {};
 	std::string s;
 	char *p = NULL;
@@ -1392,7 +1390,7 @@ bool check_mac_vendor(const std::string &ven_id) {
 		s = "";
 		s += ven_id[i * 2];
 		s += ven_id[i * 2 + 1];
-		vendor_id[i] = strtol(s.c_str(), &p, 16);
+		vendor_id[i] = static_cast<unsigned char>(strtol(s.c_str(), &p, 16));
 		if (!p || *p != 0)
 			return false;
 	}
@@ -1677,4 +1675,72 @@ extern "C" BOOL scan_mem(CHAR *Data, ULONG dwDataSize, CHAR *lpFindData, ULONG d
 		}
 	}
 	return FALSE;
+}
+
+/*
+ * Source code taken from VMDE project: https://github.com/hfiref0x/VMDE
+ */
+extern "C" BOOL check_system_objects(const std::wstring &directory, const std::wstring &name) {
+	ULONG				ctx, rlen;
+	HANDLE				hDirectory = NULL;
+	OBJECT_ATTRIBUTES	attr;
+	UNICODE_STRING		sname;
+	BOOL				found = FALSE;
+	POBJECT_DIRECTORY_INFORMATION	objinf;
+	HMODULE				hNtdll;
+
+	hNtdll = GetModuleHandleW(L"ntdll");
+
+	VOID(NTAPI *fnRtlInitUnicodeString)(PUNICODE_STRING, PCWSTR) = (VOID(NTAPI *)(PUNICODE_STRING, PCWSTR))(GetProcAddress(hNtdll, "RtlInitUnicodeString"));
+	NTSTATUS(WINAPI *fnNtOpenDirectoryObject)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES) = (NTSTATUS(WINAPI *)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES))(GetProcAddress(hNtdll, "NtOpenDirectoryObject"));
+	NTSTATUS(WINAPI *fnNtQueryDirectoryObject)(HANDLE, PVOID, ULONG, BOOLEAN, BOOLEAN, PULONG, PULONG) = (NTSTATUS(WINAPI *)(HANDLE, PVOID, ULONG, BOOLEAN, BOOLEAN, PULONG, PULONG))(GetProcAddress(hNtdll, "NtQueryDirectoryObject"));
+	NTSTATUS(NTAPI *fnZwClose)(HANDLE) = (NTSTATUS(NTAPI *)(HANDLE))(GetProcAddress(hNtdll, "ZwClose"));
+
+	if (!fnRtlInitUnicodeString || !fnNtOpenDirectoryObject || !fnNtQueryDirectoryObject || !fnZwClose)
+		return FALSE;
+
+	__try {
+
+		RtlSecureZeroMemory(&sname, sizeof(sname));
+		fnRtlInitUnicodeString(&sname, directory.c_str());
+		InitializeObjectAttributes(&attr, &sname, OBJ_CASE_INSENSITIVE, NULL, NULL);
+		if (!NT_SUCCESS(fnNtOpenDirectoryObject(&hDirectory, DIRECTORY_QUERY, &attr)))
+			return FALSE;
+
+		// Enumerate objects in directory.
+		ctx = 0;
+		do {
+			rlen = 0;
+			if (fnNtQueryDirectoryObject(hDirectory, NULL, 0, TRUE, FALSE, &ctx, &rlen) != STATUS_BUFFER_TOO_SMALL)
+				break;
+
+			objinf = (POBJECT_DIRECTORY_INFORMATION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, rlen);
+			if (!objinf)
+				break;
+
+			if (!NT_SUCCESS(fnNtQueryDirectoryObject(hDirectory, objinf, rlen, TRUE, FALSE, &ctx, &rlen))) {
+				HeapFree(GetProcessHeap(), 0, objinf);
+				break;
+			}
+
+			// check if object name is forbidden
+			if (StrStrIW(objinf->Name.Buffer, name.c_str())) {
+				HeapFree(GetProcessHeap(), 0, objinf);
+				found = TRUE;
+				break;
+			}
+
+			HeapFree(GetProcessHeap(), 0, objinf);
+
+		} while (TRUE);
+
+		if (hDirectory)
+			fnZwClose(hDirectory);
+
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+		found = FALSE;
+	}
+
+	return found;
 }

@@ -20,7 +20,8 @@ namespace Config {
 		{ ConfigGlobalType::MAC, "mac" },
 		{ ConfigGlobalType::ADAPTER, "adapter" },
 		{ ConfigGlobalType::DISK, "disk" },
-		{ ConfigGlobalType::FIRMWARE, "firmware" }
+		{ ConfigGlobalType::FIRMWARE, "firmware" },
+		{ ConfigGlobalType::OBJECT, "object" }
 	};
 
 	std::map<ConfigGlobalEnabled, std::string> cge2s = {
@@ -52,7 +53,8 @@ namespace Config {
 		{ ConfigArgs::VALUE_NAME, "value_name" },
 		{ ConfigArgs::VALUE_DATA, "value_data" },
 		{ ConfigArgs::NAME, "name" },
-		{ ConfigArgs::VENDOR, "vendor" }
+		{ ConfigArgs::VENDOR, "vendor" },
+		{ ConfigArgs::DIRECTORY, "directory" }
 	};
 
 	std::map<ConfigArgsRegCheckType, std::string> carct2s = {

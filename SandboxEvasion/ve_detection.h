@@ -30,6 +30,7 @@ namespace SandboxEvasion {
 		void CheckAllMacVendors() const;
 		void CheckAllAdaptersName() const;
 		void CheckAllFirmwareTables() const;
+		void CheckAllDirectoryObjects() const;
 
 		virtual void CheckAllCustom() = 0;
 
@@ -51,6 +52,7 @@ namespace SandboxEvasion {
 		bool CheckAdapterName(const std::string &adapter_name) const;
 		bool CheckFirmwareTableFIRM(const std::string &vendor) const;
 		bool CheckFirmwareTableRSMB(const std::string &vendor) const;
+		bool CheckDirectoryObject(const std::string &directory, const std::string &object) const;
 
 		bool IsEnabled(const std::string &detection_name, const std::string &enabled) const;
 
