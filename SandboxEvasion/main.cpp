@@ -119,7 +119,11 @@ void perform_action(const char *action) {
 
 
 void banner() {
-	// FIXME: implement
+	std::string module_name("");
+
+	log_message(LogMessageLevel::NO, module_name, std::string(30, '*'), BLUE);
+	log_message(LogMessageLevel::NO, module_name, "********SandboxEvasion********", BLUE);
+	log_message(LogMessageLevel::NO, module_name, std::string(30, '*'), BLUE);
 }
 
 
@@ -134,8 +138,6 @@ int main(int argc, char **argv, char **env) {
 	json_tiny *pj;
 	bool action = false;
 	char *chosen_action = NULL;
-
-	banner();
 
 	// test();
 
@@ -178,6 +180,8 @@ int main(int argc, char **argv, char **env) {
 		perform_action(chosen_action);
 		return 0;
 	}
+
+	banner();
 
 	// printf debug info
 	log_message(LogMessageLevel::INFO, module_name, std::string("Initialize virtual environment detection modules..."));

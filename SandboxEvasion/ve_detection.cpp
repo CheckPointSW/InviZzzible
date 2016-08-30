@@ -79,7 +79,7 @@ namespace SandboxEvasion {
 				}
 
 				report = GenerateReportEntry(o.first, o.second, detected);
-				log_message(LogMessageLevel::INFO, module_name, report.second);
+				log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 			}
 		}
 	}
@@ -123,7 +123,7 @@ namespace SandboxEvasion {
 				}
 
 				report = GenerateReportEntry(o.first, o.second, detected);
-				log_message(LogMessageLevel::INFO, module_name, report.second);
+				log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 			}
 		}
 	}
@@ -166,7 +166,7 @@ namespace SandboxEvasion {
 				}
 
 				report = GenerateReportEntry(o.first, o.second, detected);
-				log_message(LogMessageLevel::INFO, module_name, report.second);
+				log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 			}
 		}
 	}
@@ -209,7 +209,7 @@ namespace SandboxEvasion {
 				}
 
 				report = GenerateReportEntry(o.first, o.second, detected);
-				log_message(LogMessageLevel::INFO, module_name, report.second);
+				log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 			}
 		}
 	}
@@ -242,7 +242,7 @@ namespace SandboxEvasion {
 				detected = CheckFileExists(fname);
 			}
 			report = GenerateReportEntry(o.first, o.second, detected);
-			log_message(LogMessageLevel::INFO, module_name, report.second);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
 	}
 
@@ -274,7 +274,7 @@ namespace SandboxEvasion {
 				detected = CheckDeviceExists(devicename);
 			}
 			report = GenerateReportEntry(o.first, o.second, detected);
-			log_message(LogMessageLevel::INFO, module_name, report.second);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
 	}
 
@@ -306,7 +306,7 @@ namespace SandboxEvasion {
 				detected = CheckProcessIsRunning(procname);
 			}
 			report = GenerateReportEntry(o.first, o.second, detected);
-			log_message(LogMessageLevel::INFO, module_name, report.second);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
 	}
 
@@ -338,7 +338,7 @@ namespace SandboxEvasion {
 				detected = CheckMacVendor(macaddr);
 			}
 			report = GenerateReportEntry(o.first, o.second, detected);
-			log_message(LogMessageLevel::INFO, module_name, report.second);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
 	}
 
@@ -370,7 +370,7 @@ namespace SandboxEvasion {
 				detected = CheckAdapterName(adapter);
 			}
 			report = GenerateReportEntry(o.first, o.second, detected);
-			log_message(LogMessageLevel::INFO, module_name, report.second);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
 	}
 
@@ -410,7 +410,7 @@ namespace SandboxEvasion {
 				else detected = false;
 			}
 			report = GenerateReportEntry(o.first, o.second, detected);
-			log_message(LogMessageLevel::INFO, module_name, report.second);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
 
 	}
@@ -443,7 +443,7 @@ namespace SandboxEvasion {
 				detected = CheckDirectoryObject(jt.get<std::string>(Config::ca2s[Config::ConfigArgs::DIRECTORY], ""), dirobject);
 			}
 			report = GenerateReportEntry(o.first, o.second, detected);
-			log_message(LogMessageLevel::INFO, module_name, report.second);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
 	}
 

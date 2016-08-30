@@ -3,6 +3,8 @@ August 30th, 2016:
 	[+] VEDetection: VEDetection: generic interface for different firmware types, directory objects checks implemented
 	[+] VMWare: custom checks implemented (port, NDIS_WanIP)
 	[+] Config: enabled field added
+	[+] Logger: colored console implemented
+	[+] Main: banner added
 
 August 29th, 2016:
 	[+] VEDetection: generic interface for the registries, files, devices, processes, macs, adapters checks implemented

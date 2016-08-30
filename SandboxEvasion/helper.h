@@ -60,10 +60,11 @@ typedef std::list<network_endpoint_t> network_endpoints_t;
 
 typedef std::map<arg_t, arg_t> args_t;
 
-enum class LogMessageLevel { DEBUG, INFO, WARNING, ERR, PANIC };
+enum class LogMessageLevel { NO, DEBUG, INFO, WARNING, ERR, PANIC };
+enum console_color_t { DEFAULT = 0, GREEN = FOREGROUND_GREEN, RED = FOREGROUND_RED, BLUE = FOREGROUND_BLUE };
 
 void enable_verbose_mode();
-void log_message(LogMessageLevel msg_l, const std::string & module, const std::string &msg);
+void log_message(LogMessageLevel msg_l, const std::string & module, const std::string &msg, console_color_t cc=DEFAULT);
 
 void enable_wow64();
 bool is_wow64();
@@ -121,7 +122,6 @@ bool check_process_is_running(const process_name_t &proc_name);
 bool check_mac_vendor(const std::string &ven_id);
 bool check_adapter_name(const std::string &adapter_name);
 PIP_ADAPTER_ADDRESSES get_adapters_addresses();
-bool check_driver_object(const std::string &directory_object, const std::string &driver_object);
 extern "C" PVOID get_firmware_table(PULONG pdwDataSize, DWORD dwSignature, DWORD dwTableID);
 extern "C" BOOL enable_privilege(DWORD PrivilegeName, BOOL fEnable);
 extern "C" BOOL scan_mem(CHAR *Data, ULONG dwDataSize, CHAR *lpFindData, ULONG dwFindDataSize);

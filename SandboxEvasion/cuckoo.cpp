@@ -187,91 +187,91 @@ void Cuckoo::CheckAllCustom() {
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckUnbalancedStack();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::INFINITE_DELAY];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckInfiniteSleep();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::DELAYS_ACCUMULATION];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckDelaysAccumulation();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::FUNCTION_HOOKS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckFunctionHooks();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::AGENT_ARTIFACTS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckAgentArtifacts();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::CUCKOOMON_CONFIGURATION];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsConfigurationPresent();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::WHITELISTED_PROCESS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsWhitelistedNotTracked();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::EVENT_NAME];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckEventName();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::RAISED_EXCEPTIONS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::MASTER);
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::WMI_PROCESS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::TASK_SCHED_PROCESS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::PID_REUSE];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsPidReusedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::AGENT_LISTENER];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsAgentPresent();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 }
 

@@ -27,11 +27,12 @@ using std::endl;
 
 
 std::map<LogMessageLevel, std::string> log_msg_levels = {
-	{ LogMessageLevel::DEBUG, std::string("DEBUG") },
-	{ LogMessageLevel::INFO, std::string("INFO") },
-	{ LogMessageLevel::WARNING, std::string("WARNING") },
-	{ LogMessageLevel::ERR, std::string("ERROR") },
-	{ LogMessageLevel::PANIC, std::string("PANIC") }
+	{ LogMessageLevel::NO,		""			},
+	{ LogMessageLevel::DEBUG,	"DEBUG"		},
+	{ LogMessageLevel::INFO,	"INFO"		},
+	{ LogMessageLevel::WARNING, "WARNING"	},
+	{ LogMessageLevel::ERR,		"ERROR"		},
+	{ LogMessageLevel::PANIC,	"PANIC"		}
 };
 
 const std::map<std::string, HKEY> str2hkey = {
@@ -64,14 +65,34 @@ HKEY get_hkey(const std::string &key) {
 	return it == str2hkey.end() ? reinterpret_cast<HKEY>(INVALID_HKEY) : it->second;
 }
 
-void log_message(LogMessageLevel msg_l, const std::string &module, const std::string &msg) {
+void log_message(LogMessageLevel msg_l, const std::string &module, const std::string &msg, console_color_t cc) {
+	HANDLE std_handle = INVALID_HANDLE_VALUE;
+
 	if (!g_verbose_mode)
 		return;
 
 	if (log_msg_levels.find(msg_l) == log_msg_levels.end())
 		return;
 
-	cout << "[" << log_msg_levels[msg_l] << "] " << module << ": " << msg << std::endl;
+	if (cc != DEFAULT) {
+		std_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+		if (std_handle != INVALID_HANDLE_VALUE) {
+			SetConsoleTextAttribute(std_handle, cc);
+		}
+	}
+
+	if (msg_l == LogMessageLevel::NO) {
+		if (module == "")
+			cout << log_msg_levels[msg_l] << module << msg << std::endl;
+		else 
+			cout << log_msg_levels[msg_l] << module << ": " << msg << std::endl;
+	}
+	else 
+		cout << "[" << log_msg_levels[msg_l] << "] " << module << ": " << msg << std::endl;
+
+	if (cc != DEFAULT && std_handle != INVALID_HANDLE_VALUE) {
+		SetConsoleTextAttribute(std_handle, FOREGROUND_INTENSITY);
+	}
 }
 
 extern "C" BOOL cdtors(TORS_ROUTINE *p_ir, size_t ir_count) {
@@ -1463,11 +1484,6 @@ PIP_ADAPTER_ADDRESSES get_adapters_addresses() {
 	return l;
 }
 
-
-bool check_driver_object(const std::string &directory_object, const std::string &driver_object) {
-	// TODO: implement
-	return false;
-}
 
 /*
  * Source code taken from VMDE project: https://github.com/hfiref0x/VMDE
