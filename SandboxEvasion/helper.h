@@ -17,6 +17,8 @@
 #define INVALID_HKEY		0xFFFFFFFF
 #define EVENT_NAME_MAX_LEN	0x10
 
+#define FIRM 'FIRM'
+#define RSMB 'RSMB'
 
 typedef std::wstring lib_name_t;
 typedef std::string func_name_t;
@@ -80,12 +82,13 @@ extern "C" LPVOID dtors_wsa(LPVOID);
 
 extern "C" LPVOID ctors_check_wow64(LPVOID);
 
+extern "C" LPVOID ctors_get_os_ver(LPVOID);
+
 extern "C" DWORD find_process_by_name(LPCSTR);
 extern "C" HANDLE open_process_by_pid(DWORD, DWORD);
 extern "C" HANDLE open_thread_by_tid(DWORD, DWORD);
 extern "C" HANDLE open_process_by_name(LPCSTR, DWORD);
 extern "C" BOOL terminate_process(HANDLE);
-extern "C" BOOL check_if_path_exists(LPCSTR, DWORD*);
 extern "C" BOOL check_current_parent_folder_w(const wchar_t *);
 extern "C" BOOL enumerate_directory_w(const wchar_t *, SIZE_T, SIZE_T, FILE_ROUTINE, PVOID, const std::list<file_name_w_t> &);
 extern "C" LPCVOID inject_data(HANDLE, const data_t *, SIZE_T, DWORD protect = PAGE_READWRITE);
@@ -119,6 +122,9 @@ bool check_mac_vendor(const std::string &ven_id);
 bool check_adapter_name(const std::string &adapter_name);
 PIP_ADAPTER_ADDRESSES get_adapters_addresses();
 bool check_driver_object(const std::string &directory_object, const std::string &driver_object);
+extern "C" PVOID get_firmware_table(PULONG pdwDataSize, DWORD dwSignature, DWORD dwTableID);
+extern "C" BOOL enable_privilege(DWORD PrivilegeName, BOOL fEnable);
+extern "C" BOOL scan_mem(CHAR *Data, ULONG dwDataSize, CHAR *lpFindData, ULONG dwFindDataSize);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);

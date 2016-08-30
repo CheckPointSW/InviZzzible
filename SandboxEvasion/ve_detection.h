@@ -4,6 +4,7 @@
 #include "json.h"
 #include "config.h"
 
+
 namespace SandboxEvasion {
 	class VEDetection {
 	public:
@@ -28,6 +29,8 @@ namespace SandboxEvasion {
 		void CheckAllProcessRunning() const;
 		void CheckAllMacVendors() const;
 		void CheckAllAdaptersName() const;
+		void CheckAllFirmwareTables() const;
+
 		virtual void CheckAllCustom() = 0;
 
 		// registry-related checks
@@ -46,6 +49,8 @@ namespace SandboxEvasion {
 		bool CheckProcessIsRunning(const process_name_t &proc_name) const;
 		bool CheckMacVendor(const std::string &ven_id) const;
 		bool CheckAdapterName(const std::string &adapter_name) const;
+		bool CheckFirmwareTableFIRM(const std::string &vendor) const;
+		bool CheckFirmwareTableRSMB(const std::string &vendor) const;
 
 		std::pair<std::string, std::string> GenerateReportEntry(const std::string &name, const json_tiny &j, bool detected) const;
 	};

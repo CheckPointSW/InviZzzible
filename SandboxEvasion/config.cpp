@@ -17,7 +17,9 @@ namespace Config {
 		{ ConfigGlobalType::DEVICE, "device" },
 		{ ConfigGlobalType::PROCESS, "process" },
 		{ ConfigGlobalType::MAC, "mac" },
-		{ ConfigGlobalType::ADAPTER, "adapter" }
+		{ ConfigGlobalType::ADAPTER, "adapter" },
+		{ ConfigGlobalType::DISK, "disk" },
+		{ ConfigGlobalType::FIRMWARE, "firmware" }
 	};
 
 	std::map<ConfigCuckoo, std::string> cc2s = {
@@ -52,6 +54,16 @@ namespace Config {
 		{ ConfigArgsRegCheckType::CONTAINS, "contains" },
 		{ ConfigArgsRegCheckType::ENUM_KEYS, "enum_keys" },
 		{ ConfigArgsRegCheckType::ENUM_VALUES, "enum_values" }
+	};
+
+	std::map<ConfigVMWare, std::string> cvm2s = {
+		{ ConfigVMWare::HYPERVISOR_PORT, "HypervisorPort" },
+		{ ConfigVMWare::DEVICE_NPF_NDIS, "DeviceNPF_NDIS" }
+	};
+
+	std::map<ConfigArgsFirmwareCheckType, std::string> cafct2s = {
+		{ ConfigArgsFirmwareCheckType::FIRMBIOS, "firm" },
+		{ ConfigArgsFirmwareCheckType::RSMBBIOS, "rsmb" }
 	};
 
 } // Config

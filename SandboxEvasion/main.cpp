@@ -10,7 +10,7 @@
 
 
 #if defined(_WIN32) && defined(_WIN64)
-#error "Only Win32 supported"
+#error "Only Win32 is supported"
 #endif // _WIN32
 
 
@@ -143,7 +143,7 @@ int main(int argc, char **argv, char **env) {
 	if (argc < 2)
 		return 0;
 
-	TORS_ROUTINE ctors_r[] = { ctors_wsa, ctors_check_wow64 };
+	TORS_ROUTINE ctors_r[] = { ctors_wsa, ctors_check_wow64, ctors_get_os_ver };
 	TORS_ROUTINE dtors_r[] = { dtors_wsa };
 
 	if (!ctors(ctors_r, _countof(ctors_r))) {

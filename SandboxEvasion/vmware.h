@@ -16,6 +16,10 @@ namespace SandboxEvasion {
 
 		// overriden
 		virtual void CheckAllCustom();
+
+		// custom methods
+		bool CheckHypervisorPort() const;
+		bool CheckNDISFile() const;
 	};
 
 } // SandboxEvasion

@@ -11,6 +11,7 @@
 #include <Winreg.h>
 #include <Iphlpapi.h>
 #include <Ntsecapi.h>
+#include "nt.h"
 
 
 #pragma comment(lib, "Shlwapi")
@@ -43,6 +44,7 @@ const std::map<std::string, HKEY> str2hkey = {
 
 bool g_verbose_mode = false;
 bool g_is_wow64 = false;
+RTL_OSVERSIONINFOW g_osver;
 
 void enable_verbose_mode() {
 	g_verbose_mode = true;
@@ -106,12 +108,12 @@ extern "C" LPVOID ctors_wsa(LPVOID arg) {
 	wVersionRequested = MAKEWORD(2, 2);
 
 	if (WSAStartup(wVersionRequested, &wsaData)) {
-		return reinterpret_cast<LPVOID>(1);
+		return (LPVOID)(1);
 	}
 
 	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
 		WSACleanup();
-		return reinterpret_cast<LPVOID>(1);
+		return (LPVOID)(1);
 	}
 
 	return NULL;
@@ -125,7 +127,31 @@ extern "C" LPVOID ctors_check_wow64(LPVOID arg) {
 	if (fpIsWow64Process && ((BOOL (WINAPI*)(HANDLE, PBOOL))fpIsWow64Process)(GetCurrentProcess(), &isWoW64) && isWoW64)
 		enable_wow64();
 
-	return reinterpret_cast<LPVOID>(0);
+	return (LPVOID)(0);
+}
+
+/*
+ * Code taken from VMDE project: https://github.com/hfiref0x/VMDE
+ */
+extern "C" LPVOID ctors_get_os_ver(LPVOID arg) {
+	NTSTATUS Status;
+
+	RtlSecureZeroMemory(&g_osver, sizeof(g_osver));
+	g_osver.dwOSVersionInfoSize = sizeof(g_osver);
+
+	NTSTATUS(NTAPI *fnRtlGetVersion)(PRTL_OSVERSIONINFOW) = (NTSTATUS(NTAPI *)(PRTL_OSVERSIONINFOW))(GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlGetVersion"));
+	if (!fnRtlGetVersion)
+		return (LPVOID)(1);
+
+	Status = fnRtlGetVersion(&g_osver);
+	if (NT_SUCCESS(Status)) {
+		if (g_osver.dwMajorVersion < 6) {
+			enable_privilege(SE_DEBUG_PRIVILEGE, TRUE);
+		}
+		return (LPVOID)(0);
+	}
+
+	return (LPVOID)(1);
 }
 
 extern "C" LPVOID dtors_wsa(LPVOID arg) {
@@ -195,23 +221,6 @@ extern "C" BOOL terminate_process(HANDLE proc) {
 	return FALSE;
 }
 
-extern "C" BOOL check_if_path_exists(LPCSTR path, DWORD *err_code) {
-	// TODO: implement
-	// HANDLE hFile;
-
-	/*
-	if (!(hFile = CreateFileA(
-			path,
-			READ_CONTROL,
-			FILE_SHARE_READ | FILE_SHARE_WRITE
-		))) {
-
-		return FALSE;
-	}
-	*/
-
-	return TRUE;
-}
 
 extern "C" BOOL check_current_parent_folder_w(const wchar_t *file_name) {
 	if (!file_name)
@@ -1458,5 +1467,214 @@ PIP_ADAPTER_ADDRESSES get_adapters_addresses() {
 
 
 bool check_driver_object(const std::string &directory_object, const std::string &driver_object) {
+	// TODO: implement
 	return false;
+}
+
+/*
+ * Source code taken from VMDE project: https://github.com/hfiref0x/VMDE
+ */
+extern "C" BOOL enable_privilege(DWORD PrivilegeName, BOOL fEnable) {
+	BOOL bResult = FALSE;
+	NTSTATUS status;
+	HANDLE hToken;
+	TOKEN_PRIVILEGES TokenPrivileges;
+	HMODULE hNtdll;
+
+	hNtdll = GetModuleHandleW(L"ntdll");
+
+	NTSTATUS(NTAPI *fnNtOpenProcessToken)(HANDLE, ACCESS_MASK, PHANDLE) = (NTSTATUS(NTAPI *)(HANDLE, ACCESS_MASK, PHANDLE))(GetProcAddress(hNtdll, "NtOpenProcessToken"));
+	NTSTATUS(NTAPI *fnNtAdjustPrivilegesToken)(HANDLE, BOOLEAN, PTOKEN_PRIVILEGES, ULONG, PTOKEN_PRIVILEGES, PULONG) = (NTSTATUS(NTAPI *)(HANDLE, BOOLEAN, PTOKEN_PRIVILEGES, ULONG, PTOKEN_PRIVILEGES, PULONG))(GetProcAddress(hNtdll, "NtAdjustPrivilegesToken"));
+	NTSTATUS(NTAPI *fnZwClose)(HANDLE) = (NTSTATUS(NTAPI *)(HANDLE))(GetProcAddress(hNtdll, "ZwClose"));
+
+	if (!fnNtOpenProcessToken || !fnNtAdjustPrivilegesToken || !fnZwClose)
+		return FALSE;
+
+	status = fnNtOpenProcessToken(
+		GetCurrentProcess(),
+		TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
+		&hToken);
+
+	if (!NT_SUCCESS(status)) {
+		return bResult;
+	}
+
+	TokenPrivileges.PrivilegeCount = 1;
+	TokenPrivileges.Privileges[0].Luid.LowPart = PrivilegeName;
+	TokenPrivileges.Privileges[0].Luid.HighPart = 0;
+	TokenPrivileges.Privileges[0].Attributes = (fEnable) ? SE_PRIVILEGE_ENABLED : 0;
+	status = fnNtAdjustPrivilegesToken(hToken, FALSE, &TokenPrivileges,
+		sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES)NULL, NULL);
+	if (status == STATUS_NOT_ALL_ASSIGNED) {
+		status = STATUS_PRIVILEGE_NOT_HELD;
+	}
+	bResult = NT_SUCCESS(status);
+	fnZwClose(hToken);
+	return bResult;
+}
+
+/*
+ * Source code taken from VMDE project: https://github.com/hfiref0x/VMDE
+ */
+extern "C" PVOID get_firmware_table(PULONG pdwDataSize, DWORD dwSignature, DWORD dwTableID) {
+	NTSTATUS Status;
+	ULONG Length;
+	HANDLE hProcess = NULL;
+	ULONG uAddress;
+	SYSTEM_FIRMWARE_TABLE_INFORMATION *sfti = NULL;
+	SIZE_T memIO = 0;
+
+	CLIENT_ID cid;
+	OBJECT_ATTRIBUTES attr;
+	MEMORY_REGION_INFORMATION memInfo;
+	HMODULE hNtdll;
+
+	hNtdll = GetModuleHandleW(L"ntdll");
+
+	NTSTATUS(NTAPI *fnNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG) = (NTSTATUS(NTAPI *)(SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG))(GetProcAddress(hNtdll, "NtQuerySystemInformation"));
+	NTSTATUS(NTAPI *fnZwQueryVirtualMemory)(HANDLE, PVOID, MEMORY_INFORMATION_CLASS, PVOID, SIZE_T, PSIZE_T) = (NTSTATUS(NTAPI *)(HANDLE, PVOID, MEMORY_INFORMATION_CLASS, PVOID, SIZE_T, PSIZE_T))(GetProcAddress(hNtdll, "ZwQueryVirtualMemory"));
+	NTSTATUS(NTAPI *fnZwOpenProcess)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PCLIENT_ID) = (NTSTATUS(NTAPI *)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PCLIENT_ID))(GetProcAddress(hNtdll, "ZwOpenProcess"));
+	NTSTATUS(NTAPI *fnNtReadVirtualMemory)(HANDLE, PVOID, PVOID, ULONG, PULONG) = (NTSTATUS(NTAPI *)(HANDLE, PVOID, PVOID, ULONG, PULONG))(GetProcAddress(hNtdll, "NtReadVirtualMemory"));
+	NTSTATUS(NTAPI *fnZwClose)(HANDLE) = (NTSTATUS(NTAPI *)(HANDLE))(GetProcAddress(hNtdll, "ZwClose"));
+	ULONG(NTAPI *fnCsrGetProcessId)() = (ULONG(NTAPI *)())(GetProcAddress(hNtdll, "CsrGetProcessId"));
+
+	if (!fnNtQuerySystemInformation || !fnZwQueryVirtualMemory || !fnZwOpenProcess || !fnNtReadVirtualMemory || !fnZwClose || !fnCsrGetProcessId)
+		return NULL;
+
+	// Use documented GetSystemFirmwareTable instead, this is it raw implementation.
+	if (g_osver.dwMajorVersion > 5) {
+
+		Length = 0x1000;
+		sfti = (PSYSTEM_FIRMWARE_TABLE_INFORMATION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+		if (sfti != NULL) {
+			sfti->Action = SystemFirmwareTable_Get;
+			sfti->ProviderSignature = dwSignature;
+			sfti->TableID = dwTableID;
+			sfti->TableBufferLength = Length;
+
+			// Query if info class available and if how many memory we need.
+			Status = fnNtQuerySystemInformation(SystemFirmwareTableInformation, sfti, Length, &Length);
+			if (
+				(Status == STATUS_INVALID_INFO_CLASS) ||
+				(Status == STATUS_INVALID_DEVICE_REQUEST) ||
+				(Status == STATUS_NOT_IMPLEMENTED) ||
+				(Length == 0)
+				)
+			{
+				HeapFree(GetProcessHeap(), 0, sfti);
+				return NULL;
+			}
+
+			if ((!NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_TOO_SMALL)) {
+
+				HeapFree(GetProcessHeap(), 0, sfti);
+
+				sfti = (PSYSTEM_FIRMWARE_TABLE_INFORMATION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+				if (sfti != NULL) {
+					sfti->Action = SystemFirmwareTable_Get;
+					sfti->ProviderSignature = dwSignature;
+					sfti->TableID = dwTableID;
+					sfti->TableBufferLength = Length;
+					Status = fnNtQuerySystemInformation(SystemFirmwareTableInformation, sfti, Length, &Length);
+					if (!NT_SUCCESS(Status)) {
+						HeapFree(GetProcessHeap(), 0, sfti);
+						return NULL;
+					}
+					if (pdwDataSize) {
+						*pdwDataSize = Length;
+					}
+				}
+			}
+			else {
+				if (pdwDataSize) {
+					*pdwDataSize = Length;
+				}
+			}
+		}
+	}
+	else {
+		//
+		//  On pre Vista systems the above info class unavailable, but all required information.
+		//  can be found inside csrss  memory space (stored here for VDM purposes) at few fixed addresses.
+		//
+		if ((dwSignature != FIRM) && (dwSignature != RSMB)) {
+			return NULL;
+		}
+
+		// we are interested only in two memory regions 
+		switch (dwSignature) {
+		case FIRM:
+			uAddress = 0xC0000; // FIRM analogue 
+			break;
+		case RSMB:
+			uAddress = 0xE0000; // RSMB analogue 
+			break;
+		default:
+			return NULL;
+			break;
+		}
+
+		Length = 0;
+		cid.UniqueProcess = (HANDLE)fnCsrGetProcessId();
+		cid.UniqueThread = 0;
+		InitializeObjectAttributes(&attr, NULL, 0, 0, NULL);
+
+		// open csrss, reg. client debug privilege set 
+		Status = fnZwOpenProcess(&hProcess, PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, &attr, &cid);
+		if (NT_SUCCESS(Status)) {
+
+			// get memory data region size for buffer allocation
+			Status = fnZwQueryVirtualMemory(hProcess, (PVOID)uAddress, MemoryRegionInformation, &memInfo, sizeof(MEMORY_REGION_INFORMATION), &memIO);
+			if (NT_SUCCESS(Status)) {
+
+				sfti = (PSYSTEM_FIRMWARE_TABLE_INFORMATION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, memInfo.RegionSize);
+				if (sfti != NULL) {
+
+					// read data to our allocated buffer 
+					Status = fnNtReadVirtualMemory(hProcess, (PVOID)uAddress, sfti, memInfo.RegionSize, &memIO);
+					if (NT_SUCCESS(Status)) {
+
+						if (pdwDataSize) {
+							*pdwDataSize = (ULONG)memInfo.RegionSize;
+						}
+					}
+					else {
+						HeapFree(GetProcessHeap(), 0, sfti);
+						return NULL;
+					}
+				}
+			}
+			fnZwClose(hProcess);
+		}
+	}
+	return sfti;
+}
+
+/*
+ * Source code taken from VMDE project: https://github.com/hfiref0x/VMDE
+ */
+extern "C" BOOL scan_mem(CHAR *Data, ULONG dwDataSize, CHAR *lpFindData, ULONG dwFindDataSize) {
+	UINT i;
+	SIZE_T(NTAPI *fnRtlCompareMemory)(const VOID *, const VOID *, SIZE_T) = (SIZE_T(NTAPI *)(const VOID *, const VOID *, SIZE_T))(GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlCompareMemory"));
+	if (!fnRtlCompareMemory)
+		return FALSE;
+
+	if (
+		(Data == NULL) ||
+		(lpFindData == NULL)
+		)
+	{
+		return FALSE;
+	}
+
+	if (dwFindDataSize > dwDataSize) {
+		return FALSE;
+	}
+
+	for (i = 0; i < dwDataSize - dwFindDataSize; i++) {
+		if (fnRtlCompareMemory(Data + i, lpFindData, dwFindDataSize) == dwFindDataSize) {
+			return TRUE;
+		}
+	}
+	return FALSE;
 }

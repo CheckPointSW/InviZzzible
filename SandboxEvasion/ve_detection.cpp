@@ -32,6 +32,7 @@ namespace SandboxEvasion {
 		CheckAllProcessRunning();
 		CheckAllMacVendors();
 		CheckAllAdaptersName();
+		CheckAllFirmwareTables();
 	}
 
 	void VEDetection::CheckAllRegistry() const {
@@ -320,6 +321,43 @@ namespace SandboxEvasion {
 		}
 	}
 
+	void VEDetection::CheckAllFirmwareTables() const {
+		bool detected;
+		std::pair<std::string, std::string> report;
+		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::FIRMWARE]);
+		json_tiny jt;
+		std::string firmware;
+		std::list<std::string> firmwares;
+
+		// check for the presence of all files
+		for each (auto &o in jl) {
+			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+			firmware = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
+			if (firmware == "") {
+				firmwares = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
+				for (auto &f : firmwares) {
+					if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cafct2s[Config::ConfigArgsFirmwareCheckType::FIRMBIOS])
+						detected = CheckFirmwareTableFIRM(f);
+					else if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cafct2s[Config::ConfigArgsFirmwareCheckType::RSMBBIOS])
+						detected = CheckFirmwareTableRSMB(f);
+					else detected = false;
+					if (detected)
+						break;
+				}
+			}
+			else {
+				if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cafct2s[Config::ConfigArgsFirmwareCheckType::FIRMBIOS])
+					detected = CheckFirmwareTableFIRM(firmware);
+				else if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cafct2s[Config::ConfigArgsFirmwareCheckType::RSMBBIOS])
+					detected = CheckFirmwareTableRSMB(firmware);
+				else detected = false;
+			}
+			report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second);
+		}
+
+	}
+
 	bool VEDetection::CheckRegKeyExists(const std::string &key_root, const std::string &key) const {
 		HKEY hRootKey = get_hkey(key_root);
 		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
@@ -370,6 +408,38 @@ namespace SandboxEvasion {
 
 	bool VEDetection::CheckAdapterName(const std::string &adapter_name) const {
 		return check_adapter_name(adapter_name);
+	}
+
+	bool VEDetection::CheckFirmwareTableFIRM(const std::string &vendor) const {
+		CHAR *sfti;
+		DWORD data_size;
+		bool found;
+
+		sfti = reinterpret_cast<CHAR *>(get_firmware_table(&data_size, FIRM, 0xC0000));
+		if (!sfti)
+			return false;
+
+		found = scan_mem(sfti, data_size, const_cast<char *>(vendor.c_str()), vendor.length());
+
+		LocalFree(sfti);
+
+		return found;
+	}
+
+	bool VEDetection::CheckFirmwareTableRSMB(const std::string &vendor) const {
+		CHAR *sfti;
+		DWORD data_size;
+		bool found;
+
+		sfti = reinterpret_cast<CHAR *>(get_firmware_table(&data_size, RSMB, 0x0));
+		if (!sfti)
+			return false;
+
+		found = scan_mem(sfti, data_size, const_cast<char *>(vendor.c_str()), vendor.length());
+
+		LocalFree(sfti);
+
+		return found;
 	}
 
 } // SandboxEvasion

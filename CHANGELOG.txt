@@ -1,3 +1,7 @@
+August 30th, 2016:
+	[+] VEDetection: VEDetection: generic interface for different firmware types checks implemented
+	[+] VMWare: custom checks implemented (port, NDIS_WanIP)
+
 August 29th, 2016:
 	[+] VEDetection: generic interface for the registries, files, devices, processes, macs, adapters checks implemented
 	[+] VMWare: implementation of detection techniques using VEDetection interface
