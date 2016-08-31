@@ -83,7 +83,8 @@ namespace Config {
 		{ ConfigGeneric::RAM, "RAM" },
 		{ ConfigGeneric::SYSTEM_UPTIME, "SystemUptime" },
 		{ ConfigGeneric::SLEEP_DUMMY, "SleepDummyPatch" },
-		{ ConfigGeneric::PROCESSORS_COUNT, "ProcessorsCount" }
+		{ ConfigGeneric::PROCESSORS_COUNT, "ProcessorsCount" },
+		{ ConfigGeneric::DNS_RESPONSE, "DnsResponse" }
 	};
 
 } // Config

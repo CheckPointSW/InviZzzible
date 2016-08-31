@@ -22,6 +22,7 @@
 #pragma comment(lib, "wbemuuid.lib")
 #pragma comment(lib, "taskschd.lib")
 #pragma comment(lib, "Mstask.lib")
+#pragma comment(lib, "Dnsapi.lib")
 
 #include <iostream>
 using std::cout;
@@ -1896,4 +1897,26 @@ bool get_web_time(const std::string &net_resource, FILETIME & rv) {
 		return false;
 
 	return !!SystemTimeToFileTime(&st, &rv);
+}
+
+bool perform_dns_request(const std::string &domain_name, std::list<IP4_ADDRESS> &ips) {
+	DNS_STATUS s;
+	PDNS_RECORD dns_records, head_dns;
+
+	// FIXME: should we use specific DNS service in 4th parameter
+	s = DnsQuery_A(domain_name.c_str(), DNS_TYPE_A, DNS_QUERY_BYPASS_CACHE, NULL, &dns_records, NULL);
+
+	if (s)
+		return false;
+
+	head_dns = dns_records;
+
+	while (dns_records) {
+		ips.push_back(dns_records->Data.A.IpAddress);
+		dns_records = dns_records->pNext;
+	}
+
+	DnsRecordListFree(head_dns, DnsFreeRecordListDeep);
+
+	return true;
 }

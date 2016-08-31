@@ -10,6 +10,7 @@
 #include <list>
 #include <regex>
 #include <Iphlpapi.h>
+#include <WinDNS.h>
 
 
 #define INVALID_PID_VALUE	0xFFFFFFFF
@@ -131,6 +132,7 @@ bool is_hypervisor();
 DWORD get_number_of_processors();
 bool get_web_time(const std::string &net_resource, FILETIME &rv);
 int64_t operator-(const FILETIME &endTime, const FILETIME &startTime);
+bool perform_dns_request(const std::string &domain_name, std::list<IP4_ADDRESS> &ips);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);

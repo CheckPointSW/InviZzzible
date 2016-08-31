@@ -26,6 +26,7 @@ protected:
 	bool CheckMouseActive() const;
 	bool CheckSleepDummyPatch() const;
 	bool CheckNumberOfProcessors() const;
+	bool CheckDNSResponse() const;
 };
 
 } // SandboxEvasion
