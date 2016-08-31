@@ -42,7 +42,8 @@ namespace Config {
 		{ ConfigCuckoo::WMI_PROCESS, "WMIProcess" },
 		{ ConfigCuckoo::TASK_SCHED_PROCESS, "TaskSchedulerProcess" },
 		{ ConfigCuckoo::PID_REUSE, "PidReuse" },
-		{ ConfigCuckoo::AGENT_LISTENER, "AgentListener" }
+		{ ConfigCuckoo::AGENT_LISTENER, "AgentListener" },
+		{ ConfigCuckoo::TIME_TAMPERING, "TimeTampering" }
 	};
 
 	std::map<ConfigArgs, std::string> ca2s = {

@@ -11,6 +11,8 @@
 #include <Winreg.h>
 #include <Iphlpapi.h>
 #include <Ntsecapi.h>
+#include <sstream>
+#include <WinInet.h>
 #include "nt.h"
 
 
@@ -700,10 +702,11 @@ extern "C" char* hexlify(const unsigned char *data, size_t data_size) {
 bool string_replace_substring(std::string &s, const std::string &what, const std::string &rep) {
 	size_t i = s.find(what);
 
-	if (i == std::string::npos)
+	if (i == s.npos)
 		return false;
 
 	s = s.substr(0, i) + rep + s.substr(i + what.length());
+	return true;
 }
 
 void get_tcp_entries(const MIB_TCPTABLE *p_tcp_table, network_endpoints_t &net_endpoints, DWORD state) {
@@ -763,7 +766,7 @@ bool run_self_susp(const wchar_t *app_params, PROCESS_INFORMATION *ppi) {
 		return false;
 
 	// create process with parametres
-	return CreateProcessW(
+	return !!CreateProcessW(
 		NULL,
 		app_name,
 		NULL,
@@ -1220,7 +1223,7 @@ bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD
 
 	memcpy(buffer_write, &pid, sizeof(buffer_write));
 
-	return CallNamedPipeW(pipe_name, buffer_write, sizeof(buffer_write), &buffer_read, sizeof(buffer_read), &dwRead, NMPWAIT_USE_DEFAULT_WAIT);
+	return !!CallNamedPipeW(pipe_name, buffer_write, sizeof(buffer_write), &buffer_read, sizeof(buffer_read), &dwRead, NMPWAIT_USE_DEFAULT_WAIT);
 }
 
 
@@ -1814,4 +1817,83 @@ DWORD get_number_of_processors() {
 		pop ebp;
 		retn;
 	}
+}
+
+
+int64_t operator-(const FILETIME &endTime, const FILETIME &startTime) {
+	return *reinterpret_cast<const uint64_t*>(&endTime) - *reinterpret_cast<const uint64_t*>(&startTime);
+}
+
+bool get_web_time(const std::string &net_resource, FILETIME & rv) {
+	rv = {};
+
+	SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (INVALID_SOCKET == s)
+		return false;
+
+	sockaddr_in sin = {};
+	sin.sin_port = htons(80);
+	sin.sin_family = AF_INET;
+
+	hostent* he = gethostbyname(net_resource.c_str());
+	if (!he) {
+		closesocket(s);
+		return false;
+	}
+
+	memcpy(&sin.sin_addr.S_un.S_addr, he->h_addr, sizeof(sin.sin_addr.S_un.S_addr));
+	if (SOCKET_ERROR == connect(s, reinterpret_cast<const sockaddr*>(&sin), sizeof(sin))) {
+		closesocket(s);
+		return false;
+	}
+
+	std::stringstream http_request;
+	http_request << "GET / HTTP/1.1\r\n"
+		"Accept: */*\r\n"
+		"Accept-Language: en-us\r\n"
+		"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36\r\n"
+		"Accept-Encoding: gzip, deflate\r\n"
+		"Host: " << net_resource << "\r\n"
+		"\r\n";
+
+	if (SOCKET_ERROR == send(s, http_request.str().c_str(), http_request.str().length(), 0)) {
+		closesocket(s);
+		return false;
+	}
+
+	char buff[1024] = {};
+	int total_bytes_recv = 0;
+	int bytes_recv = 0;
+
+	while ((bytes_recv = recv(s, buff + total_bytes_recv, _countof(buff) - total_bytes_recv - 1, MSG_PEEK)) && bytes_recv != SOCKET_ERROR)
+		total_bytes_recv += bytes_recv;
+
+	if (!total_bytes_recv || bytes_recv == SOCKET_ERROR) {
+		closesocket(s);
+		return false;
+	}
+
+	const auto err = WSAGetLastError();
+	closesocket(s);
+	if (err == WSAECONNRESET || err == WSAEINTR || err == WSAEWOULDBLOCK)
+		return false;
+
+	std::string sBuff = buff;
+
+	auto pos = sBuff.find("Date: ");
+	if (sBuff.npos == pos)
+		return false;
+
+	sBuff = sBuff.substr(pos + 6);
+	pos = sBuff.find("\r\n");
+	if (sBuff.npos == pos)
+		return false;
+
+	sBuff.resize(pos);
+
+	SYSTEMTIME st = {};
+	if (!InternetTimeToSystemTimeA(sBuff.c_str(), &st, 0))
+		return false;
+
+	return !!SystemTimeToFileTime(&st, &rv);
 }

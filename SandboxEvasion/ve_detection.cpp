@@ -519,7 +519,7 @@ namespace SandboxEvasion {
 		if (!sfti)
 			return false;
 
-		found = scan_mem(sfti, data_size, const_cast<char *>(vendor.c_str()), vendor.length());
+		found = !!scan_mem(sfti, data_size, const_cast<char *>(vendor.c_str()), vendor.length());
 
 		LocalFree(sfti);
 
@@ -535,7 +535,7 @@ namespace SandboxEvasion {
 		if (!sfti)
 			return false;
 
-		found = scan_mem(sfti, data_size, const_cast<char *>(vendor.c_str()), vendor.length());
+		found = !!scan_mem(sfti, data_size, const_cast<char *>(vendor.c_str()), vendor.length());
 
 		LocalFree(sfti);
 
@@ -549,7 +549,7 @@ namespace SandboxEvasion {
 		directory_w.assign(directory.begin(), directory.end());
 		object_w.assign(object.begin(), object.end());
 
-		return check_system_objects(directory_w, object_w);
+		return !!check_system_objects(directory_w, object_w);
 	}
 
 	bool VEDetection::IsEnabled(const std::string &detection_name, const std::string &enabled) const {

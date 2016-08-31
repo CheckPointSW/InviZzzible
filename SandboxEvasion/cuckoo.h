@@ -44,6 +44,7 @@ namespace SandboxEvasion {
 		bool IsServiceNotTracked() const;
 		bool IsWhitelistedNotTracked() const;
 		bool CheckExceptionsNumber(ProcessWorkingMode) const;
+		bool CheckTimeTampering() const;
 
 		static const event_name_t GeneratePrintableBuffer(SIZE_T length, DWORD seed = SEED_DEFAULT);
 		static ULARGE_INTEGER CompareDatetime(SYSTEMTIME *st_1, SYSTEMTIME *st_2);

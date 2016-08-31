@@ -204,6 +204,13 @@ void Cuckoo::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
+	ce_name = Config::cc2s[Config::ConfigCuckoo::TIME_TAMPERING];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckTimeTampering();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cc2s[Config::ConfigCuckoo::FUNCTION_HOOKS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckFunctionHooks();
@@ -690,6 +697,46 @@ bool Cuckoo::CheckExceptionsNumber(ProcessWorkingMode wm) const {
 	default:
 		return false;
 	}
+}
+
+bool Cuckoo::CheckTimeTampering() const {
+	const int delta = 5 * 1000; // 5 sec
+	const int64_t k100NStoMSecs = 10000ll;
+	bool sandboxDetected = false;
+	const std::string host("google.com");	// FIXME: should be configurable?
+
+	FILETIME ftLocalStart, ftLocalEnd, ftWebStart, ftWebEnd;
+
+	GetSystemTimeAsFileTime(&ftLocalStart);
+	if (!get_web_time(host, ftWebStart))
+		return false;
+
+	int64_t totalMSec = 0;
+	for (int i = 0; i < 10; ++i) {
+		const int sleepSec = 1 + (rand() % 10);
+		totalMSec += sleepSec * 1000;
+		SleepEx(sleepSec * 1000, FALSE);
+	}
+
+	GetSystemTimeAsFileTime(&ftLocalEnd);
+	if (!get_web_time(host, ftWebEnd))
+		return false;
+
+	// PC's clock validation
+	const int64_t localTimeDiff = std::abs(ftLocalEnd - ftLocalStart) / k100NStoMSecs;
+	const int64_t webTimeDiff = std::abs(ftWebEnd - ftWebStart) / k100NStoMSecs;
+
+	if (std::abs(localTimeDiff - webTimeDiff) > delta)
+		sandboxDetected = true;
+
+	// second check for proper sleep delay
+	if (!sandboxDetected) {
+		if (localTimeDiff < totalMSec)
+			sandboxDetected = true;
+		if (webTimeDiff < totalMSec)
+			sandboxDetected = true;
+	}
+	return sandboxDetected;
 }
 
 
