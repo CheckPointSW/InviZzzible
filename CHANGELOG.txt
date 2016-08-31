@@ -4,6 +4,7 @@ August 31st, 2016:
 	[*] VEDetection: Report module is used now for the report generation
 	[+] Generic: implementation of detection techniques using VEDetection interface
 	[+] Generic: DNS response check implemented
+	[+] VEDetection: generic interface for cpuid vendor check implemented
 
 August 30th, 2016:
 	[+] VBOX: implementation of detection techniques using VEDetection interface

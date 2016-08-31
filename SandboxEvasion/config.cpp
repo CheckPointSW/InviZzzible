@@ -21,7 +21,8 @@ namespace Config {
 		{ ConfigGlobalType::ADAPTER, "adapter" },
 		{ ConfigGlobalType::DISK, "disk" },
 		{ ConfigGlobalType::FIRMWARE, "firmware" },
-		{ ConfigGlobalType::OBJECT, "object" }
+		{ ConfigGlobalType::OBJECT, "object" },
+		{ ConfigGlobalType::CPUID, "cpuid" }
 	};
 
 	std::map<ConfigGlobalEnabled, std::string> cge2s = {

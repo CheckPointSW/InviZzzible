@@ -129,6 +129,7 @@ extern "C" BOOL enable_privilege(DWORD PrivilegeName, BOOL fEnable);
 extern "C" BOOL scan_mem(CHAR *Data, ULONG dwDataSize, CHAR *lpFindData, ULONG dwFindDataSize);
 extern "C" BOOL check_system_objects(const std::wstring &directory, const std::wstring &name);
 bool is_hypervisor();
+void get_cpuid_vendor(char *vendor_id);
 DWORD get_number_of_processors();
 bool get_web_time(const std::string &net_resource, FILETIME &rv);
 int64_t operator-(const FILETIME &endTime, const FILETIME &startTime);

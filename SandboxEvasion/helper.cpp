@@ -1808,6 +1808,34 @@ bool is_hypervisor() {
 }
 
 __declspec(naked)
+void get_cpuid_vendor(char *vendor_id) {
+	__asm {
+		push ebp;
+		mov ebp, esp;
+		push ebx;
+		push ecx;
+		push edx;
+		xor ebx, ebx;
+		xor ecx, ecx;
+		xor edx, edx;
+		mov eax, 0x40000000;
+		cpuid;
+		mov eax, ebx;
+		mov edi, vendor_id;
+		stosd;
+		mov eax, ecx;
+		stosd;
+		mov eax, edx;
+		stosd;
+		pop ebx;
+		pop ecx;
+		pop edx;
+		pop ebp;
+		retn;
+	}
+}
+
+__declspec(naked)
 DWORD get_number_of_processors() {
 	__asm {
 		push ebp;
