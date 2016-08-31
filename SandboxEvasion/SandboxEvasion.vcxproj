@@ -85,11 +85,13 @@
     <ClCompile Include="helper.cpp" />
     <ClCompile Include="json.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="report.cpp" />
     <ClCompile Include="vbox.cpp" />
     <ClCompile Include="ve_detection.cpp" />
     <ClCompile Include="vmware.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="report.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="cuckoo.h" />
     <ClInclude Include="helper.h" />
@@ -98,6 +100,10 @@
     <ClInclude Include="vbox.h" />
     <ClInclude Include="ve_detection.h" />
     <ClInclude Include="vmware.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bootstrap.css" />
+    <None Include="report.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

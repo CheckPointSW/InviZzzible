@@ -697,6 +697,15 @@ extern "C" char* hexlify(const unsigned char *data, size_t data_size) {
 	return hex_data;
 }
 
+bool string_replace_substring(std::string &s, const std::string &what, const std::string &rep) {
+	size_t i = s.find(what);
+
+	if (i == std::string::npos)
+		return false;
+
+	s = s.substr(0, i) + rep + s.substr(i + what.length());
+}
+
 void get_tcp_entries(const MIB_TCPTABLE *p_tcp_table, network_endpoints_t &net_endpoints, DWORD state) {
 	size_t i;
 

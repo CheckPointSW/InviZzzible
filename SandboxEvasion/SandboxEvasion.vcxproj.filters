@@ -39,6 +39,9 @@
     <ClCompile Include="vbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="report.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ve_detection.h">
@@ -65,5 +68,16 @@
     <ClInclude Include="vbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="report.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bootstrap.css">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="report.html">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

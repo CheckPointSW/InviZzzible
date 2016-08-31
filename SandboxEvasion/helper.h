@@ -100,6 +100,7 @@ extern "C" DWORD align_down(DWORD val, DWORD align);
 extern "C" DWORD align_up(DWORD val, DWORD align);
 extern "C" LPCVOID get_tcp_table();
 extern "C" char* hexlify(const unsigned char *data, size_t data_size);
+bool string_replace_substring(std::string &s, const std::string &what, const std::string &rep);
 void get_tcp_entries(const MIB_TCPTABLE *p_tcp_table, network_endpoints_t &net_endpoints, DWORD state);
 bool get_app_full_name(const wchar_t *app_params, wchar_t *app_name, size_t app_name_size, wchar_t *cur_dir, size_t cur_dir_size);
 bool get_envvar(const char *env, char **out);

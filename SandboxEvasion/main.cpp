@@ -7,6 +7,7 @@
 #include <iostream>
 #include "ve_detection.h"
 #include <map>
+#include "report.h"
 
 
 #if defined(_WIN32) && defined(_WIN64)
@@ -87,6 +88,31 @@ void test() {
 	*/
 }
 
+void test_report() {
+	Report report;
+
+	if (!report.load())
+		return;
+
+	report.add_entry({"Blabla", "XXX", "1", "YYY"});
+	report.add_entry({ "Blabla", "XXX", "0", "YYY" });
+	report.add_entry({ "Blabla", "XXX", "2", "YYY" });
+	report.add_entry({ "Blabla", "XXX", "1", "YYY" });
+
+	if (!report.flush("Cuckoo"))
+		return;
+
+	report.add_entry({ "asdf", "XXX", "3", "YYY" });
+	report.add_entry({ "Blasdgabla", "XXX", "0", "YYY" });
+	report.add_entry({ "asdg", "XXX", "2", "YYY" });
+	report.add_entry({ "Basdglabla", "XXX", "1", "YYY" });
+
+	if (!report.flush("VBOX"))
+		return;
+
+	report.dump("report_exec.html");
+}
+
 
 void perform_action(const char *action) {
 	Cuckoo cuckoo = Cuckoo(json_tiny());
@@ -138,6 +164,8 @@ int main(int argc, char **argv, char **env) {
 	json_tiny *pj;
 	bool action = false;
 	char *chosen_action = NULL;
+
+	// test_report();
 
 	// test();
 
