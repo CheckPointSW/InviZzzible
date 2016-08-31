@@ -3,6 +3,7 @@
 
 #include "json.h"
 #include "config.h"
+#include "report.h"
 
 
 namespace SandboxEvasion {
@@ -12,16 +13,14 @@ namespace SandboxEvasion {
 		virtual ~VEDetection() {};
 
 		void CheckAll();
-		virtual std::string GetReport() {
-			return report;
-		};
 
 		std::string GetModuleName() const { return module_name; }
+		void AddReportModule(Report *_report);
 
 	protected:
 		json_tiny conf;
 		std::string module_name;
-		std::string report;
+		Report *p_report;
 
 		void CheckAllRegistry() const;
 		void CheckAllFilesExist() const;

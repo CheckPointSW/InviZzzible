@@ -19,7 +19,10 @@ namespace SandboxEvasion {
 
 		ostream_debug << name  << "> " << desc << ": " << detected << std::endl;
 		
-		// FIXME: generate HTML template stream
+		// add entry to report
+		if (p_report) {
+			p_report->add_entry({ name, desc, detected ? "1" : "0", wtd });
+		}
 
 		return std::pair<std::string, std::string>(ostream_html.str(), ostream_debug.str());
 	}
@@ -34,6 +37,14 @@ namespace SandboxEvasion {
 		CheckAllAdaptersName();
 		CheckAllFirmwareTables();
 		CheckAllDirectoryObjects();
+
+		if (p_report) {
+			p_report->flush(module_name);
+		}
+	}
+
+	void VEDetection::AddReportModule(Report *_report) {
+		p_report = _report;
 	}
 
 	void VEDetection::CheckAllRegistry() const {

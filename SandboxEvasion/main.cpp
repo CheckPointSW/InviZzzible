@@ -164,6 +164,10 @@ int main(int argc, char **argv, char **env) {
 	json_tiny *pj;
 	bool action = false;
 	char *chosen_action = NULL;
+	Report report;
+	Report *pReport;
+	char report_file[MAX_PATH] = {};
+	SYSTEMTIME st;
 
 	// test_report();
 
@@ -211,6 +215,8 @@ int main(int argc, char **argv, char **env) {
 
 	banner();
 
+	pReport = report.load() ? &report : NULL;
+
 	// printf debug info
 	log_message(LogMessageLevel::INFO, module_name, std::string("Initialize virtual environment detection modules..."));
 
@@ -227,11 +233,18 @@ int main(int argc, char **argv, char **env) {
 	// printf info
 	for (auto &d : detects) {
 		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Starting checks..."));
+		d->AddReportModule(pReport);
 		d->CheckAll();
-		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Checks finished\n") + std::string(100, '*') + std::string("\n"));
+		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Checks finished\n") + std::string(60, '*') + std::string("\n"));
 	}
 
-	// TODO: implement get reports
+	if (pReport) {
+		GetSystemTime(&st);
+		_snprintf_s(report_file, _countof(report_file), "SandboxEvasion_%.02u%.02u%.02u_%.02u%.02u%.02u.html", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+		if (report.dump(report_file))
+			log_message(LogMessageLevel::INFO, module_name, std::string("Report was successfully saved to file: ") + std::string(report_file));
+	}
 
 	// free all data
 	for (auto &d : detects)
