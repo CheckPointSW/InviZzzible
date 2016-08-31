@@ -82,6 +82,7 @@
   <ItemGroup>
     <ClCompile Include="config.cpp" />
     <ClCompile Include="cuckoo.cpp" />
+    <ClCompile Include="generic.cpp" />
     <ClCompile Include="helper.cpp" />
     <ClCompile Include="json.cpp" />
     <ClCompile Include="main.cpp" />
@@ -91,6 +92,7 @@
     <ClCompile Include="vmware.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="generic.h" />
     <ClInclude Include="report.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="cuckoo.h" />

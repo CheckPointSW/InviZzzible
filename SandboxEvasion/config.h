@@ -12,7 +12,8 @@ namespace Config {
 	enum class ConfigArgs { CHECK, NAME, HKEY, KEY, SUBKEY, VALUE_NAME, VALUE_DATA, VENDOR, DIRECTORY };
 	enum class ConfigArgsRegCheckType { EXISTS, CONTAINS, ENUM_KEYS, ENUM_VALUES };
 	enum class ConfigArgsFirmwareCheckType { FIRMBIOS, RSMBBIOS };
-	enum class ConfigVMWare { HYPERVISOR_PORT, DEVICE_NPF_NDIS };
+	enum class ConfigVMWare { HYPERVISOR_PORT, DEVICE_NPF_NDIS, HYPERVISOR_BIT };
+	enum class ConfigGeneric { SYSTEM_UPTIME, RAM, DISK_SIZE, DRIVE_SIZE, MOUSE_ACTIVE, SLEEP_DUMMY, PROCESSORS_COUNT };
 	
 	extern std::map<ConfigGlobal, std::string> cg2s;
 	extern std::map<ConfigGlobalType, std::string> cgt2s;
@@ -22,6 +23,7 @@ namespace Config {
 	extern std::map<ConfigArgsRegCheckType, std::string> carct2s;
 	extern std::map<ConfigVMWare, std::string> cvm2s;
 	extern std::map<ConfigArgsFirmwareCheckType, std::string> cafct2s;
+	extern std::map<ConfigGeneric, std::string> cgen2s;
 
 } // Config
 } // SandboxEvasion

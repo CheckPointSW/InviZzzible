@@ -20,6 +20,7 @@ namespace SandboxEvasion {
 		// custom methods
 		bool CheckHypervisorPort() const;
 		bool CheckNDISFile() const;
+		bool IsHypervisor() const;
 	};
 
 } // SandboxEvasion

@@ -66,12 +66,23 @@ namespace Config {
 
 	std::map<ConfigVMWare, std::string> cvm2s = {
 		{ ConfigVMWare::HYPERVISOR_PORT, "HypervisorPort" },
+		{ ConfigVMWare::HYPERVISOR_BIT,  "HypervisorBit" },
 		{ ConfigVMWare::DEVICE_NPF_NDIS, "DeviceNPF_NDIS" }
 	};
 
 	std::map<ConfigArgsFirmwareCheckType, std::string> cafct2s = {
 		{ ConfigArgsFirmwareCheckType::FIRMBIOS, "firm" },
 		{ ConfigArgsFirmwareCheckType::RSMBBIOS, "rsmb" }
+	};
+
+	std::map<ConfigGeneric, std::string> cgen2s = {
+		{ ConfigGeneric::DISK_SIZE, "DiskSize" },
+		{ ConfigGeneric::DRIVE_SIZE, "DriveSize" },
+		{ ConfigGeneric::MOUSE_ACTIVE, "MouseActive" },
+		{ ConfigGeneric::RAM, "RAM" },
+		{ ConfigGeneric::SYSTEM_UPTIME, "SystemUptime" },
+		{ ConfigGeneric::SLEEP_DUMMY, "SleepDummyPatch" },
+		{ ConfigGeneric::PROCESSORS_COUNT, "ProcessorsCount" }
 	};
 
 } // Config

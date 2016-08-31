@@ -1,6 +1,7 @@
 August 31st, 2016:
 	[+] Report: dummy module that is responsible for HTML report generation implemented
 	[*] VEDetection: Report module is used now for the report generation
+	[+] Generic: implementation of detection techniques using VEDetection interface
 
 August 30th, 2016:
 	[+] VBOX: implementation of detection techniques using VEDetection interface

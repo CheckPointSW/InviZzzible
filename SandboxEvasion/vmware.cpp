@@ -24,6 +24,14 @@ void VMWare::CheckAllCustom() {
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
+
+	ce_name = Config::cvm2s[Config::ConfigVMWare::HYPERVISOR_BIT];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsHypervisor();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 }
 
 bool VMWare::CheckHypervisorPort() const {
@@ -66,5 +74,17 @@ bool VMWare::CheckNDISFile() const {
 
 	return true;
 }
+
+bool VMWare::IsHypervisor() const {
+	/*
+	int32_t cpuinfo[4] = { 0 };
+
+	__cpuid(cpuinfo, 0x00000000);
+
+	return (cpuinfo[2] >> 31) & 1;
+	*/
+	return is_hypervisor();
+}
+
 
 } // SandboxEvasion

@@ -1769,3 +1769,49 @@ extern "C" BOOL check_system_objects(const std::wstring &directory, const std::w
 
 	return found;
 }
+
+__declspec(naked)
+bool is_hypervisor() {
+	__asm {
+		push    ebp;
+		mov     ebp, esp;
+		sub     esp, 0x10;
+		push    ebx;
+		push    esi;
+		push    edi;
+		xor     eax, eax;
+		lea     edi, [ebp - 0xC];
+		stosd;
+		stosd;
+		stosd;
+		mov		eax, 1;
+		xor     ecx, ecx;
+		cpuid;
+		lea     esi, [ebp - 0x10];
+		mov		[esi], eax;
+		mov		[esi + 4], ebx;
+		mov		[esi + 8], ecx;
+		mov		[esi + 0xC], edx;
+		mov     eax, [ebp - 8];
+		pop     edi;
+		sar     eax, 0x1F;
+		pop     esi;
+		and     al, 1;
+		pop     ebx;
+		leave;
+		retn;
+	}
+}
+
+__declspec(naked)
+DWORD get_number_of_processors() {
+	__asm {
+		push ebp;
+		mov ebp, esp;
+		mov eax, fs:0x18 ; TEB
+		mov eax, [eax + 0x30]; PEB
+		mov eax, [eax + 0x64]; 
+		pop ebp;
+		retn;
+	}
+}

@@ -42,6 +42,9 @@
     <ClCompile Include="report.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="generic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ve_detection.h">
@@ -69,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="report.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
