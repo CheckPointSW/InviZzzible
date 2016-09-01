@@ -56,6 +56,14 @@ public:
 	}
 	*/
 
+	const std::list<std::string> get_entries(const std::string &field) {
+		std::string fe = get<std::string>(field, "");
+		if (fe == "") 
+			return get_array(field);
+		else 
+			return { fe };
+	}
+
 	const std::list<std::string> get_array(const std::string &field) const {
 		std::list<std::string> jl;
 		pt::ptree r;

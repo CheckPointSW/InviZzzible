@@ -61,7 +61,6 @@ namespace SandboxEvasion {
 		bool detected;
 		std::pair<std::string, std::string> report;
 		json_tiny jt;
-		std::string key;
 		std::list<std::string> keys;
 
 		// iterate through all registry exists detections
@@ -71,23 +70,11 @@ namespace SandboxEvasion {
 				continue;
 
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::EXISTS]) {
-				key = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], "");
-				if (key == "") {
-					keys = jt.get_array(Config::ca2s[Config::ConfigArgs::KEY]);
-					for (auto &k : keys) {
-						detected = CheckRegKeyExists(
-							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
-							k
-							);
-						if (detected)
-							break;
-					}
-				}
-				else {
-					detected = CheckRegKeyExists(
-						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
-						key
-						);
+
+				keys = jt.get_entries(Config::ca2s[Config::ConfigArgs::KEY]);
+				for (auto &k : keys) {
+					detected = CheckRegKeyExists(jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""), k );
+					if (detected) break;
 				}
 
 				report = GenerateReportEntry(o.first, o.second, detected);
@@ -100,7 +87,7 @@ namespace SandboxEvasion {
 		bool detected;
 		std::pair<std::string, std::string> report;
 		json_tiny jt;
-		std::string value_data;
+		std::list<std::string> vn;
 		std::list<std::string> vd;
 
 		// iterate through all registry keys contains specific values
@@ -111,27 +98,19 @@ namespace SandboxEvasion {
 				continue;
 
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::CONTAINS]) {
-				value_data = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_DATA], "");
-				if (value_data == "") {
-					vd = jt.get_array(Config::ca2s[Config::ConfigArgs::VALUE_DATA]);
-					for (auto &kv : vd) {
+
+				vn = jt.get_entries(Config::ca2s[Config::ConfigArgs::VALUE_NAME]);
+				vd = jt.get_entries(Config::ca2s[Config::ConfigArgs::VALUE_DATA]);
+				for (auto &_vd : vd) {
+					detected = false;
+					for (auto &_vn : vn) {
 						detected = CheckRegKeyValueContains(
 							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
 							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
-							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_NAME], ""),
-							kv
-							);
-						if (detected)
-							break;
+							_vn, _vd);
+						if (detected) break;
 					}
-				}
-				else {
-					detected = CheckRegKeyValueContains(
-						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
-						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
-						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_NAME], ""),
-						value_data
-						);
+					if (detected) break;
 				}
 
 				report = GenerateReportEntry(o.first, o.second, detected);
@@ -144,7 +123,6 @@ namespace SandboxEvasion {
 		bool detected;
 		std::pair<std::string, std::string> report;
 		json_tiny jt;
-		std::string subkey;
 		std::list<std::string> subkeys;
 
 		// iterate through all registry keys contains specific values
@@ -155,26 +133,15 @@ namespace SandboxEvasion {
 				continue;
 
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::ENUM_KEYS]) {
-				subkey = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::SUBKEY], "");
-				if (subkey == "") {
-					subkeys = jt.get_array(Config::ca2s[Config::ConfigArgs::SUBKEY]);
-					for (auto &sk : subkeys) {
-						detected = CheckRegKeyEnumKeys(
-							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
-							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
-							sk
-							);
 
-						if (detected)
-							break;
-					}
-				}
-				else {
+				subkeys = jt.get_entries(Config::ca2s[Config::ConfigArgs::SUBKEY]);
+				for (auto &sk : subkeys) {
 					detected = CheckRegKeyEnumKeys(
 						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
 						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
-						subkey
-						);
+						sk);
+
+					if (detected) break;
 				}
 
 				report = GenerateReportEntry(o.first, o.second, detected);
@@ -187,7 +154,6 @@ namespace SandboxEvasion {
 		bool detected;
 		std::pair<std::string, std::string> report;
 		json_tiny jt;
-		std::string value;
 		std::list<std::string> values;
 
 		// iterate through all registry keys contains specific values
@@ -198,26 +164,15 @@ namespace SandboxEvasion {
 				continue;
 
 			if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::carct2s[Config::ConfigArgsRegCheckType::ENUM_VALUES]) {
-				value = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VALUE_NAME], "");
-				if (value == "") {
-					values = jt.get_array(Config::ca2s[Config::ConfigArgs::VALUE_NAME]);
-					for (auto &v : values) {
-						detected = CheckRegKeyEnumValues(
-							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
-							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
-							v
-							);
-
-						if (detected)
-							break;
-					}
-				}
-				else {
+				
+				values = jt.get_entries(Config::ca2s[Config::ConfigArgs::VALUE_NAME]);
+				for (auto &v : values) {
 					detected = CheckRegKeyEnumValues(
 						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
 						jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
-						value
-						);
+						v);
+
+					if (detected) break;
 				}
 
 				report = GenerateReportEntry(o.first, o.second, detected);
@@ -231,7 +186,6 @@ namespace SandboxEvasion {
 		std::pair<std::string, std::string> report;
 		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::FILE]);
 		json_tiny jt;
-		std::string fname;
 		std::list<std::string> fnames;
 
 		// check for the presence of all files
@@ -241,18 +195,12 @@ namespace SandboxEvasion {
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
-			fname = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
-			if (fname == "") {
-				fnames = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
-				for (auto &fn : fnames) {
-					detected = CheckFileExists(fn);
-					if (detected)
-						break;
-				}
+			fnames = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			for (auto &fn : fnames) {
+				detected = CheckFileExists(fn);
+				if (detected) break;
 			}
-			else {
-				detected = CheckFileExists(fname);
-			}
+
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
@@ -263,7 +211,6 @@ namespace SandboxEvasion {
 		std::pair<std::string, std::string> report;
 		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::DEVICE]);
 		json_tiny jt;
-		std::string devicename;
 		std::list<std::string> devicenames;
 
 		// check for the presence of devices
@@ -273,18 +220,12 @@ namespace SandboxEvasion {
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
-			devicename = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
-			if (devicename == "") {
-				devicenames = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
-				for (auto &dn : devicenames) {
-					detected = CheckDeviceExists(dn);
-					if (detected)
-						break;
-				}
+			devicenames = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			for (auto &dn : devicenames) {
+				detected = CheckDeviceExists(dn);
+				if (detected) break;
 			}
-			else {
-				detected = CheckDeviceExists(devicename);
-			}
+
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
@@ -295,7 +236,6 @@ namespace SandboxEvasion {
 		std::pair<std::string, std::string> report;
 		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::PROCESS]);
 		json_tiny jt;
-		std::string procname;
 		std::list<std::string> procnames;
 
 		// check for the presence of devices
@@ -305,18 +245,12 @@ namespace SandboxEvasion {
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
-			procname = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
-			if (procname == "") {
-				procnames = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
-				for (auto &pn : procnames) {
-					detected = CheckProcessIsRunning(pn);
-					if (detected)
-						break;
-				}
+			procnames = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			for (auto &pn : procnames) {
+				detected = CheckProcessIsRunning(pn);
+				if (detected) break;
 			}
-			else {
-				detected = CheckProcessIsRunning(procname);
-			}
+
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
@@ -327,7 +261,6 @@ namespace SandboxEvasion {
 		std::pair<std::string, std::string> report;
 		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::MAC]);
 		json_tiny jt;
-		std::string macaddr;
 		std::list<std::string> macaddrs;
 
 		// check for the presence of devices
@@ -337,18 +270,12 @@ namespace SandboxEvasion {
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
-			macaddr = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VENDOR], "");
-			if (macaddr == "") {
-				macaddrs = jt.get_array(Config::ca2s[Config::ConfigArgs::VENDOR]);
-				for (auto &mac : macaddrs) {
-					detected = CheckMacVendor(mac);
-					if (detected)
-						break;
-				}
+			macaddrs = jt.get_entries(Config::ca2s[Config::ConfigArgs::VENDOR]);
+			for (auto &mac : macaddrs) {
+				detected = CheckMacVendor(mac);
+				if (detected) break;
 			}
-			else {
-				detected = CheckMacVendor(macaddr);
-			}
+
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
@@ -359,7 +286,6 @@ namespace SandboxEvasion {
 		std::pair<std::string, std::string> report;
 		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::ADAPTER]);
 		json_tiny jt;
-		std::string adapter;
 		std::list<std::string> adapters;
 
 		// check for the presence of devices
@@ -369,18 +295,12 @@ namespace SandboxEvasion {
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
-			adapter = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
-			if (adapter == "") {
-				adapters = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
-				for (auto &adp : adapters) {
-					detected = CheckAdapterName(adp);
-					if (detected)
-						break;
-				}
+			adapters = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			for (auto &adp : adapters) {
+				detected = CheckAdapterName(adp);
+				if (detected) break;
 			}
-			else {
-				detected = CheckAdapterName(adapter);
-			}
+
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
@@ -391,7 +311,6 @@ namespace SandboxEvasion {
 		std::pair<std::string, std::string> report;
 		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::FIRMWARE]);
 		json_tiny jt;
-		std::string firmware;
 		std::list<std::string> firmwares;
 
 		// check for the presence of all files
@@ -401,26 +320,16 @@ namespace SandboxEvasion {
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
-			firmware = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
-			if (firmware == "") {
-				firmwares = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
-				for (auto &f : firmwares) {
-					if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cafct2s[Config::ConfigArgsFirmwareCheckType::FIRMBIOS])
-						detected = CheckFirmwareTableFIRM(f);
-					else if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cafct2s[Config::ConfigArgsFirmwareCheckType::RSMBBIOS])
-						detected = CheckFirmwareTableRSMB(f);
-					else detected = false;
-					if (detected)
-						break;
-				}
-			}
-			else {
+			firmwares = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			for (auto &f : firmwares) {
 				if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cafct2s[Config::ConfigArgsFirmwareCheckType::FIRMBIOS])
-					detected = CheckFirmwareTableFIRM(firmware);
+					detected = CheckFirmwareTableFIRM(f);
 				else if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cafct2s[Config::ConfigArgsFirmwareCheckType::RSMBBIOS])
-					detected = CheckFirmwareTableRSMB(firmware);
+					detected = CheckFirmwareTableRSMB(f);
 				else detected = false;
+				if (detected) break;
 			}
+
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
@@ -432,7 +341,6 @@ namespace SandboxEvasion {
 		std::pair<std::string, std::string> report;
 		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::OBJECT]);
 		json_tiny jt;
-		std::string dirobject;
 		std::list<std::string> dirobjects;
 
 		// check for the presence of specific directory objects
@@ -442,18 +350,12 @@ namespace SandboxEvasion {
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
-			dirobject = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::NAME], "");
-			if (dirobject == "") {
-				dirobjects = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
-				for (auto &dir : dirobjects) {
-					detected = CheckDirectoryObject(jt.get<std::string>(Config::ca2s[Config::ConfigArgs::DIRECTORY], ""), dir);
-					if (detected)
-						break;
-				}
+			dirobjects = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			for (auto &dir : dirobjects) {
+				detected = CheckDirectoryObject(jt.get<std::string>(Config::ca2s[Config::ConfigArgs::DIRECTORY], ""), dir);
+				if (detected) break;
 			}
-			else {
-				detected = CheckDirectoryObject(jt.get<std::string>(Config::ca2s[Config::ConfigArgs::DIRECTORY], ""), dirobject);
-			}
+
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
@@ -464,7 +366,6 @@ namespace SandboxEvasion {
 		std::pair<std::string, std::string> report;
 		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::CPUID]);
 		json_tiny jt;
-		std::string vendor;
 		std::list<std::string> vendors;
 
 		// check for the presence of specific directory objects
@@ -474,18 +375,12 @@ namespace SandboxEvasion {
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
-			vendor = jt.get<std::string>(Config::ca2s[Config::ConfigArgs::VENDOR], "");
-			if (vendor == "") {
-				vendors = jt.get_array(Config::ca2s[Config::ConfigArgs::NAME]);
-				for (auto &v : vendors) {
-					detected = CheckCpuid(v);
-					if (detected)
-						break;
-				}
+			vendors = jt.get_entries(Config::ca2s[Config::ConfigArgs::VENDOR]);
+			for (auto &v : vendors) {
+				detected = CheckCpuid(v);
+				if (detected) break;
 			}
-			else {
-				detected = CheckCpuid(vendor);
-			}
+
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}

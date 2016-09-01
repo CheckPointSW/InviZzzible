@@ -56,7 +56,8 @@ namespace Config {
 		{ ConfigArgs::VALUE_DATA, "value_data" },
 		{ ConfigArgs::NAME, "name" },
 		{ ConfigArgs::VENDOR, "vendor" },
-		{ ConfigArgs::DIRECTORY, "directory" }
+		{ ConfigArgs::DIRECTORY, "directory" },
+		{ ConfigArgs::RECURSIVE, "recursive" }
 	};
 
 	std::map<ConfigArgsRegCheckType, std::string> carct2s = {
