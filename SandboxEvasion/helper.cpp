@@ -1262,7 +1262,11 @@ bool check_regkey_exists(HKEY h_key, const std::string &regkey) {
 	return true;
 }
 
-bool check_regkey_subkey_value(HKEY h_key, const std::string &regkey, const std::string &subkey, const std::string &value) {
+bool check_regkey_subkey_value(HKEY h_key, const std::string &regkey, const std::string &value_name, const std::string &value_data, bool rec) {
+	return rec ? check_regkey_subkey_value_rec(h_key, regkey, value_name, value_data) : check_regkey_subkey_value_nrec(h_key, regkey, value_name, value_data);
+}
+
+bool check_regkey_subkey_value_nrec(HKEY h_key, const std::string & regkey, const std::string & value_name, const std::string & value_data) {
 	HKEY h_regkey;
 	unsigned char regkey_buff[512] = {};
 	DWORD regkey_buff_size = sizeof(regkey_buff);
@@ -1270,16 +1274,52 @@ bool check_regkey_subkey_value(HKEY h_key, const std::string &regkey, const std:
 	if (RegOpenKeyExA(h_key, regkey.c_str(), 0, KEY_READ | (is_wow64() ? KEY_WOW64_64KEY : 0), &h_regkey) != ERROR_SUCCESS)
 		return false;
 
-	if (RegQueryValueExA(h_regkey, subkey.c_str(), NULL, NULL, regkey_buff, &regkey_buff_size) != ERROR_SUCCESS) {
+	if (RegQueryValueExA(h_regkey, value_name.c_str(), NULL, NULL, regkey_buff, &regkey_buff_size) != ERROR_SUCCESS) {
 		RegCloseKey(h_regkey);
 		return false;
 	}
 
 	RegCloseKey(h_regkey);
 
-	if (StrStrIA(reinterpret_cast<LPCSTR>(regkey_buff), value.c_str()))
+	return !!StrStrIA(reinterpret_cast<LPCSTR>(regkey_buff), value_data.c_str());
+}
 
-	return true;
+bool check_regkey_subkey_value_rec(HKEY h_key, const std::string &regkey, const std::string &value_name, const std::string &value_data) {
+	HKEY h_regkey;
+	LSTATUS status;
+	DWORD i;
+	char subkeyi[255] = {};
+	DWORD subkey_size;
+	FILETIME ftLast;
+	unsigned char regkey_buff[512] = {};
+	DWORD regkey_buff_size = sizeof(regkey_buff);
+
+	if (RegOpenKeyExA(h_key, regkey.c_str(), 0, KEY_READ | (is_wow64() ? KEY_WOW64_64KEY : 0), &h_regkey) != ERROR_SUCCESS)
+		return false;
+
+	// check if there is value we want exists
+	regkey_buff_size = sizeof(regkey_buff);
+	if (RegQueryValueExA(h_regkey, value_name.c_str(), NULL, NULL, regkey_buff, &regkey_buff_size) == ERROR_SUCCESS) {
+		if (StrStrIA(reinterpret_cast<char *>(regkey_buff), value_data.c_str())) {
+			RegCloseKey(h_regkey);
+			return true;
+		}
+	}
+
+	i = 0;
+	do {
+		subkey_size = _countof(subkeyi);
+		status = RegEnumKeyExA(h_regkey, i++, subkeyi, &subkey_size, NULL, NULL, NULL, &ftLast);
+		if (status == ERROR_SUCCESS) {
+			if (check_regkey_subkey_value_rec(h_regkey, subkeyi, value_name, value_data)) {
+				RegCloseKey(h_regkey);
+				return true;
+			}
+		}
+	} while (status == ERROR_SUCCESS);
+
+	RegCloseKey(h_regkey);
+	return false;
 }
 
 bool check_regkey_enum_keys(HKEY h_key, const std::string &key, const std::string &subkey) {

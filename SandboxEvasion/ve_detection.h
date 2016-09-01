@@ -41,7 +41,7 @@ namespace SandboxEvasion {
 		void CheckAllRegistryEnumValues(const std::list<std::pair<std::string, json_tiny>> &jl) const;
 
 		bool CheckRegKeyExists(const std::string &key_root, const std::string &key) const;
-		bool CheckRegKeyValueContains(const std::string &key_root, const std::string &key, const std::string &subkey, const std::string &value) const;
+		bool CheckRegKeyValueContains(const std::string &key_root, const std::string &key, const std::string &subkey, const std::string &value, bool rec=false) const;
 		bool CheckRegKeyEnumKeys(const std::string &key_root, const std::string &key, const std::string &subkey) const;
 		bool CheckRegKeyEnumValues(const std::string &key_root, const std::string &key, const std::string &value) const;
 

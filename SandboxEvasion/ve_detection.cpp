@@ -107,7 +107,8 @@ namespace SandboxEvasion {
 						detected = CheckRegKeyValueContains(
 							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::HKEY], ""),
 							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::KEY], ""),
-							_vn, _vd);
+							_vn, _vd,
+							jt.get<std::string>(Config::ca2s[Config::ConfigArgs::RECURSIVE], "") == Config::cge2s[Config::ConfigGlobalEnabled::YES]);
 						if (detected) break;
 					}
 					if (detected) break;
@@ -395,12 +396,12 @@ namespace SandboxEvasion {
 		return check_regkey_exists(hRootKey, key);
 	}
 
-	bool VEDetection::CheckRegKeyValueContains(const std::string &key_root, const std::string &key, const std::string &subkey, const std::string &value) const {
+	bool VEDetection::CheckRegKeyValueContains(const std::string &key_root, const std::string &key, const std::string &subkey, const std::string &value, bool rec) const {
 		HKEY hRootKey = get_hkey(key_root);
 		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
 			return false;
 
-		return check_regkey_subkey_value(hRootKey, key, subkey, value);
+		return check_regkey_subkey_value(hRootKey, key, subkey, value, rec);
 	}
 
 	bool VEDetection::CheckRegKeyEnumKeys(const std::string & key_root, const std::string & key, const std::string & subkey) const {
