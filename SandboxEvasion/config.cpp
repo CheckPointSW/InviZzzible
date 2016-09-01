@@ -22,7 +22,8 @@ namespace Config {
 		{ ConfigGlobalType::DISK, "disk" },
 		{ ConfigGlobalType::FIRMWARE, "firmware" },
 		{ ConfigGlobalType::OBJECT, "object" },
-		{ ConfigGlobalType::CPUID, "cpuid" }
+		{ ConfigGlobalType::CPUID, "cpuid" },
+		{ ConfigGlobalType::WINDOW, "window" }
 	};
 
 	std::map<ConfigGlobalEnabled, std::string> cge2s = {
@@ -76,6 +77,11 @@ namespace Config {
 	std::map<ConfigArgsFirmwareCheckType, std::string> cafct2s = {
 		{ ConfigArgsFirmwareCheckType::FIRMBIOS, "firm" },
 		{ ConfigArgsFirmwareCheckType::RSMBBIOS, "rsmb" }
+	};
+
+	std::map<ConfigArgsWindowCheckType, std::string> cawct2s = {
+		{ ConfigArgsWindowCheckType::CLASS, "class" },
+		{ ConfigArgsWindowCheckType::WINDOW, "window" }
 	};
 
 	std::map<ConfigGeneric, std::string> cgen2s = {

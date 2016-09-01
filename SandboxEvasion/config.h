@@ -6,12 +6,13 @@
 namespace SandboxEvasion {
 namespace Config {
 	enum class ConfigGlobal { DESCRIPTION, COUNTERMEASURES, TYPE, ENABLED, ARGUMENTS };
-	enum class ConfigGlobalType { CUSTOM, REGISTRY, FILE, DEVICE, PROCESS, MAC, ADAPTER, DISK, FIRMWARE, OBJECT, CPUID };
+	enum class ConfigGlobalType { CUSTOM, REGISTRY, FILE, DEVICE, PROCESS, MAC, ADAPTER, DISK, FIRMWARE, OBJECT, CPUID, WINDOW };
 	enum class ConfigGlobalEnabled { YES, NO };
 	enum class ConfigCuckoo { UNBALANCED_STACK, INFINITE_DELAY, DELAYS_ACCUMULATION, FUNCTION_HOOKS, AGENT_ARTIFACTS, CUCKOOMON_CONFIGURATION, WHITELISTED_PROCESS, EVENT_NAME, RAISED_EXCEPTIONS, WMI_PROCESS, TASK_SCHED_PROCESS, PID_REUSE, AGENT_LISTENER, TIME_TAMPERING };
 	enum class ConfigArgs { CHECK, NAME, HKEY, KEY, SUBKEY, VALUE_NAME, VALUE_DATA, VENDOR, DIRECTORY, RECURSIVE };
 	enum class ConfigArgsRegCheckType { EXISTS, CONTAINS, ENUM_KEYS, ENUM_VALUES };
 	enum class ConfigArgsFirmwareCheckType { FIRMBIOS, RSMBBIOS };
+	enum class ConfigArgsWindowCheckType { CLASS, WINDOW };
 	enum class ConfigVMWare { HYPERVISOR_PORT, DEVICE_NPF_NDIS, HYPERVISOR_BIT };
 	enum class ConfigGeneric { SYSTEM_UPTIME, RAM, DISK_SIZE, DRIVE_SIZE, MOUSE_ACTIVE, SLEEP_DUMMY, PROCESSORS_COUNT, DNS_RESPONSE };
 	
@@ -23,6 +24,7 @@ namespace Config {
 	extern std::map<ConfigArgsRegCheckType, std::string> carct2s;
 	extern std::map<ConfigVMWare, std::string> cvm2s;
 	extern std::map<ConfigArgsFirmwareCheckType, std::string> cafct2s;
+	extern std::map<ConfigArgsWindowCheckType, std::string> cawct2s;
 	extern std::map<ConfigGeneric, std::string> cgen2s;
 
 } // Config

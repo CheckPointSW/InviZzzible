@@ -38,6 +38,7 @@ namespace SandboxEvasion {
 		CheckAllFirmwareTables();
 		CheckAllDirectoryObjects();
 		CheckAllCpuid();
+		CheckAllWindows();
 
 		if (p_report) {
 			p_report->flush(module_name);
@@ -385,7 +386,36 @@ namespace SandboxEvasion {
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
+	}
 
+	void VEDetection::CheckAllWindows() const {
+		bool detected;
+		std::pair<std::string, std::string> report;
+		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::WINDOW]);
+		json_tiny jt;
+		std::list<std::string> windows;
+
+		// check for the presence of specific directory objects
+		for each (auto &o in jl) {
+			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			windows = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			for (auto &w : windows) {				
+				if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cawct2s[Config::ConfigArgsWindowCheckType::CLASS])
+					detected = CheckWindowClassName(w);
+				else if (jt.get<std::string>(Config::ca2s[Config::ConfigArgs::CHECK], "") == Config::cawct2s[Config::ConfigArgsWindowCheckType::WINDOW])
+					detected = CheckWindowWindowName(w);
+				else detected = false;
+
+				if (detected) break;
+			}
+
+			report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
 	}
 
 	bool VEDetection::CheckRegKeyExists(const std::string &key_root, const std::string &key) const {
@@ -489,6 +519,14 @@ namespace SandboxEvasion {
 		get_cpuid_vendor(cpuid_);
 
 		return !strncmp(cpuid_, cpuid_s.c_str(), s);
+	}
+
+	bool VEDetection::CheckWindowClassName(const std::string & cname) const {
+		return !!FindWindowA(cname.c_str(), NULL);
+	}
+
+	bool VEDetection::CheckWindowWindowName(const std::string &wname) const {
+		return !!FindWindowA(NULL, wname.c_str());
 	}
 
 	bool VEDetection::IsEnabled(const std::string &detection_name, const std::string &enabled) const {

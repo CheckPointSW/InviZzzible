@@ -31,6 +31,7 @@ namespace SandboxEvasion {
 		void CheckAllFirmwareTables() const;
 		void CheckAllDirectoryObjects() const;
 		void CheckAllCpuid() const;
+		void CheckAllWindows() const;
 
 		virtual void CheckAllCustom() = 0;
 
@@ -54,6 +55,8 @@ namespace SandboxEvasion {
 		bool CheckFirmwareTableRSMB(const std::string &vendor) const;
 		bool CheckDirectoryObject(const std::string &directory, const std::string &object) const;
 		bool CheckCpuid(const std::string &cpuid_s) const;
+		bool CheckWindowWindowName(const std::string &wname) const;
+		bool CheckWindowClassName(const std::string &cname) const;
 
 		bool IsEnabled(const std::string &detection_name, const std::string &enabled) const;
 
