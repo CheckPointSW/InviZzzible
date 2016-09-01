@@ -1,5 +1,6 @@
 #include "ve_detection.h"
 #include <iostream>
+#include <Shlwapi.h>
 #include <boost\foreach.hpp>
 
 using std::cout;
@@ -39,6 +40,7 @@ namespace SandboxEvasion {
 		CheckAllDirectoryObjects();
 		CheckAllCpuid();
 		CheckAllWindows();
+		CheckAllSharedFolders();
 
 		if (p_report) {
 			p_report->flush(module_name);
@@ -418,6 +420,31 @@ namespace SandboxEvasion {
 		}
 	}
 
+	void VEDetection::CheckAllSharedFolders() const {
+		bool detected;
+		std::pair<std::string, std::string> report;
+		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::SHARED]);
+		json_tiny jt;
+		std::list<std::string> shared_folders;
+
+		// check for the presence of specific directory objects
+		for each (auto &o in jl) {
+			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			shared_folders = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			for (auto &sf : shared_folders) {
+				detected = CheckSharedFolder(sf);
+				if (detected) break;
+			}
+
+			report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+	}
+
 	bool VEDetection::CheckRegKeyExists(const std::string &key_root, const std::string &key) const {
 		HKEY hRootKey = get_hkey(key_root);
 		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
@@ -521,8 +548,21 @@ namespace SandboxEvasion {
 		return !strncmp(cpuid_, cpuid_s.c_str(), s);
 	}
 
-	bool VEDetection::CheckWindowClassName(const std::string & cname) const {
+	bool VEDetection::CheckWindowClassName(const std::string &cname) const {
 		return !!FindWindowA(cname.c_str(), NULL);
+	}
+
+	/*
+	 * Code taken from: https://github.com/a0rtega/pafish
+	 */
+	bool VEDetection::CheckSharedFolder(const std::string &name) const {
+		char provider[0x1000];
+		DWORD provider_size = _countof(provider);
+
+		if (WNetGetProviderNameA(WNNC_NET_RDR2SAMPLE, provider, &provider_size) != NO_ERROR)
+			return false;
+
+		return StrStrIA(provider, name.c_str());
 	}
 
 	bool VEDetection::CheckWindowWindowName(const std::string &wname) const {

@@ -14,7 +14,7 @@
 #include <sstream>
 #include <WinInet.h>
 #include "nt.h"
-
+#include <iostream>
 
 #pragma comment(lib, "Shlwapi")
 #pragma comment(lib, "Iphlpapi")
@@ -23,8 +23,9 @@
 #pragma comment(lib, "taskschd.lib")
 #pragma comment(lib, "Mstask.lib")
 #pragma comment(lib, "Dnsapi.lib")
+#pragma comment(lib, "Mpr.lib")
 
-#include <iostream>
+
 using std::cout;
 using std::endl;
 

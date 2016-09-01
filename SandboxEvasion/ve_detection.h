@@ -32,6 +32,7 @@ namespace SandboxEvasion {
 		void CheckAllDirectoryObjects() const;
 		void CheckAllCpuid() const;
 		void CheckAllWindows() const;
+		void CheckAllSharedFolders() const;
 
 		virtual void CheckAllCustom() = 0;
 
@@ -57,6 +58,7 @@ namespace SandboxEvasion {
 		bool CheckCpuid(const std::string &cpuid_s) const;
 		bool CheckWindowWindowName(const std::string &wname) const;
 		bool CheckWindowClassName(const std::string &cname) const;
+		bool CheckSharedFolder(const std::string &name) const;
 
 		bool IsEnabled(const std::string &detection_name, const std::string &enabled) const;
 

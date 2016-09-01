@@ -23,7 +23,8 @@ namespace Config {
 		{ ConfigGlobalType::FIRMWARE, "firmware" },
 		{ ConfigGlobalType::OBJECT, "object" },
 		{ ConfigGlobalType::CPUID, "cpuid" },
-		{ ConfigGlobalType::WINDOW, "window" }
+		{ ConfigGlobalType::WINDOW, "window" },
+		{ ConfigGlobalType::SHARED, "shared" }
 	};
 
 	std::map<ConfigGlobalEnabled, std::string> cge2s = {

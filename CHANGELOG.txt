@@ -1,7 +1,7 @@
 September 1st, 2016:
 	[+] Config: value_name now support arrays
 	[+] Config: recursive field added
-	[+] VEDetection: generic interface for the windows checks implemented
+	[+] VEDetection: generic interface for the windows, shared folders checks implemented
 	
 August 31st, 2016:
 	[+] Cuckoo: time tampering sandbox detection method implemented
