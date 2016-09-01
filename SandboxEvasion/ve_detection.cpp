@@ -43,6 +43,7 @@ namespace SandboxEvasion {
 		CheckAllCpuid();
 		CheckAllWindows();
 		CheckAllSharedFolders();
+		CheckAllDiskNames();
 
 		if (p_report) {
 			p_report->flush(module_name);
@@ -447,6 +448,31 @@ namespace SandboxEvasion {
 		}
 	}
 
+	void VEDetection::CheckAllDiskNames() const {
+		bool detected;
+		std::pair<std::string, std::string> report;
+		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::DISK]);
+		json_tiny jt;
+		std::list<std::string> disk_names;
+
+		// check for the presence of specific directory objects
+		for each (auto &o in jl) {
+			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			disk_names = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			for (auto &dn : disk_names) {
+				detected = CheckDiskName(dn);
+				if (detected) break;
+			}
+
+			report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+	}
+
 	bool VEDetection::CheckRegKeyExists(const std::string &key_root, const std::string &key) const {
 		HKEY hRootKey = get_hkey(key_root);
 		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
@@ -565,6 +591,20 @@ namespace SandboxEvasion {
 			return false;
 
 		return StrStrIA(provider, name.c_str());
+	}
+
+	bool VEDetection::CheckDiskName(const std::string &name) const {
+		std::list<std::string> disks;
+
+		if (!get_drive_print_names(disks))
+			return false;
+
+		for (auto &d : disks) {
+			if (StrStrIA(d.c_str(), name.c_str()))
+				return true;
+		}
+
+		return false;
 	}
 
 	bool VEDetection::CheckWindowWindowName(const std::string &wname) const {

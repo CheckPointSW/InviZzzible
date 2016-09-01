@@ -16,6 +16,7 @@
 #include "nt.h"
 #include <iostream>
 
+
 #pragma comment(lib, "Shlwapi")
 #pragma comment(lib, "Iphlpapi")
 #pragma comment(lib, "ws2_32.lib")
@@ -24,6 +25,7 @@
 #pragma comment(lib, "Mstask.lib")
 #pragma comment(lib, "Dnsapi.lib")
 #pragma comment(lib, "Mpr.lib")
+#pragma comment(lib, "SetupAPI.lib")
 
 
 using std::cout;
@@ -1987,5 +1989,59 @@ bool perform_dns_request(const std::string &domain_name, std::list<IP4_ADDRESS> 
 
 	DnsRecordListFree(head_dns, DnsFreeRecordListDeep);
 
+	return true;
+}
+
+bool get_disk_friendly_name(HDEVINFO hDevs, DWORD i, std::list<std::string> &disk_names) {
+	BOOL status;
+	SP_DEVINFO_DATA deviceInfoData = {};
+	DWORD buff_size = 0;
+	unsigned char *friendly_name = NULL;
+
+	deviceInfoData.cbSize = sizeof(deviceInfoData);
+	status = SetupDiEnumDeviceInfo(hDevs, i, &deviceInfoData);
+
+	if (!status)
+		return false;
+
+	// calculate space needed for disk friendly name
+	status = SetupDiGetDeviceRegistryPropertyA(hDevs, &deviceInfoData, SPDRP_FRIENDLYNAME, NULL, friendly_name, buff_size, &buff_size);
+
+	if (!status && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+		return false;
+
+	// allocate space for disk friendly name
+	friendly_name = reinterpret_cast<unsigned char *>(calloc(buff_size, sizeof(unsigned char)));
+	if (!friendly_name)
+		return false;
+
+	if (!SetupDiGetDeviceRegistryPropertyA(hDevs, &deviceInfoData, SPDRP_FRIENDLYNAME, NULL, friendly_name, buff_size, &buff_size)) {
+		free(friendly_name);
+		return false;
+	}
+
+	disk_names.push_back(reinterpret_cast<char *>(friendly_name));
+
+	if (friendly_name) free(friendly_name);
+
+	return true;
+}
+
+bool get_drive_print_names(std::list<std::string> &disks) {
+	HDEVINFO hDevs;
+	DWORD i;
+
+	if ((hDevs = SetupDiGetClassDevsA((LPGUID)&GUID_DEVCLASS_DISKDRIVE, NULL, NULL, DIGCF_PRESENT)) == INVALID_HANDLE_VALUE)
+		return false;
+
+	// enumerate all disk devices
+	i = 0;
+	do {} while (get_disk_friendly_name(hDevs, i++, disks));
+
+	for (auto & d : disks) {
+		printf("%s\n", d.c_str());
+	}
+
+	SetupDiDestroyDeviceInfoList(hDevs);
 	return true;
 }

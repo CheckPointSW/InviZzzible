@@ -11,6 +11,8 @@
 #include <regex>
 #include <Iphlpapi.h>
 #include <WinDNS.h>
+#include <setupapi.h>
+#include <devguid.h>
 
 
 #define INVALID_PID_VALUE	0xFFFFFFFF
@@ -136,6 +138,8 @@ DWORD get_number_of_processors();
 bool get_web_time(const std::string &net_resource, FILETIME &rv);
 int64_t operator-(const FILETIME &endTime, const FILETIME &startTime);
 bool perform_dns_request(const std::string &domain_name, std::list<IP4_ADDRESS> &ips);
+bool get_disk_friendly_name(HDEVINFO hDevs, DWORD i, std::list<std::string> &disk_names);
+bool get_drive_print_names(std::list<std::string> &disks);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);
