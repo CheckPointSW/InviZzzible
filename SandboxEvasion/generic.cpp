@@ -129,13 +129,15 @@ bool Generic::CheckMouseActive() const {
 }
 
 bool Generic::CheckSleepDummyPatch() const {
-	DWORD tick_count;
+	DWORD tick_count_f, tick_count_s;
+	DWORD tick_count_diff;
 	const uint32_t delay_ms = 900; // timeout in milliseconds
 
-	tick_count = GetTickCount();
-	Sleep(delay_ms);
+	tick_count_f = GetTickCount();
+	SleepEx(delay_ms, FALSE);
+	tick_count_s = GetTickCount();
 
-	return (GetTickCount() - tick_count) < delay_ms;
+	return (tick_count_s - tick_count_f) < (delay_ms - 50);
 }
 
 bool Generic::CheckNumberOfProcessors() const {

@@ -38,15 +38,15 @@ bool Report::dump(const std::string &fname) const {
 }
 
 bool Report::add_entry(const std::vector<std::string> &columns) {
-	if (columns.size() != column_names.size() && columns.size() > 2)
+	if (columns.size() != column_names.size() && columns.size() > 3)
 		return false;
 
 	std::stringstream table_entry;
 
 	// FIXME: make entries instead of numbers
-	if (columns[2] == "1")
+	if (columns[3] == "1")
 		table_entry << "<tr class = \"danger\">";
-	else if (columns[2] == "0")
+	else if (columns[3] == "0")
 		table_entry << "<tr class = \"success\">";
 	else return false;
 

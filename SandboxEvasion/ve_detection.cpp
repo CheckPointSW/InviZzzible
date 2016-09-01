@@ -17,12 +17,14 @@ namespace SandboxEvasion {
 		std::string desc = j.get<std::string>(Config::cg2s[Config::ConfigGlobal::DESCRIPTION], "");
 		std::string wtd = j.get<std::string>(Config::cg2s[Config::ConfigGlobal::COUNTERMEASURES], "");
 		std::string dtype = j.get<std::string>(Config::cg2s[Config::ConfigGlobal::TYPE], "");
+		if (dtype == "")
+			dtype = Config::cgt2s[Config::ConfigGlobalType::CUSTOM];
 
 		ostream_debug << name  << "> " << desc << ": " << detected << std::endl;
 		
 		// add entry to report
 		if (p_report) {
-			p_report->add_entry({ name, desc, detected ? "1" : "0", wtd });
+			p_report->add_entry({ name, dtype, desc, detected ? "1" : "0", wtd });
 		}
 
 		return std::pair<std::string, std::string>(ostream_html.str(), ostream_debug.str());
