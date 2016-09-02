@@ -2038,10 +2038,6 @@ bool get_drive_print_names(std::list<std::string> &disks) {
 	i = 0;
 	do {} while (get_disk_friendly_name(hDevs, i++, disks));
 
-	for (auto & d : disks) {
-		printf("%s\n", d.c_str());
-	}
-
 	SetupDiDestroyDeviceInfoList(hDevs);
 	return true;
 }

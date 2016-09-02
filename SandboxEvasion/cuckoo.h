@@ -12,7 +12,7 @@ namespace SandboxEvasion {
 	enum class ProcessCheckHooksFunc { GET_MODULE_HANDLE_W, GET_PROC_ADDRESS, OPEN_EVENT_W, SET_EVENT, CLOSE_HANDLE, EXIT_PROCESS, READ_PROCESS_MEMORY, GET_CURRENT_PROCESS, ZW_DELAY_EXECUTION, ZW_CREATE_PROCESS, ZW_CREATE_THREAD, ZW_OPEN_THREAD, Count };
 	const uint32_t MAGIC_WHTL_PROC_ARGS = 0xBAADF00D;
 	const unsigned char I_magic[] = { 0x0F, 0x0B, 0x0F, 0x0B, 0xCC, 0xCC, 0xCC, 0xCC, 0x0F, 0x0B, 0x0F, 0x0B, 0xCC, 0xCC, 0xCC, 0xCC };
-	const uint32_t EXCEPTION_MAXCOUNT = 0x10000;
+	const uint32_t EXCEPTION_MAXCOUNT = 1024 + 50;
 	const wchar_t task_pipe_name[] = L"\\\\.\\pipe\\task_sched_se";
 	const uint32_t task_proc_wait_timeout = 2500;
 

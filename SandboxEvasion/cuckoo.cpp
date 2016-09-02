@@ -1188,7 +1188,7 @@ bool Cuckoo::CheckExceptionsNumberMaster() const {
 	CloseHandle(pi.hThread);
 	CloseHandle(pi.hProcess);
 
-	fprintf(stdout, "{+} Exceptions process exit code: 0x%x\n", ec);
+	// fprintf(stdout, "{+} Exceptions process exit code: 0x%x\n", ec);
 
 	// check if exit code is a specific one
 	return ec == SLAVE_EXIT_CODE_FAILED;
