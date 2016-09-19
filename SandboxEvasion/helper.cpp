@@ -2041,3 +2041,33 @@ bool get_drive_print_names(std::list<std::string> &disks) {
 	SetupDiDestroyDeviceInfoList(hDevs);
 	return true;
 }
+
+bool file_interface_save(const std::string &module, const std::string &name, bool detected) {
+	HANDLE hFile;
+	wchar_t file_path[MAX_PATH + 1] = {},
+		cur_dir[MAX_PATH + 1] = {};
+
+	if (!get_app_full_name(NULL, file_path, _countof(file_path), cur_dir, _countof(cur_dir)))
+		return false;
+
+	// as we have current directory, create now file name for the file
+	std::wstringstream file_name;
+	file_name << string_to_wstring(module) << L'_' << string_to_wstring(name) << L'_' << (detected ? L"detected" : L"notdetected");
+
+	// FIXME: delete this debug info
+	// std::wcout << file_name.str();
+
+	if (!PathCombineW(file_path, cur_dir, file_name.str().c_str()))
+		return false;
+
+	hFile = CreateFileW(file_path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+	CloseHandle(hFile);
+
+	return hFile != INVALID_HANDLE_VALUE;
+}
+
+std::wstring string_to_wstring(const std::string &s) {
+	std::wstring sw(s.length(), L' ');
+	std::copy(s.begin(), s.end(), sw.begin());
+	return sw;
+}

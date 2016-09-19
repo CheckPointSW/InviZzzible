@@ -160,11 +160,13 @@ int main(int argc, char **argv, char **env) {
 	args_t args;
 	const char verbose_mode[] = "--verbose";
 	const char action_mode[] = "--action";
+	const char file_mode[] = "--file";
 	std::string module_name("MAIN");
 	std::list<VEDetection*> detects;
 	std::list<json_tiny *> jsons;
 	json_tiny *pj;
 	bool action = false;
+	bool bfile = false;
 	char *chosen_action = NULL;
 	Report report;
 	Report *pReport;
@@ -199,6 +201,9 @@ int main(int argc, char **argv, char **env) {
 			}
 			else if (!strncmp(verbose_mode, argv[arg_no], strlen(verbose_mode))) {
 				enable_verbose_mode();
+			}
+			else if (!strncmp(file_mode, argv[arg_no], strlen(file_mode))) {
+				bfile = true;
 			}
 			else if (!strncmp(action_mode, argv[arg_no], strlen(action_mode)) && arg_no + 1 < argc) {
 				action = true;
@@ -235,6 +240,7 @@ int main(int argc, char **argv, char **env) {
 	for (auto &d : detects) {
 		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Starting checks..."));
 		d->AddReportModule(pReport);
+		d->SetFileInterfaceModule(bfile);
 		d->CheckAll();
 		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Checks finished\n") + std::string(60, '*') + std::string("\n"));
 	}

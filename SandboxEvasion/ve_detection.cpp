@@ -27,6 +27,17 @@ namespace SandboxEvasion {
 			p_report->add_entry({ name, dtype, desc, detected ? "1" : "0", wtd });
 		}
 
+		// if file interface is enabled, then use it
+		if (file_interface) {
+			// FIXME: delete log information
+			bool b = file_interface_save(module_name, name, detected);
+			/*
+			if (b)
+				std::cout << "File saved :)" << std::endl;
+			else std::cout << "File not saved :(" << std::endl;
+			*/
+		}
+
 		return std::pair<std::string, std::string>(ostream_html.str(), ostream_debug.str());
 	}
 
@@ -52,6 +63,10 @@ namespace SandboxEvasion {
 
 	void VEDetection::AddReportModule(Report *_report) {
 		p_report = _report;
+	}
+
+	void VEDetection::SetFileInterfaceModule(bool _fim) {
+		file_interface = _fim;
 	}
 
 	void VEDetection::CheckAllRegistry() const {

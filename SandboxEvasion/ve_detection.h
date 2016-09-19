@@ -9,18 +9,20 @@
 namespace SandboxEvasion {
 	class VEDetection {
 	public:
-		VEDetection(const json_tiny &j) : conf(j) {}
+		VEDetection(const json_tiny &j) : conf(j), p_report(NULL), file_interface(false) {}
 		virtual ~VEDetection() {};
 
 		void CheckAll();
 
 		std::string GetModuleName() const { return module_name; }
 		void AddReportModule(Report *_report);
+		void SetFileInterfaceModule(bool _fim);
 
 	protected:
 		json_tiny conf;
 		std::string module_name;
 		Report *p_report;
+		bool file_interface;
 
 		void CheckAllRegistry() const;
 		void CheckAllFilesExist() const;
