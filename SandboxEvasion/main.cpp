@@ -8,6 +8,7 @@
 #include <iostream>
 #include "ve_detection.h"
 #include <map>
+#include <sstream>
 #include "report.h"
 
 
@@ -39,82 +40,6 @@ static args_t k_args = {
 	{ "--vbox",		NULL }
 };
 
-void test() {
-	// Create a root
-	/*
-	pt::ptree root;
-	pt::ptree root2;
-
-	try {
-	// Load the json file in this ptree
-	pt::read_json("cuckoo.conf", root);
-	}
-	catch (const std::exception &e) {
-	return;
-	}
-
-	BOOST_FOREACH(pt::ptree::value_type &p, root) {
-		std::cout << p.first << std::endl;
-	}
-
-	// Read values
-	int height = root.get<int>("height", 0);
-
-	// emulate animals
-	// A vector to allow storing our animals
-	std::vector< std::pair<std::string, std::string> > animals;
-
-	// Iterator over all animals
-	for (pt::ptree::value_type &animal : root.get_child("animals"))
-	{
-	// Animal is a std::pair of a string and a child
-
-	// Get the label of the node
-	std::string name = animal.first;
-	// Get the content of the node
-	//std::string color = animal.second.data();
-	//animals.push_back(std::make_pair(name, color));
-
-	}
-
-	root2 = root.get_child("animals");
-
-	std::string r = root2.get<std::string>("rabbit.color");
-	int size = root2.get<int>("rabbit.size");
-
-	std::cout << size << std::endl;
-	std::cout << r << std::endl;
-
-	// You can also go through nested nodes
-	std::string msg = root.get<std::string>("some.complex.path", "asdfasdf");
-	*/
-}
-
-void test_report() {
-	Report report;
-
-	if (!report.load())
-		return;
-
-	report.add_entry({"Blabla", "XXX", "1", "YYY"});
-	report.add_entry({ "Blabla", "XXX", "0", "YYY" });
-	report.add_entry({ "Blabla", "XXX", "2", "YYY" });
-	report.add_entry({ "Blabla", "XXX", "1", "YYY" });
-
-	if (!report.flush("Cuckoo"))
-		return;
-
-	report.add_entry({ "asdf", "XXX", "3", "YYY" });
-	report.add_entry({ "Blasdgabla", "XXX", "0", "YYY" });
-	report.add_entry({ "asdg", "XXX", "2", "YYY" });
-	report.add_entry({ "Basdglabla", "XXX", "1", "YYY" });
-
-	if (!report.flush("VBOX"))
-		return;
-
-	report.dump("report_exec.html");
-}
-
 
 void perform_action(const char *action) {
 	Cuckoo cuckoo = Cuckoo(json_tiny());
@@ -137,12 +62,27 @@ void perform_action(const char *action) {
 		cuckoo.IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::SLAVE);
 	}
 	else if (!strncmp(action, "--tsh", 5)) {
-		/*
-		wsprintfW(fname, L"E:\\tmp\\tsh_%d", GetCurrentProcessId());
-		CreateFileW(fname, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-		*/
 		cuckoo.IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::SLAVE);
 	}
+}
+
+
+void apply_default_mode(std::list<VEDetection*> &detects, std::list<json_tiny *> &jsons) {
+	// as for now default mode executes only cuckoo checks
+	json_tiny *pj;
+
+	#include "code_cuckoo.conf"
+
+	std::stringstream ss;
+	ss << cuckoo_conf;
+
+	pj = json_tiny::load(ss);
+	if (pj) {
+		detects.push_back(k_fm[std::string("--cuckoo")](*pj));
+		jsons.push_back(pj);
+	}
+
+	// TODO: implement bootstrap generation
 }
 
 
@@ -173,14 +113,7 @@ int main(int argc, char **argv, char **env) {
 	char report_file[MAX_PATH] = {};
 	SYSTEMTIME st;
 
-	// test_report();
-
-	// test();
-
 	// TODO: do we need to disable FsRedirection when enumerating directory
-
-	if (argc < 2)
-		return 0;
 
 	TORS_ROUTINE ctors_r[] = { ctors_wsa, ctors_check_wow64, ctors_get_os_ver };
 	TORS_ROUTINE dtors_r[] = { dtors_wsa };
@@ -235,6 +168,10 @@ int main(int argc, char **argv, char **env) {
 			}
 		}
 	}
+
+	// in case if no class checks parametres were not specified, then use default execution mode
+	if (!detects.size())
+		apply_default_mode(detects, jsons);
 
 	// printf info
 	for (auto &d : detects) {

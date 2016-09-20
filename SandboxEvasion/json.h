@@ -5,6 +5,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
 #include <type_traits>
+#include <sstream>
 #include "helper.h"
 
 #include <iostream>
@@ -21,6 +22,7 @@ public:
 	virtual ~json_tiny() {}
 
 	static json_tiny* load(const char *pfn);
+	static json_tiny* load(std::stringstream &ss);
 	static bool dump(const json_tiny &, const char *pfn);
 
 	template <typename T>

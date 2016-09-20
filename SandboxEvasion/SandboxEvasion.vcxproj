@@ -85,6 +85,9 @@
     <PostBuildEvent>
       <Message>Build bundle that may be executed without arguments</Message>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>python gen_default_data.py def_data.conf</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="config.cpp" />
