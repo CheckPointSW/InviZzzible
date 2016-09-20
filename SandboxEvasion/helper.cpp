@@ -1139,7 +1139,7 @@ bool run_self_tsched_xp_down(const wchar_t *app_params, DWORD *ppid) {
 		// FIXME: remove Sleep
 		HRESULT phrStatus;
 		hres = pTask->GetStatus(&phrStatus);
-		fprintf(stdout, "{+} Task status: 0x%x\n", phrStatus);
+		// fprintf(stdout, "{+} Task status: 0x%x\n", phrStatus);
 
 		succ = true;
 
@@ -2060,10 +2060,18 @@ bool file_interface_save(const std::string &module, const std::string &name, boo
 	if (!PathCombineW(file_path, cur_dir, file_name.str().c_str()))
 		return false;
 
-	hFile = CreateFileW(file_path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+	hFile = CreateFileW(file_path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFile == INVALID_HANDLE_VALUE)
+		return false;
+
+	char file_buff[] = "c0de";
+	DWORD dwBytesWritten;
+	BOOL b = WriteFile(hFile, file_buff, strlen(file_buff), &dwBytesWritten, NULL);
+
 	CloseHandle(hFile);
 
-	return hFile != INVALID_HANDLE_VALUE;
+	return !!b;
 }
 
 std::wstring string_to_wstring(const std::string &s) {
