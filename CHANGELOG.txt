@@ -1,5 +1,6 @@
 September 20th, 2016:
 	[*] Main: default mode (without parameters) executes Cuckoo Sandbox environment checks
+	[*] Main: report is generated in case of configuration files absence during execution
 
 September 19th, 2016:
 	[+] VEDetection: File module is used now for user notification about detection technique result

@@ -7,16 +7,23 @@
 bool Report::load() {
 	// loading content of files
 	std::ifstream ifsb(bootstrap_f);
-	if (!ifsb.is_open())
-		return false;
-
-	bootstrap_content.assign((std::istreambuf_iterator<char>(ifsb)), (std::istreambuf_iterator<char>()));
+	if (!ifsb.is_open()) {
+		// load from the pre generated file
+		#include "data_bootstrap.css"
+		bootstrap_content = std::string(bootstrap_data);
+	}
+	else {
+		bootstrap_content.assign((std::istreambuf_iterator<char>(ifsb)), (std::istreambuf_iterator<char>()));
+	}
 
 	std::ifstream ifsr(report_f);
-	if (!ifsr.is_open())
-		return false;
-
-	report.assign((std::istreambuf_iterator<char>(ifsr)), (std::istreambuf_iterator<char>()));
+	if (!ifsr.is_open()) {
+		#include "data_report.html"
+		report = std::string(report_data);
+	}
+	else {
+		report.assign((std::istreambuf_iterator<char>(ifsr)), (std::istreambuf_iterator<char>()));
+	}
 
 	// find bootstrap expression
 	return string_replace_substring(report, bootstrap_s, bootstrap_content);

@@ -67,7 +67,7 @@ void perform_action(const char *action) {
 }
 
 
-void apply_default_mode(std::list<VEDetection*> &detects, std::list<json_tiny *> &jsons) {
+void apply_default_mode(std::list<VEDetection*> &detects, std::list<json_tiny *> &jsons, bool &bfile) {
 	// as for now default mode executes only cuckoo checks
 	json_tiny *pj;
 
@@ -82,7 +82,8 @@ void apply_default_mode(std::list<VEDetection*> &detects, std::list<json_tiny *>
 		jsons.push_back(pj);
 	}
 
-	// TODO: implement bootstrap generation
+	enable_verbose_mode();
+	bfile = true;
 }
 
 
@@ -113,7 +114,8 @@ int main(int argc, char **argv, char **env) {
 	char report_file[MAX_PATH] = {};
 	SYSTEMTIME st;
 
-	// TODO: do we need to disable FsRedirection when enumerating directory
+	// TODO: do we need to disable FsRedirection when enumerating directory?
+	// TODO: do we need placeholders for report and cuckoo default stuff?
 
 	TORS_ROUTINE ctors_r[] = { ctors_wsa, ctors_check_wow64, ctors_get_os_ver };
 	TORS_ROUTINE dtors_r[] = { dtors_wsa };
@@ -170,8 +172,9 @@ int main(int argc, char **argv, char **env) {
 	}
 
 	// in case if no class checks parametres were not specified, then use default execution mode
-	if (!detects.size())
-		apply_default_mode(detects, jsons);
+	if (!detects.size()) {
+		apply_default_mode(detects, jsons, bfile);
+	}
 
 	// printf info
 	for (auto &d : detects) {
@@ -182,7 +185,7 @@ int main(int argc, char **argv, char **env) {
 		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Checks finished\n") + std::string(60, '*') + std::string("\n"));
 	}
 
-	if (pReport) {
+	if (pReport && detects.size()) {
 		GetSystemTime(&st);
 		_snprintf_s(report_file, _countof(report_file), "SandboxEvasion_%.02u%.02u%.02u_%.02u%.02u%.02u.html", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 

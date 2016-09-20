@@ -10,6 +10,10 @@ PATH_REPORT = 'report'
 PATH_BOOTSTRAP = 'bootstrap'
 
 
+def make_hex_array(data):
+    return ','.join(['0x%02x' % ord(x) + ('\r\n' if (i + 1) % 16 == 0 else '') for i, x in enumerate(data)])
+
+
 def escape_file_data(data):
     data = data.replace("\\", "\\\\")
     data = data.replace("\"", "\\\"")
@@ -56,7 +60,7 @@ def create_includes(conf):
     # escape characters
     cuckoo_file = "static const char *cuckoo_conf = \"%s\";" % escape_file_data(cuckoo_d)
     report_file = "static const char *report_data = \"%s\";" % escape_file_data(report_d)
-    bootstrap_file = "static const char *bootstrap_data = \"%s\";" % escape_file_data(bootstrap_d)
+    bootstrap_file = "static const char bootstrap_data[] = {\r\n%s\r\n};" % make_hex_array(bootstrap_d)
 
     if not write_data("code_cuckoo.conf", cuckoo_file):
         return False
