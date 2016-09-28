@@ -1,5 +1,6 @@
 September 28th, 2016:
 	[*] Cuckoo: detection by configuration file technique reimplemented
+	[*] Cuckoo: delays accumulation detection technique reimplemented
 
 September 20th, 2016:
 	[*] Main: default mode (without parameters) executes Cuckoo Sandbox environment checks

@@ -190,16 +190,16 @@ void Cuckoo::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
-	ce_name = Config::cc2s[Config::ConfigCuckoo::INFINITE_DELAY];
+	ce_name = Config::cc2s[Config::ConfigCuckoo::DELAYS_ACCUMULATION];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
-		d = CheckInfiniteSleep();
+		d = CheckDelaysAccumulation();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
-	ce_name = Config::cc2s[Config::ConfigCuckoo::DELAYS_ACCUMULATION];
+	ce_name = Config::cc2s[Config::ConfigCuckoo::INFINITE_DELAY];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
-		d = CheckDelaysAccumulation();
+		d = CheckInfiniteSleep();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
@@ -817,13 +817,20 @@ DWORD Cuckoo::ThreadDelaysAccumulationMaster(LPVOID thread_params) {
 	ptpsi p_thread_param_si = static_cast<ptpsi>(thread_params);
 	HANDLE hEvent;
 	DWORD event_state;
-	SYSTEMTIME st_start, st_end;
+	// SYSTEMTIME st_start, st_end;
+	LARGE_INTEGER st_start, st_end;
 
 	if (!p_thread_param_si)
 		return FALSE;
 	
+	NTSTATUS(NTAPI *fnNtQuerySystemTime)(OUT PLARGE_INTEGER SystemTime) = (NTSTATUS(NTAPI *)(OUT PLARGE_INTEGER SystemTime))GetProcAddress(GetModuleHandleW(L"ntdll"), "NtQuerySystemTime");
+	if (!fnNtQuerySystemTime)
+		return FALSE;
+
 	// get current system time at the begining of a function
-	GetSystemTime(&st_start);
+	fnNtQuerySystemTime(&st_start);
+	// FIXME: should be deleted
+	// printf("Seconds passed: %llu\n", st_start.QuadPart / (10000 * 1000));
 
 	// barrier sync
 	InterlockedIncrement(&dwThreadMasterSlaveBarrier);
@@ -835,12 +842,14 @@ DWORD Cuckoo::ThreadDelaysAccumulationMaster(LPVOID thread_params) {
 	event_state = WaitForSingleObject(hEvent, 100); // FIXME: dwMilliseconds constant
 	if (event_state == WAIT_OBJECT_0) {
 		// sleep was definitely skipped, but let's check the current date
+		fnNtQuerySystemTime(&st_end);
 
-		GetSystemTime(&st_end);
-		ULARGE_INTEGER time_diff_ms = CompareDatetime(&st_end, &st_start);
+		// printf("Seconds passed: %llu\n", st_end.QuadPart / (10000 * 1000));
+		unsigned long long diff = (st_end.QuadPart - st_start.QuadPart) / (10000 * 1000);
+		// printf("Difference between two intervals: %llu\n", diff);
 
 		// FIXME: value should not be taken from ass :)
-		p_thread_param_si->detected = time_diff_ms.QuadPart > (2 * 24 * 60 * 60 * 1000);
+		p_thread_param_si->detected = diff > 2 * 24 * 60 * 60;
 
 		CloseHandle(hEvent);
 		return TRUE;
