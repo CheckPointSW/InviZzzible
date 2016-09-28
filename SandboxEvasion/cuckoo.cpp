@@ -435,7 +435,6 @@ bool Cuckoo::CheckFunctionHooks() const {
 
 bool Cuckoo::IsConfigurationPresent() const {
 	// TODO: do we need to create a thread here ???
-	DWORD pid = GetCurrentProcessId();
 
 	// my implementation
 	/*
@@ -445,35 +444,50 @@ bool Cuckoo::IsConfigurationPresent() const {
 		return false;
 	*/
 
+	wchar_t app_params[] = L"--action --cfg";
+	PROCESS_INFORMATION pi = {};
+	const size_t max_retries = 5;
+	const DWORD retry_delay = 500;
+
+	if (!run_self_susp(app_params, &pi))
+		return false;
+
 	// original cuckoo implementation (except of wchars usage)
 	wchar_t *temp_path = NULL;
 	if (!get_envvar_w(L"TEMP", &temp_path))
 		return false;
 
 	pfi _pfi = { NULL, false, NULL };
-	wchar_t filename[MAX_PATH + 1];
+	wchar_t old_filename[MAX_PATH + 1] = {};
+	wchar_t new_filename[MAX_PATH + 1] = {};
 
-	memset(filename, 0, sizeof(filename));
-	_snwprintf_s(filename, _countof(filename), _TRUNCATE, L"%d.ini", pid);
+	_snwprintf_s(old_filename, _countof(old_filename), _TRUNCATE, L"%d.ini", pi.dwProcessId);
+	_snwprintf_s(new_filename, _countof(new_filename), _TRUNCATE, L"cuckoo_%lu.ini", pi.dwProcessId);
 
-	// check for configuration file of cuckoomon
-	enumerate_directory_w(temp_path, 0, 0, NULL, &_pfi, { file_name_w_t(filename) });
+	size_t mri = 0;
+	while (mri++ < max_retries) {
+		// check for configuration file of cuckoomon
+		memset(&_pfi, 0, sizeof(_pfi));
+		enumerate_directory_w(temp_path, 0, 0, NULL, &_pfi, { file_name_w_t(old_filename) });
+		if (_pfi.matched)
+			break;
 
-	if (_pfi.matched) {
-		free(temp_path);
-		temp_path = NULL;
-		return true;
+		// check for configuration file of monitor
+		memset(&_pfi, 0, sizeof(_pfi));
+		enumerate_directory_w(L"C:\\", 0, 0, NULL, &_pfi, { file_name_w_t(new_filename) });
+		if (_pfi.matched)
+			break;
+
+		Sleep(retry_delay);
 	}
-
-	memset(&_pfi, 0, sizeof(_pfi));
-
-	memset(filename, 0, sizeof(filename));
-	_snwprintf_s(filename, _countof(filename), _TRUNCATE, L"cuckoo_%lu.ini", pid);
-
-	enumerate_directory_w(L"C:\\", 0, 0, NULL, &_pfi, { file_name_w_t(filename) });
 
 	free(temp_path);
 	temp_path = NULL;
+
+	// process termination and objects closing
+	TerminateProcess(pi.hProcess, 1);
+	CloseHandle(pi.hThread);
+	CloseHandle(pi.hProcess);
 
 	return _pfi.matched;
 }

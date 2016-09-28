@@ -55,6 +55,11 @@ void perform_action(const char *action) {
 		Sleep(1000);
 		ExitProcess(0);
 	}
+	else if (!strncmp(action, "--cfg", 5)) {
+		// just sleep for some time and then exit process
+		Sleep(2000);
+		ExitProcess(0);
+	}
 	else if (!strncmp(action, "--exc", 5)) {
 		cuckoo.CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::SLAVE);
 	}
