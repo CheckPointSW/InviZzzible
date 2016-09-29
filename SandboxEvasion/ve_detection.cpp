@@ -24,7 +24,7 @@ namespace SandboxEvasion {
 		
 		// add entry to report
 		if (p_report) {
-			p_report->add_entry({ name, dtype, desc, detected ? "1" : "0", wtd });
+			p_report->add_entry({ name, dtype, desc, detected ? "YES" : "NO", wtd });
 		}
 
 		// if file interface is enabled, then use it

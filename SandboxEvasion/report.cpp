@@ -51,9 +51,9 @@ bool Report::add_entry(const std::vector<std::string> &columns) {
 	std::stringstream table_entry;
 
 	// FIXME: make entries instead of numbers
-	if (columns[3] == "1")
+	if (columns[3] == "YES")
 		table_entry << "<tr class = \"danger\">";
-	else if (columns[3] == "0")
+	else if (columns[3] == "NO")
 		table_entry << "<tr class = \"success\">";
 	else return false;
 

@@ -86,6 +86,9 @@ void apply_default_mode(std::list<VEDetection*> &detects, std::list<json_tiny *>
 		detects.push_back(k_fm[std::string("--cuckoo")](*pj));
 		jsons.push_back(pj);
 	}
+	else {
+		log_message(LogMessageLevel::ERR, "MAIN", "Unable to load configuration for --cuckoo...");
+	}
 
 	enable_verbose_mode();
 	bfile = true;
@@ -172,6 +175,11 @@ int main(int argc, char **argv, char **env) {
 			if (pj) {
 				detects.push_back(k_fm[a.first](*pj));
 				jsons.push_back(pj);
+			}
+			else {
+				std::stringstream ss;
+				ss << "Unable to load configuration for " << a.first;
+				log_message(LogMessageLevel::ERR, "MAIN", ss.str());
 			}
 		}
 	}
