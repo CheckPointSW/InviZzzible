@@ -63,7 +63,7 @@ typedef std::list<network_endpoint_t> network_endpoints_t;
 
 typedef std::map<arg_t, arg_t> args_t;
 
-enum class LogMessageLevel { NO, DEBUG, INFO, WARNING, ERR, PANIC };
+enum class LogMessageLevel { NO, DBG, INFO, WARNING, ERR, PANIC };
 enum console_color_t { DEFAULT = 0, GREEN = FOREGROUND_GREEN, RED = FOREGROUND_RED, BLUE = FOREGROUND_BLUE };
 
 void enable_verbose_mode();

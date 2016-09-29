@@ -34,7 +34,7 @@ using std::endl;
 
 std::map<LogMessageLevel, std::string> log_msg_levels = {
 	{ LogMessageLevel::NO,		""			},
-	{ LogMessageLevel::DEBUG,	"DEBUG"		},
+	{ LogMessageLevel::DBG,		"DEBUG"		},
 	{ LogMessageLevel::INFO,	"INFO"		},
 	{ LogMessageLevel::WARNING, "WARNING"	},
 	{ LogMessageLevel::ERR,		"ERROR"		},
