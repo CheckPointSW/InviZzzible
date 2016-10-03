@@ -65,6 +65,7 @@ typedef std::map<arg_t, arg_t> args_t;
 
 enum class LogMessageLevel { NO, DBG, INFO, WARNING, ERR, PANIC };
 enum console_color_t { DEFAULT = 0, GREEN = FOREGROUND_GREEN, RED = FOREGROUND_RED, BLUE = FOREGROUND_BLUE };
+enum class ProcessWorkingMode { MASTER, SLAVE };
 
 void enable_verbose_mode();
 void log_message(LogMessageLevel msg_l, const std::string & module, const std::string &msg, console_color_t cc=DEFAULT);

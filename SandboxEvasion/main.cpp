@@ -48,7 +48,7 @@ void perform_action(const char *action) {
 	 * Cuckoo actions
 	 */
 	if (!strncmp(action, "--pid", 5)) {
-		cuckoo.IsPidReusedNotTracked(SandboxEvasion::ProcessWorkingMode::SLAVE);
+		cuckoo.IsPidReusedNotTracked(ProcessWorkingMode::SLAVE);
 	}
 	else if (!strncmp(action, "--evt", 5)) {
 		// just sleep for some time and then exit process
@@ -61,13 +61,21 @@ void perform_action(const char *action) {
 		ExitProcess(0);
 	}
 	else if (!strncmp(action, "--exc", 5)) {
-		cuckoo.CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::SLAVE);
+		cuckoo.CheckExceptionsNumber(ProcessWorkingMode::SLAVE);
 	}
 	else if (!strncmp(action, "--wmi", 5)) {
-		cuckoo.IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::SLAVE);
+		cuckoo.IsWMINotTracked(ProcessWorkingMode::SLAVE);
 	}
 	else if (!strncmp(action, "--tsh", 5)) {
-		cuckoo.IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::SLAVE);
+		cuckoo.IsTaskSchedNotTracked(ProcessWorkingMode::SLAVE);
+	}
+	/*
+	 * Generic actions
+	 */
+	else if (!strncmp(action, "--dtt", 5)) {
+		Generic gen = Generic(json_tiny());
+		bool d = gen.CheckTimeTampering(ProcessWorkingMode::SLAVE);
+		ExitProcess(d);
 	}
 }
 

@@ -45,8 +45,7 @@ namespace Config {
 		{ ConfigCuckoo::WMI_PROCESS, "WMIProcess" },
 		{ ConfigCuckoo::TASK_SCHED_PROCESS, "TaskSchedulerProcess" },
 		{ ConfigCuckoo::PID_REUSE, "PidReuse" },
-		{ ConfigCuckoo::AGENT_LISTENER, "AgentListener" },
-		{ ConfigCuckoo::TIME_TAMPERING, "TimeTampering" }
+		{ ConfigCuckoo::AGENT_LISTENER, "AgentListener" }
 	};
 
 	std::map<ConfigArgs, std::string> ca2s = {
@@ -93,7 +92,8 @@ namespace Config {
 		{ ConfigGeneric::SYSTEM_UPTIME, "SystemUptime" },
 		{ ConfigGeneric::SLEEP_DUMMY, "SleepDummyPatch" },
 		{ ConfigGeneric::PROCESSORS_COUNT, "ProcessorsCount" },
-		{ ConfigGeneric::DNS_RESPONSE, "DnsResponse" }
+		{ ConfigGeneric::DNS_RESPONSE, "DnsResponse" },
+		{ ConfigGeneric::TIME_TAMPERING, "TimeTampering" }
 	};
 
 } // Config

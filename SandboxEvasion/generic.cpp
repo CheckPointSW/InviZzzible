@@ -66,6 +66,13 @@ void Generic::CheckAllCustom() {
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
+
+	ce_name = Config::cgen2s[Config::ConfigGeneric::TIME_TAMPERING];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckTimeTampering(ProcessWorkingMode::MASTER);
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
 }
 
 bool Generic::CheckSystemUptime() const {
@@ -186,6 +193,87 @@ bool Generic::CheckDNSResponse() const {
 	}
 
 	return sandbox_detected;
+}
+
+bool Generic::CheckTimeTampering(ProcessWorkingMode wm) const {
+	switch (wm) {
+	case ProcessWorkingMode::MASTER:
+		return CheckTimeTamperingMaster();
+	case ProcessWorkingMode::SLAVE:
+		return CheckTimeTamperingSlave();
+	default:
+		return false;
+	}
+}
+
+
+bool Generic::CheckTimeTamperingMaster() const {
+	wchar_t app_params[] = L"--action --dtt";
+	PROCESS_INFORMATION pi = {};
+
+	if (!run_self_susp(app_params, &pi))
+		return false;
+
+	// resume thread
+	ResumeThread(pi.hThread);
+
+	// wait process for finish
+	DWORD ec;
+	do {
+		if (!GetExitCodeProcess(pi.hProcess, &ec)) {
+			TerminateProcess(pi.hProcess, 0xFF);
+			CloseHandle(pi.hThread);
+			CloseHandle(pi.hProcess);
+			return false;
+		}
+		Sleep(100);
+	} while (ec == STILL_ACTIVE);
+
+	CloseHandle(pi.hThread);
+	CloseHandle(pi.hProcess);
+
+	return !!ec;
+}
+
+
+bool Generic::CheckTimeTamperingSlave() const {
+	const int delta = 5 * 1000; // 5 sec
+	const int64_t k100NStoMSecs = 10000ll;
+	bool sandboxDetected = false;
+	const std::string host("google.com");	// FIXME: should be configurable?
+
+	FILETIME ftLocalStart, ftLocalEnd, ftWebStart, ftWebEnd;
+
+	GetSystemTimeAsFileTime(&ftLocalStart);
+	if (!get_web_time(host, ftWebStart))
+		return false;
+
+	int64_t totalMSec = 0;
+	for (int i = 0; i < 10; ++i) {
+		const int sleepSec = 1 + (rand() % 10);
+		totalMSec += sleepSec * 1000;
+		SleepEx(sleepSec * 1000, FALSE);
+	}
+
+	GetSystemTimeAsFileTime(&ftLocalEnd);
+	if (!get_web_time(host, ftWebEnd))
+		return false;
+
+	// PC's clock validation
+	const int64_t localTimeDiff = std::abs(ftLocalEnd - ftLocalStart) / k100NStoMSecs;
+	const int64_t webTimeDiff = std::abs(ftWebEnd - ftWebStart) / k100NStoMSecs;
+
+	if (std::abs(localTimeDiff - webTimeDiff) > delta)
+		sandboxDetected = true;
+
+	// second check for proper sleep delay
+	if (!sandboxDetected) {
+		if (localTimeDiff < totalMSec)
+			sandboxDetected = true;
+		if (webTimeDiff < totalMSec)
+			sandboxDetected = true;
+	}
+	return sandboxDetected;
 }
 
 } // SandboxEvasion

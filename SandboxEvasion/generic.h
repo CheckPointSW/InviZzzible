@@ -3,6 +3,7 @@
 
 #include "ve_detection.h"
 #include "json.h"
+#include "helper.h"
 
 namespace SandboxEvasion {
 
@@ -18,6 +19,8 @@ public:
 	// overriden
 	virtual void CheckAllCustom();
 
+	bool CheckTimeTampering(ProcessWorkingMode wm) const;
+
 protected:
 	bool CheckSystemUptime() const;
 	bool CheckRAM() const;
@@ -27,6 +30,8 @@ protected:
 	bool CheckSleepDummyPatch() const;
 	bool CheckNumberOfProcessors() const;
 	bool CheckDNSResponse() const;
+	bool CheckTimeTamperingMaster() const;
+	bool CheckTimeTamperingSlave() const;
 };
 
 } // SandboxEvasion

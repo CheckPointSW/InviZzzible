@@ -204,13 +204,6 @@ void Cuckoo::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
-	ce_name = Config::cc2s[Config::ConfigCuckoo::TIME_TAMPERING];
-	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
-		d = CheckTimeTampering();
-		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
-	}
-
 	ce_name = Config::cc2s[Config::ConfigCuckoo::FUNCTION_HOOKS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckFunctionHooks();
@@ -248,28 +241,28 @@ void Cuckoo::CheckAllCustom() {
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::RAISED_EXCEPTIONS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
-		d = CheckExceptionsNumber(SandboxEvasion::ProcessWorkingMode::MASTER);
+		d = CheckExceptionsNumber(ProcessWorkingMode::MASTER);
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::WMI_PROCESS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
-		d = IsWMINotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
+		d = IsWMINotTracked(ProcessWorkingMode::MASTER);
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::TASK_SCHED_PROCESS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
-		d = IsTaskSchedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
+		d = IsTaskSchedNotTracked(ProcessWorkingMode::MASTER);
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
 	ce_name = Config::cc2s[Config::ConfigCuckoo::PID_REUSE];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
-		d = IsPidReusedNotTracked(SandboxEvasion::ProcessWorkingMode::MASTER);
+		d = IsPidReusedNotTracked(ProcessWorkingMode::MASTER);
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
@@ -517,9 +510,9 @@ bool Cuckoo::CheckAgentArtifacts() const {
 
 bool Cuckoo::IsPidReusedNotTracked(ProcessWorkingMode wm) const {
 	switch (wm) {
-	case SandboxEvasion::ProcessWorkingMode::MASTER:
+	case ProcessWorkingMode::MASTER:
 		return IsPidReusedNotTrackedMaster();
-	case SandboxEvasion::ProcessWorkingMode::SLAVE:
+	case ProcessWorkingMode::SLAVE:
 		return IsPidReusedNotTrackedSlave();
 	default:
 		return false;
@@ -529,9 +522,9 @@ bool Cuckoo::IsPidReusedNotTracked(ProcessWorkingMode wm) const {
 
 bool Cuckoo::IsWMINotTracked(ProcessWorkingMode wm) const {
 	switch (wm) {
-	case SandboxEvasion::ProcessWorkingMode::MASTER:
+	case ProcessWorkingMode::MASTER:
 		return IsWMINotTrackedMaster();
-	case SandboxEvasion::ProcessWorkingMode::SLAVE:
+	case ProcessWorkingMode::SLAVE:
 		return IsWMINotTrackedSlave();
 	default:
 		return false;
@@ -541,9 +534,9 @@ bool Cuckoo::IsWMINotTracked(ProcessWorkingMode wm) const {
 
 bool Cuckoo::IsTaskSchedNotTracked(ProcessWorkingMode wm) const {
 	switch (wm) {
-	case SandboxEvasion::ProcessWorkingMode::MASTER:
+	case ProcessWorkingMode::MASTER:
 		return IsTaskSchedNotTrackedMaster();
-	case SandboxEvasion::ProcessWorkingMode::SLAVE:
+	case ProcessWorkingMode::SLAVE:
 		return IsTaskSchedNotTrackedSlave();
 	default:
 		return false;
@@ -704,53 +697,13 @@ bool Cuckoo::IsWhitelistedNotTracked() const {
 
 bool Cuckoo::CheckExceptionsNumber(ProcessWorkingMode wm) const {
 	switch (wm) {
-	case SandboxEvasion::ProcessWorkingMode::MASTER:
+	case ProcessWorkingMode::MASTER:
 		return CheckExceptionsNumberMaster();
-	case SandboxEvasion::ProcessWorkingMode::SLAVE:
+	case ProcessWorkingMode::SLAVE:
 		return CheckExceptionsNumberSlave();
 	default:
 		return false;
 	}
-}
-
-bool Cuckoo::CheckTimeTampering() const {
-	const int delta = 5 * 1000; // 5 sec
-	const int64_t k100NStoMSecs = 10000ll;
-	bool sandboxDetected = false;
-	const std::string host("google.com");	// FIXME: should be configurable?
-
-	FILETIME ftLocalStart, ftLocalEnd, ftWebStart, ftWebEnd;
-
-	GetSystemTimeAsFileTime(&ftLocalStart);
-	if (!get_web_time(host, ftWebStart))
-		return false;
-
-	int64_t totalMSec = 0;
-	for (int i = 0; i < 10; ++i) {
-		const int sleepSec = 1 + (rand() % 10);
-		totalMSec += sleepSec * 1000;
-		SleepEx(sleepSec * 1000, FALSE);
-	}
-
-	GetSystemTimeAsFileTime(&ftLocalEnd);
-	if (!get_web_time(host, ftWebEnd))
-		return false;
-
-	// PC's clock validation
-	const int64_t localTimeDiff = std::abs(ftLocalEnd - ftLocalStart) / k100NStoMSecs;
-	const int64_t webTimeDiff = std::abs(ftWebEnd - ftWebStart) / k100NStoMSecs;
-
-	if (std::abs(localTimeDiff - webTimeDiff) > delta)
-		sandboxDetected = true;
-
-	// second check for proper sleep delay
-	if (!sandboxDetected) {
-		if (localTimeDiff < totalMSec)
-			sandboxDetected = true;
-		if (webTimeDiff < totalMSec)
-			sandboxDetected = true;
-	}
-	return sandboxDetected;
 }
 
 

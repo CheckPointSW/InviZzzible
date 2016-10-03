@@ -4,24 +4,25 @@
 #include "ve_detection.h"
 
 namespace SandboxEvasion {
-	class VMWare : VEDetection {
-	public:
-		VMWare(const json_tiny &j) :
-			VEDetection(j) {
-			module_name = std::string("VMWARE");
-		}
-		virtual ~VMWare() {}
 
-		static VEDetection* create_instance(const json_tiny &j);
+class VMWare : VEDetection {
+public:
+	VMWare(const json_tiny &j) :
+		VEDetection(j) {
+		module_name = std::string("VMWARE");
+	}
+	virtual ~VMWare() {}
 
-		// overriden
-		virtual void CheckAllCustom();
+	static VEDetection* create_instance(const json_tiny &j);
 
-		// custom methods
-		bool CheckHypervisorPort() const;
-		bool CheckNDISFile() const;
-		bool IsHypervisor() const;
-	};
+	// overriden
+	virtual void CheckAllCustom();
+
+	// custom methods
+	bool CheckHypervisorPort() const;
+	bool CheckNDISFile() const;
+	bool IsHypervisor() const;
+};
 
 } // SandboxEvasion
 
