@@ -1,4 +1,6 @@
-Contributed By Check Point Software Technologies LTD.
+Contributed By Check Point Software Technologies LTD.<br />
+Programmed by Stanislav Skuratovich.<br />
+Presented at Virus Bulletin 2016 by Alexander Chailytko and Stanislav Skuratovich.
 
 Overview
 ========
