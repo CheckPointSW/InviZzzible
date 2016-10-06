@@ -20,3 +20,10 @@ Features
 * As Cuckoo Sandbox is the most prevalent tool used for automated malware analysis, we include the detections of it as well.
 *	Ability to introduce new detection techniques not through modifying the source code, but using the JSON configuration files, so the whole community can contribute towards the development of that tool.
 * User-friendly reports about the checked environment that can be shared within the organization among the purely technical guys as well as higher management.
+
+Credits
+=======
+
+* Aliaksandr Trafimchuk
+* VMDE project
+* Pafish project
