@@ -5,7 +5,7 @@ Presented at Virus Bulletin 2016 by Alexander Chailytko and Stanislav Skuratovic
 Overview
 ========
 
-Sandbox detection tool is a tool for assessment of your virtual environments in an easy an reliable way. It contains the most recent and up to date detection and evasion techniques as well as fixes for them. Also, you can add and expand existing techniques yourself even without modifing the source code.
+Sandbox detection tool is a tool for assessment of your virtual environments in an easy an reliable way. It contains the most recent and up to date detection and evasion techniques as well as fixes for them. Also, you can add and expand existing techniques yourself even without modifying the source code.
 
 Slides from Virus Bulletin 2016 Conference: https://github.com/CheckPointSW/VB2016-sandbox-evasion/blob/master/conferences/Skuratovich_Chailytko-vb-2016-defating-sandbox-evasion.pdf
 
