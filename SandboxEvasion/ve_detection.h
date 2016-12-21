@@ -17,12 +17,14 @@ public:
 	std::string GetModuleName() const { return module_name; }
 	void AddReportModule(Report *_report);
 	void SetFileInterfaceModule(bool _fim);
+	void SetDNSInterfaceModule(bool _dns);
 
 protected:
 	json_tiny conf;
 	std::string module_name;
 	Report *p_report;
 	bool file_interface;
+	bool dns_interface;
 
 	void CheckAllRegistry() const;
 	void CheckAllFilesExist() const;

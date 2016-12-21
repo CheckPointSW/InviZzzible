@@ -142,7 +142,9 @@ bool perform_dns_request(const std::string &domain_name, std::list<IP4_ADDRESS> 
 bool get_disk_friendly_name(HDEVINFO hDevs, DWORD i, std::list<std::string> &disk_names);
 bool get_drive_print_names(std::list<std::string> &disks);
 bool file_interface_save(const std::string &module, const std::string &name, bool detected);
+bool dns_interface_save(const std::string &module, const std::string &name, bool detected);
 std::wstring string_to_wstring(const std::string &s);
+std::string remove_whitespaces(const std::string &s);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);

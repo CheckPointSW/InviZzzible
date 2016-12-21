@@ -2074,8 +2074,32 @@ bool file_interface_save(const std::string &module, const std::string &name, boo
 	return !!b;
 }
 
+bool dns_interface_save(const std::string &module, const std::string &name, bool detected) {
+	std::stringstream dnsn;
+	dnsn << module << '.' << name << '.' << (detected ? "detected" : "notdetected");
+
+	std::string domain_name = remove_whitespaces(dnsn.str());
+
+	PDNS_RECORD dns_records;
+
+	DnsQuery_A(domain_name.c_str(), DNS_TYPE_A, DNS_QUERY_BYPASS_CACHE, NULL, &dns_records, NULL);
+
+	return true;
+}
+
 std::wstring string_to_wstring(const std::string &s) {
 	std::wstring sw(s.length(), L' ');
 	std::copy(s.begin(), s.end(), sw.begin());
+	return sw;
+}
+
+std::string remove_whitespaces(const std::string &s) {
+	std::string sw;
+	sw.reserve(sw.size());
+
+	for (size_t i = 0; i < s.length(); ++i)
+		if (s[i] != ' ' && s[i] != '\t' && s[i] != '\n' && s[i] != '\r')
+			sw += s[i];
+
 	return sw;
 }

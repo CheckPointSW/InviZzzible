@@ -1,3 +1,6 @@
+October 25th, 2016:
+	[+] VEDetection: DNS module is used now for user notification about detection technique result
+
 September 29th, 2016:
 	[+] Config: detection/evasion techniques description added
 

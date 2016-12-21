@@ -80,7 +80,7 @@ void perform_action(const char *action) {
 }
 
 
-void apply_default_mode(std::list<VEDetection*> &detects, std::list<json_tiny *> &jsons, bool &bfile) {
+void apply_default_mode(std::list<VEDetection*> &detects, std::list<json_tiny *> &jsons, bool &bfile, bool &bdns) {
 	// as for now default mode executes only cuckoo checks
 	json_tiny *pj;
 
@@ -100,6 +100,7 @@ void apply_default_mode(std::list<VEDetection*> &detects, std::list<json_tiny *>
 
 	enable_verbose_mode();
 	bfile = true;
+	bdns = true;
 }
 
 
@@ -119,12 +120,14 @@ int main(int argc, char **argv, char **env) {
 	const char action_mode[] = "--action";
 	const char file_mode[] = "--file";
 	std::string module_name("MAIN");
+	const char dns_mode[] = "--dns";
 	std::list<VEDetection*> detects;
 	std::list<json_tiny *> jsons;
 	json_tiny *pj;
 	bool action = false;
 	bool bfile = false;
 	char *chosen_action = NULL;
+	bool bdns = false;
 	Report report;
 	Report *pReport;
 	char report_file[MAX_PATH] = {};
@@ -155,6 +158,9 @@ int main(int argc, char **argv, char **env) {
 			}
 			else if (!strncmp(file_mode, argv[arg_no], strlen(file_mode))) {
 				bfile = true;
+			}
+			else if (!strncmp(dns_mode, argv[arg_no], strlen(dns_mode))) {
+				bdns = true;
 			}
 			else if (!strncmp(action_mode, argv[arg_no], strlen(action_mode)) && arg_no + 1 < argc) {
 				action = true;
@@ -194,7 +200,7 @@ int main(int argc, char **argv, char **env) {
 
 	// in case if no class checks parametres were not specified, then use default execution mode
 	if (!detects.size()) {
-		apply_default_mode(detects, jsons, bfile);
+		apply_default_mode(detects, jsons, bfile, bdns);
 	}
 
 	// printf info
@@ -203,6 +209,7 @@ int main(int argc, char **argv, char **env) {
 		d->AddReportModule(pReport);
 		d->SetFileInterfaceModule(bfile);
 		d->CheckAll();
+		d->SetDNSInterfaceModule(bdns);
 		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Checks finished\n") + std::string(60, '*') + std::string("\n"));
 	}
 

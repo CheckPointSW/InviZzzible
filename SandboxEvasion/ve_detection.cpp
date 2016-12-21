@@ -29,13 +29,11 @@ namespace SandboxEvasion {
 
 		// if file interface is enabled, then use it
 		if (file_interface) {
-			// FIXME: delete log information
 			bool b = file_interface_save(module_name, name, detected);
-			/*
-			if (b)
-				std::cout << "File saved :)" << std::endl;
-			else std::cout << "File not saved :(" << std::endl;
-			*/
+
+			if (dns_interface) {
+				bool b = dns_interface_save(module_name, name, detected);
+			}
 		}
 
 		return std::pair<std::string, std::string>(ostream_html.str(), ostream_debug.str());
@@ -67,6 +65,10 @@ namespace SandboxEvasion {
 
 	void VEDetection::SetFileInterfaceModule(bool _fim) {
 		file_interface = _fim;
+	}
+
+	void VEDetection::SetDNSInterfaceModule(bool _dns) {
+		dns_interface = _dns;
 	}
 
 	void VEDetection::CheckAllRegistry() const {
