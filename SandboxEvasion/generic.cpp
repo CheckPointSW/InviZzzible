@@ -25,6 +25,13 @@ void Generic::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
+	ce_name = Config::cgen2s[Config::ConfigGeneric::DEVICE_NPF_NDIS];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckNDISFile();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cgen2s[Config::ConfigGeneric::MOUSE_ACTIVE];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckMouseActive();
@@ -122,6 +129,21 @@ bool Generic::CheckDriveSize() const {
 		return (drive_size.QuadPart / (1024 * 1024 * 1024)) < min_disk_size_gb;
 
 	return false;
+}
+
+bool Generic::CheckNDISFile() const {
+	HANDLE hFile;
+	const wchar_t ndis_wan_ip_fname[] = L"\\\\.\\NPF_NdisWanIp";
+	DWORD err;
+
+	hFile = CreateFileW(ndis_wan_ip_fname, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile == INVALID_HANDLE_VALUE) {
+		err = GetLastError();
+		return err != ERROR_PATH_NOT_FOUND && err != ERROR_FILE_NOT_FOUND;
+	}
+	CloseHandle(hFile);
+
+	return true;
 }
 
 bool Generic::CheckMouseActive() const {

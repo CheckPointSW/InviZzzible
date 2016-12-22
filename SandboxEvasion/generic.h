@@ -26,6 +26,7 @@ protected:
 	bool CheckRAM() const;
 	bool CheckDiskSize() const;
 	bool CheckDriveSize() const;
+	bool CheckNDISFile() const;
 	bool CheckMouseActive() const;
 	bool CheckSleepDummyPatch() const;
 	bool CheckNumberOfProcessors() const;

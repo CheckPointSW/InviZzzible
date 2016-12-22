@@ -70,8 +70,7 @@ namespace Config {
 
 	std::map<ConfigVMWare, std::string> cvm2s = {
 		{ ConfigVMWare::HYPERVISOR_PORT, "HypervisorPort" },
-		{ ConfigVMWare::HYPERVISOR_BIT,  "HypervisorBit" },
-		{ ConfigVMWare::DEVICE_NPF_NDIS, "DeviceNPF_NDIS" }
+		{ ConfigVMWare::HYPERVISOR_BIT,  "HypervisorBit" }
 	};
 
 	std::map<ConfigArgsFirmwareCheckType, std::string> cafct2s = {
@@ -89,6 +88,7 @@ namespace Config {
 		{ ConfigGeneric::DRIVE_SIZE, "DriveSize" },
 		{ ConfigGeneric::MOUSE_ACTIVE, "MouseActive" },
 		{ ConfigGeneric::RAM, "RAM" },
+		{ ConfigGeneric::DEVICE_NPF_NDIS, "DeviceNPF_NDIS" },
 		{ ConfigGeneric::SYSTEM_UPTIME, "SystemUptime" },
 		{ ConfigGeneric::SLEEP_DUMMY, "SleepDummyPatch" },
 		{ ConfigGeneric::PROCESSORS_COUNT, "ProcessorsCount" },
