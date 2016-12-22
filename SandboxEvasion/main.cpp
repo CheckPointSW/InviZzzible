@@ -208,8 +208,8 @@ int main(int argc, char **argv, char **env) {
 		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Starting checks..."));
 		d->AddReportModule(pReport);
 		d->SetFileInterfaceModule(bfile);
-		d->CheckAll();
 		d->SetDNSInterfaceModule(bdns);
+		d->CheckAll();
 		log_message(LogMessageLevel::INFO, d->GetModuleName(), std::string("Checks finished\n") + std::string(60, '*') + std::string("\n"));
 	}
 
