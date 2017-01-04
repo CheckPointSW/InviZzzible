@@ -1,6 +1,12 @@
+# Sandbox Detection & Evasion Tool
+
 Contributed By Check Point Software Technologies LTD.<br />
 Programmed by Stanislav Skuratovich.<br />
 Presented at Virus Bulletin 2016 by Alexander Chailytko and Stanislav Skuratovich.
+
+<p align="center">
+  <img src="https://github.com/CheckPointSW/VB2016-sandbox-evasion/blob/master/logo.png" width="150"/>
+</p>
 
 Overview
 ========
