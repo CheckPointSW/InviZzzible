@@ -65,6 +65,8 @@ typedef std::list<network_endpoint_t> network_endpoints_t;
 
 typedef std::map<arg_t, arg_t> args_t;
 
+typedef std::pair<DWORD, DWORD> cp_pids;
+
 enum class LogMessageLevel { NO, DBG, INFO, WARNING, ERR, PANIC };
 enum console_color_t { DEFAULT = 0, GREEN = FOREGROUND_GREEN, RED = FOREGROUND_RED, BLUE = FOREGROUND_BLUE };
 enum class ProcessWorkingMode { MASTER, SLAVE };
@@ -151,6 +153,8 @@ std::string remove_whitespaces(const std::string &s);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);
+
+bool get_parent_child_proc_pair(std::list<cp_pids> &pc_proc, const std::list<std::string> &proc_names);
 
 EvasionMachineMode get_evasion_status(bool parent_hooked, bool child_hooked);
 

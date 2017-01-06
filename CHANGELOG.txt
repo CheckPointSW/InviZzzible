@@ -1,4 +1,5 @@
 January 6th, 2017:
+	[+] Cuckoo: Dead Analyzer evasion technique implemented
 	[+] Cuckoo: differentiation between real and sandbox machines implemented while performing evasions (function hooks are used). If hooks are fixed. then another method should be used.
 
 October 25th, 2016:

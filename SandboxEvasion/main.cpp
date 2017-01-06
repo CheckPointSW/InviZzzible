@@ -69,6 +69,9 @@ void perform_action(const char *action) {
 	else if (!strncmp(action, "--tsh", 5)) {
 		cuckoo.IsTaskSchedNotTracked(ProcessWorkingMode::SLAVE);
 	}
+	else if (!strncmp(action, "--dan", 5)) {
+		cuckoo.IsAnalyzerDeadNotTracked(ProcessWorkingMode::SLAVE);
+	}
 	/*
 	 * Generic actions
 	 */

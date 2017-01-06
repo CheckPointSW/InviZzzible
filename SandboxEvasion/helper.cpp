@@ -15,6 +15,7 @@
 #include <WinInet.h>
 #include "nt.h"
 #include <iostream>
+#include <unordered_map>
 
 
 #pragma comment(lib, "Shlwapi")
@@ -1235,6 +1236,57 @@ bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD
 	memcpy(buffer_write, &pid, sizeof(buffer_write));
 
 	return !!CallNamedPipeW(pipe_name, buffer_write, sizeof(buffer_write), &buffer_read, sizeof(buffer_read), &dwRead, NMPWAIT_USE_DEFAULT_WAIT);
+}
+
+
+bool get_parent_child_proc_pair(std::list<cp_pids> &pc_proc, const std::list<std::string> &proc_names) {
+	PROCESSENTRY32 entry;
+	bool ok = true;
+	std::unordered_map<DWORD, DWORD> cp_pids_m;
+	std::unordered_map<DWORD, DWORD>::const_iterator ci;
+	DWORD pid;
+	DWORD ppid, cpid;
+
+	entry.dwSize = sizeof(PROCESSENTRY32);
+
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+	if (Process32First(snapshot, &entry) == FALSE) {
+		ok = false;
+		goto clean;
+	}
+
+	while (Process32Next(snapshot, &entry) == TRUE) {
+		pid = entry.th32ProcessID;
+
+		// check if parent value is already present in our list value 
+		ci = std::find_if(cp_pids_m.begin(), cp_pids_m.end(), [&pid](const cp_pids& vt) { return vt.second == pid; });
+
+		// parent process is absent in parents
+		if (ci == cp_pids_m.end()) {
+			ci = cp_pids_m.find(entry.th32ParentProcessID);
+			ppid = entry.th32ParentProcessID;
+			cpid = entry.th32ProcessID;
+		}
+		else {
+			ppid = ci->second;
+			cpid = ci->first;
+		}
+
+		for (const auto &pn : proc_names) {
+			if (strstr(entry.szExeFile, pn.c_str())) {
+				// add parent to map
+				cp_pids_m[entry.th32ProcessID] = entry.th32ParentProcessID;
+				if (ci != cp_pids_m.end())
+					pc_proc.push_back(cp_pids(ppid, cpid));
+				break;
+			}
+		}
+	}
+
+clean:
+	CloseHandle(snapshot);
+	return ok;
 }
 
 

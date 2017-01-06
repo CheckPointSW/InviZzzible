@@ -273,6 +273,13 @@ void Cuckoo::CheckAllCustom() {
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
+
+	ce_name = Config::cc2s[Config::ConfigCuckoo::DEAD_ANALYZER];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsAnalyzerDeadNotTracked(ProcessWorkingMode::MASTER);
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
 }
 
 /*
@@ -699,6 +706,18 @@ bool Cuckoo::IsWhitelistedNotTracked() const {
 	return es == EvasionMachineMode::SANDBOX_EVADED;
 }
 
+// ATTENTION: Should be called as last method withon Cuckoo Environment test, because ruins all environment
+bool Cuckoo::IsAnalyzerDeadNotTracked(ProcessWorkingMode wm) const {
+	switch (wm) {
+	case ProcessWorkingMode::MASTER:
+		return IsAnalyzerDeadNotTrackedMaster();
+	case ProcessWorkingMode::SLAVE:
+		return IsAnalyzerDeadNotTrackedSlave();
+	default:
+		return false;
+	}
+}
+
 
 bool Cuckoo::CheckExceptionsNumber(ProcessWorkingMode wm) const {
 	switch (wm) {
@@ -877,6 +896,37 @@ const event_name_t Cuckoo::GeneratePrintableBuffer(SIZE_T length, DWORD seed) {
 	return event_name;
 }
 
+bool Cuckoo::IsAnalyzerDeadNotTrackedMaster() const {
+	wchar_t app_params[] = L"--action --dan";
+	event_name_t event_name;
+	bool dan_escape_detected = false;
+	PROCESS_INFORMATION pi = { 0 };
+
+	bool cp_mode = CheckFunctionHooks();
+
+	if (!KillSuspiciousProcesses())
+		return false;
+
+	if (!run_self_susp(app_params, &pi))
+		return false;
+
+	event_name = GeneratePrintableBuffer(8, pi.dwProcessId);
+
+	dan_escape_detected = WaitForNotificationFromSlaveUsingEvent(event_name, pi.hProcess, pi.hThread, 100);
+
+	TerminateProcess(pi.hProcess, 0);
+
+	CloseHandle(pi.hThread);
+	CloseHandle(pi.hProcess);
+
+	EvasionMachineMode es = get_evasion_status(cp_mode, !dan_escape_detected);
+
+	return es == EvasionMachineMode::SANDBOX_EVADED;
+}
+
+bool Cuckoo::IsAnalyzerDeadNotTrackedSlave() const {
+	return NotifyFunctionHooks();
+}
 
 bool Cuckoo::RunMasterSlaveThreads(	DWORD(WINAPI SandboxEvasion::Cuckoo::*thread_master)(LPVOID),
 									DWORD(WINAPI SandboxEvasion::Cuckoo::*thread_slave)(LPVOID)) {
@@ -1126,13 +1176,19 @@ bool Cuckoo::IsPidReusedNotTrackedMaster() const {
 
 
 bool Cuckoo::IsPidReusedNotTrackedSlave() const {
+	return NotifyFunctionHooks();
+}
+
+
+bool Cuckoo::NotifyFunctionHooks() const {
 	event_name_t event_name;
 	HANDLE hEvent;
 
 	event_name = GeneratePrintableBuffer(8, GetCurrentProcessId());
 
-	if (!(hEvent = OpenEventW(EVENT_ALL_ACCESS, FALSE, event_name.c_str())))
+	if (!(hEvent = OpenEventW(EVENT_ALL_ACCESS, FALSE, event_name.c_str()))) {
 		return false;
+	}
 
 	// check if functions are hooked by cuckoomon
 	if (!CheckFunctionHooks()) {
@@ -1527,6 +1583,43 @@ bool Cuckoo::CheckResponseIsAgent(const unsigned char *response, size_t response
 		return false;
 	
 	return matches.size() == 1;
+}
+
+/*
+ * Try to kill Analyzer
+ */
+bool Cuckoo::KillSuspiciousProcesses() const {
+	STARTUPINFO si = { 0 };
+	PROCESS_INFORMATION pi = { 0 };
+	std::list<std::string> proc_names { "python", "pythonw" };
+	std::list<cp_pids> pc_proc;
+	HANDLE hProcess;
+	char proc_name[MAX_PATH + 1] = { 0 };
+	char proc_args[0x80] = { 0 };
+	char *filename;
+	DWORD ec;
+
+	if (get_parent_child_proc_pair(pc_proc, proc_names) == FALSE)
+		return false;
+
+	if (!pc_proc.size())
+		return false;
+
+	// try to terminate Analyzer process
+
+	for (const auto &pc : pc_proc) {
+
+		// kill all child processes
+		if ((hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pc.second)) == INVALID_HANDLE_VALUE)
+			continue;
+
+		if (TerminateProcess(hProcess, 0xDEAD) == FALSE) {
+			CloseHandle(hProcess);
+			continue;
+		}
+	}
+
+	return true;
 }
 
 

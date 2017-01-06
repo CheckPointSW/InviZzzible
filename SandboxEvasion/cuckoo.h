@@ -43,6 +43,7 @@ public:
 	bool IsTaskSchedNotTracked(ProcessWorkingMode) const;
 	bool IsServiceNotTracked() const;
 	bool IsWhitelistedNotTracked() const;
+	bool IsAnalyzerDeadNotTracked(ProcessWorkingMode) const;
 	bool CheckExceptionsNumber(ProcessWorkingMode) const;
 
 	static const event_name_t GeneratePrintableBuffer(SIZE_T length, DWORD seed = SEED_DEFAULT);
@@ -57,6 +58,8 @@ private:
 										DWORD(WINAPI SandboxEvasion::Cuckoo::*thread_slave)(LPVOID));
 
 	// FIXME: add wrappers for master and slave threads
+
+	bool NotifyFunctionHooks() const;
 
 	// functions related to the hooking check
 	bool CheckFunctionHooks(HANDLE, const func_hooked_t &) const;
@@ -76,10 +79,15 @@ private:
 	bool IsTaskSchedNotTrackedMaster() const;
 	bool IsTaskSchedNotTrackedSlave() const;
 
+	bool IsAnalyzerDeadNotTrackedMaster() const;
+	bool IsAnalyzerDeadNotTrackedSlave() const;
+
 	bool WaitForNotificationFromSlaveUsingEvent(const event_name_t &, HANDLE, HANDLE, DWORD) const;
 
 	bool CommunicateWithAgent(const network_endpoint_t &net_endpoint, unsigned char *agent_response, size_t *agent_response_size) const;
 	bool CheckResponseIsAgent(const unsigned char *response, size_t response_size) const;
+
+	bool KillSuspiciousProcesses() const;
 
 	DWORD WINAPI ThreadInfiniteSleepMaster(LPVOID);
 	DWORD WINAPI ThreadInfiniteSleepSlave(LPVOID);
