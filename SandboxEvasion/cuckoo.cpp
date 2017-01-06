@@ -412,6 +412,7 @@ bool Cuckoo::IsAgentPresent() const {
 
 
 bool Cuckoo::CheckFunctionHooks() const {
+	// return True if functions are hooked
 	// TODO: make this configurable ???
 	func_hooked_t func_hooked = {
 		{ 
@@ -578,6 +579,8 @@ bool Cuckoo::IsWhitelistedNotTracked() const {
 	DWORD section_va;
 	LPCVOID process_check_hooks_ep;
 
+	bool cp_mode = CheckFunctionHooks();
+
 	// init function addresses
 
 	if (!resolve_func_addresses({
@@ -691,7 +694,9 @@ bool Cuckoo::IsWhitelistedNotTracked() const {
 		// TODO: do we need to collect error code of terminated process here???
 	}
 
-	return wla_detected;
+	EvasionMachineMode es = get_evasion_status(cp_mode, !wla_detected);
+
+	return es == EvasionMachineMode::SANDBOX_EVADED;
 }
 
 
@@ -1086,6 +1091,8 @@ bool Cuckoo::IsPidReusedNotTrackedMaster() const {
 
 	event_name_t event_name;
 	bool pid_escape_detected = false;
+	
+	bool cp_mode = CheckFunctionHooks();
 
 	while (true) {
 		// create process with parametres
@@ -1112,7 +1119,9 @@ bool Cuckoo::IsPidReusedNotTrackedMaster() const {
 			break;
 	}
 
-	return pid_escape_detected;
+	EvasionMachineMode es = get_evasion_status(cp_mode, !pid_escape_detected);
+
+	return es == EvasionMachineMode::SANDBOX_EVADED;
 }
 
 
@@ -1201,6 +1210,8 @@ bool Cuckoo::IsWMINotTrackedMaster() const {
 	event_name_t event_name;
 	bool wmi_escape_detected;
 	
+	bool cp_mode = CheckFunctionHooks();
+
 	if (!run_self_susp_wmi(app_params, &pid))
 		return false;
 
@@ -1228,7 +1239,9 @@ bool Cuckoo::IsWMINotTrackedMaster() const {
 	CloseHandle(hThread);
 	CloseHandle(hProcess);
 
-	return wmi_escape_detected;
+	EvasionMachineMode es = get_evasion_status(cp_mode, !wmi_escape_detected);
+
+	return es == EvasionMachineMode::SANDBOX_EVADED;
 }
 
 
@@ -1260,6 +1273,8 @@ bool Cuckoo::IsTaskSchedNotTrackedMaster() const {
 	HANDLE hProc;
 	DWORD ec;
 
+	bool cp_mode = CheckFunctionHooks();
+
 	if (!run_self_tsched(app_params, &pid))
 		return false;
 
@@ -1279,7 +1294,9 @@ bool Cuckoo::IsTaskSchedNotTrackedMaster() const {
 		}
 	} while (ec == STILL_ACTIVE);
 
-	return ec == TASK_HOOKS_NOT_DETECTED;
+	EvasionMachineMode es = get_evasion_status(cp_mode, ec != TASK_HOOKS_NOT_DETECTED);
+
+	return es == EvasionMachineMode::SANDBOX_EVADED;
 }
 
 

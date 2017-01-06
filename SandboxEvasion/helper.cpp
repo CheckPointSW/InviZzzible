@@ -41,6 +41,13 @@ std::map<LogMessageLevel, std::string> log_msg_levels = {
 	{ LogMessageLevel::PANIC,	"PANIC"		}
 };
 
+std::map<EvasionMachineMode, std::string> evasion_mode = {
+	{ EvasionMachineMode::REAL_PC,				"Real Environment"	},
+	{ EvasionMachineMode::SANDBOX_CHLD_MON,		"Child Monitored"	},
+	{ EvasionMachineMode::SANDBOX_EVADED,		"Sandbox Evaded"	},
+	{ EvasionMachineMode::SANDBOX_NOT_EVADED,	"Sandbox Not Evaded"}
+};
+
 const std::map<std::string, HKEY> str2hkey = {
 	{ "HKCR", HKEY_CLASSES_ROOT },
 	{ "HKCC", HKEY_CURRENT_CONFIG },
@@ -2085,6 +2092,15 @@ bool dns_interface_save(const std::string &module, const std::string &name, bool
 	DnsQuery_A(domain_name.c_str(), DNS_TYPE_A, DNS_QUERY_BYPASS_CACHE, NULL, &dns_records, NULL);
 
 	return true;
+}
+
+EvasionMachineMode get_evasion_status(bool parent_hooked, bool child_hooked) {
+	// 0 -> 0 ==> REAL MACHINE
+	// 0 -> 1 ==> CHILD WITH MONITOR
+	// 1 -> 0 ==> SANDBOX EVADED
+	// 1 -> 1 ==> SANDBOX NOT EVADED
+
+	return static_cast<EvasionMachineMode>((!!parent_hooked) * 2 + !!child_hooked);
 }
 
 std::wstring string_to_wstring(const std::string &s) {

@@ -1,3 +1,6 @@
+January 6th, 2017:
+	[+] Cuckoo: differentiation between real and sandbox machines implemented while performing evasions (function hooks are used). If hooks are fixed. then another method should be used.
+
 October 25th, 2016:
 	[+] VEDetection: DNS module is used now for user notification about detection technique result
 

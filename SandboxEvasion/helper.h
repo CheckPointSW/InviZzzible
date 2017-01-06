@@ -43,6 +43,8 @@ typedef struct unbalanced_stack_func_info {
 	const void *args_buff;		// buffer with arguments
 } usfi;
 
+
+
 typedef std::vector<usfi> vf;
 typedef std::map<lib_name_t, vf> usf_t;
 
@@ -66,6 +68,7 @@ typedef std::map<arg_t, arg_t> args_t;
 enum class LogMessageLevel { NO, DBG, INFO, WARNING, ERR, PANIC };
 enum console_color_t { DEFAULT = 0, GREEN = FOREGROUND_GREEN, RED = FOREGROUND_RED, BLUE = FOREGROUND_BLUE };
 enum class ProcessWorkingMode { MASTER, SLAVE };
+enum class EvasionMachineMode { REAL_PC, SANDBOX_CHLD_MON, SANDBOX_EVADED, SANDBOX_NOT_EVADED };
 
 void enable_verbose_mode();
 void log_message(LogMessageLevel msg_l, const std::string & module, const std::string &msg, console_color_t cc=DEFAULT);
@@ -148,6 +151,8 @@ std::string remove_whitespaces(const std::string &s);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);
+
+EvasionMachineMode get_evasion_status(bool parent_hooked, bool child_hooked);
 
 
 template <typename T> bool match_regexp(const std::basic_string<T> &regexp, const std::basic_string<T> &str, std::vector<std::basic_string<T>> *matches = NULL);
