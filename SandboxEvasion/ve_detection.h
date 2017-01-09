@@ -38,6 +38,7 @@ protected:
 	void CheckAllWindows() const;
 	void CheckAllSharedFolders() const;
 	void CheckAllDiskNames() const;
+	void CheckAllDriveModels() const;
 
 	virtual void CheckAllCustom() = 0;
 
@@ -65,6 +66,7 @@ protected:
 	bool CheckWindowClassName(const std::string &cname) const;
 	bool CheckSharedFolder(const std::string &name) const;
 	bool CheckDiskName(const std::string &name) const;
+	bool CheckDriveModel(const std::string &drive_model) const;
 
 	bool IsEnabled(const std::string &detection_name, const std::string &enabled) const;
 

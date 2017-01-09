@@ -1,5 +1,6 @@
 January 9th, 2017:
 	[+] Cuckoo: SuspendedThread evasion technique implemented
+	[+] VEDetection: generic interface for drive model implemented
 
 January 6th, 2017:
 	[+] Cuckoo: Dead Analyzer evasion technique implemented

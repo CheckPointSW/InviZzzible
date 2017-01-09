@@ -13,6 +13,7 @@
 #include <Ntsecapi.h>
 #include <sstream>
 #include <WinInet.h>
+#include <winioctl.h>
 #include "nt.h"
 #include <iostream>
 #include <unordered_map>
@@ -27,6 +28,14 @@
 #pragma comment(lib, "Dnsapi.lib")
 #pragma comment(lib, "Mpr.lib")
 #pragma comment(lib, "SetupAPI.lib")
+
+
+#define  MAX_IDE_DRIVES  16
+#define  DFP_GET_VERSION          0x00074080
+#define  DFP_RECEIVE_DRIVE_DATA   0x0007c088
+
+#define  IDE_ATAPI_IDENTIFY  0xA1  //  Returns ID sector for ATAPI.
+#define  IDE_ATA_IDENTIFY    0xEC  //  Returns ID sector for ATA.
 
 
 using std::cout;
@@ -2099,6 +2108,290 @@ bool get_drive_print_names(std::list<std::string> &disks) {
 
 	SetupDiDestroyDeviceInfoList(hDevs);
 	return true;
+}
+
+bool get_drive_models(std::list<std::string> &drive_models) {
+	std::string drive_model;
+	const char fmt_device_name[] = "\\\\.\\PhysicalDrive%u";
+	char device_name[256] = { 0 };
+
+	for (BYTE i = 0; i < MAX_IDE_DRIVES; ++i) {
+		memset(device_name, 0, _countof(device_name));
+
+		snprintf(device_name, _countof(device_name), fmt_device_name, i);
+
+		if (get_drive_model(device_name, SMART_RCV_DRIVE_DATA, i, drive_model)) {
+			drive_models.push_back(drive_model);
+			drive_model.clear();
+		}
+
+		if (get_drive_model(device_name, IOCTL_STORAGE_QUERY_PROPERTY, i, drive_model)) {
+			drive_models.push_back(drive_model);
+			drive_model.clear();
+		}
+	}
+
+	return true;
+}
+
+bool get_drive_model(const std::string &device, ULONG ioctl, unsigned int drive, std::string &drive_model) {
+
+	switch (ioctl)
+	{
+	case SMART_RCV_DRIVE_DATA:
+		return get_drive_model_st_q(device, drive_model);
+	case IOCTL_STORAGE_QUERY_PROPERTY: 
+		return get_drive_model_drv_d(device, drive, drive_model);
+	default:
+		return false;
+	}
+
+	return true;
+}
+
+/*
+ * the following source code was used: http://codexpert.ro/blog/2013/10/26/get-physical-drive-serial-number-part-1/
+ */
+bool get_drive_model_st_q(const std::string &device, std::string &drive_model) {
+	// Get a handle to physical drive
+	HANDLE hDevice = CreateFileA(
+		device.c_str(),
+		0,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL
+		);
+
+	if (hDevice == INVALID_HANDLE_VALUE)
+		return false;
+
+	bool ok = true;
+	BYTE *pOutBuffer = NULL;
+
+	do {
+		// Set the input data structure
+		STORAGE_PROPERTY_QUERY storagePropertyQuery;
+		ZeroMemory(&storagePropertyQuery, sizeof(STORAGE_PROPERTY_QUERY));
+		storagePropertyQuery.PropertyId = StorageDeviceProperty;
+		storagePropertyQuery.QueryType = PropertyStandardQuery;
+
+		// Get the necessary output buffer size
+		STORAGE_DESCRIPTOR_HEADER storageDescriptorHeader = { 0 };
+		DWORD dwBytesReturned = 0;
+		if (!DeviceIoControl(
+			hDevice, 
+			IOCTL_STORAGE_QUERY_PROPERTY,
+			&storagePropertyQuery, 
+			sizeof(STORAGE_PROPERTY_QUERY),
+			&storageDescriptorHeader, 
+			sizeof(STORAGE_DESCRIPTOR_HEADER),
+			&dwBytesReturned, 
+			NULL)) {
+			// error handling
+			ok = false;
+			break;
+		}
+
+		// Alloc the output buffer
+		const DWORD dwOutBufferSize = storageDescriptorHeader.Size;
+		pOutBuffer = new BYTE[dwOutBufferSize];
+		ZeroMemory(pOutBuffer, dwOutBufferSize);
+
+		// Get the storage device descriptor
+		if (!DeviceIoControl(
+			hDevice, 
+			IOCTL_STORAGE_QUERY_PROPERTY,
+			&storagePropertyQuery, 
+			sizeof(STORAGE_PROPERTY_QUERY),
+			pOutBuffer, 
+			dwOutBufferSize,
+			&dwBytesReturned, 
+			NULL)) {
+			// error handling
+			ok = false;
+			break;
+		}
+
+		// Now, the output buffer points to a STORAGE_DEVICE_DESCRIPTOR structure
+		// followed by additional info like vendor ID, product ID, serial number, and so on.
+
+		STORAGE_DEVICE_DESCRIPTOR* pDeviceDescriptor = (STORAGE_DEVICE_DESCRIPTOR*)pOutBuffer;
+		// const DWORD dwSerialNumberOffset = pDeviceDescriptor->SerialNumberOffset;
+		// const DWORD dwVendorIdOffset = pDeviceDescriptor->VendorIdOffset;
+		const DWORD dwProdIdOffset = pDeviceDescriptor->ProductIdOffset;
+		UCHAR *strSerialNumber, *strVendorId, *strProdId;
+
+		if (dwProdIdOffset == 0) {
+			ok = false;
+			break;
+		}
+
+		strProdId = pOutBuffer + dwProdIdOffset;
+		drive_model = reinterpret_cast<char *>(strProdId);
+
+		// FIXME: delete rest
+		/*
+		if (dwSerialNumberOffset != 0)
+		{
+			// Finally, get the serial number
+			strSerialNumber = pOutBuffer + dwSerialNumberOffset;
+			printf_s("Serial number: %s\n", strSerialNumber);
+		}
+
+
+		if (dwVendorIdOffset != 0)
+		{
+			strVendorId = pOutBuffer + dwVendorIdOffset;
+			printf_s("Vendor id: %s\n", strVendorId);
+		}
+
+		if (dwProdIdOffset != 0)
+		{
+			strProdId = pOutBuffer + dwProdIdOffset;
+			printf_s("Prod id: %s\n", strProdId);
+		}
+		*/
+
+	} while (false);
+	
+	CloseHandle(hDevice);
+
+	if (pOutBuffer) {
+		free(pOutBuffer);
+		pOutBuffer = NULL;
+	}
+
+	return ok;
+}
+
+bool get_drive_model_drv_d(const std::string &device, unsigned int drive, std::string &drive_model) {
+	// Get a handle to physical drive
+	HANDLE hDevice = CreateFileA(
+		device.c_str(),
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL
+		);
+
+	if (hDevice == INVALID_HANDLE_VALUE)
+		return false;
+
+	GETVERSIONOUTPARAMS VersionParams;
+	DWORD               cbBytesReturned = 0;
+	BYTE IdOutCmd[sizeof(SENDCMDOUTPARAMS) + IDENTIFY_BUFFER_SIZE - 1];
+
+	// Get the version, etc of PhysicalDrive IOCTL
+	memset((void*)&VersionParams, 0, sizeof(VersionParams));
+
+	if (!DeviceIoControl(
+		hDevice,
+		DFP_GET_VERSION,
+		NULL,
+		0,
+		&VersionParams,
+		sizeof(VersionParams),
+		&cbBytesReturned, NULL
+		)) {
+		CloseHandle(hDevice);
+		return false;
+	}
+
+	BYTE             bIDCmd = 0;   // IDE or ATAPI IDENTIFY cmd
+	SENDCMDINPARAMS  scip;
+	//SENDCMDOUTPARAMS OutCmd;
+
+	// Now, get the ID sector for all IDE devices in the system.
+	// If the device is ATAPI use the IDE_ATAPI_IDENTIFY command,
+	// otherwise use the IDE_ATA_IDENTIFY command
+
+	bIDCmd = (VersionParams.bIDEDeviceMap >> drive & 0x10) ? IDE_ATAPI_IDENTIFY : IDE_ATA_IDENTIFY;
+
+	memset(&scip, 0, sizeof(scip));
+	memset(IdOutCmd, 0, sizeof(IdOutCmd));
+
+	if (!do_identify(
+		hDevice,
+		&scip,
+		reinterpret_cast<PSENDCMDOUTPARAMS>(&IdOutCmd),
+		static_cast<BYTE>(bIDCmd),
+		static_cast<BYTE>(drive),
+		&cbBytesReturned)) {
+
+		CloseHandle(hDevice);
+		return false;
+	}
+
+	DWORD diskdata[256];
+	USHORT *pIdSector = reinterpret_cast<USHORT *>((reinterpret_cast<PSENDCMDOUTPARAMS>(IdOutCmd))->bBuffer);
+
+	for (int ijk = 0; ijk < 256; ijk++)
+		diskdata[ijk] = pIdSector[ijk];
+
+	// get drive model
+
+	return drv_convert_to_string(diskdata, _countof(diskdata), 27, 46, drive_model);
+}
+
+bool drv_convert_to_string(DWORD diskdata[256], DWORD diskdata_size, unsigned int firstIndex, unsigned int lastIndex, std::string &buffer) {
+	unsigned int index = 0;
+	// int position = 0;
+	
+	// index check
+	if (firstIndex > lastIndex || firstIndex >= diskdata_size || lastIndex >= diskdata_size)
+		return false;
+
+	//  each integer has two characters stored in it backwards
+	for (index = firstIndex; index <= lastIndex; index++) {
+		//  get high byte for 1st character
+		buffer += static_cast<char>((diskdata[index] / 256));
+
+		//  get low byte for 2nd character
+		buffer += static_cast<char>((diskdata[index] % 256));
+	}
+
+	//  cut off the trailing blanks
+	/*
+	for (index = position - 1; index > 0 && isspace(buf[index]); index--)
+		buf[index] = '\0';
+	*/
+
+	return true;
+}
+
+/*
+ * the following source code was used: https://www.winsim.com/diskid32/diskid32.cpp
+ */
+bool do_identify(HANDLE hPhysicalDriveIOCTL, PSENDCMDINPARAMS pSCIP, PSENDCMDOUTPARAMS pSCOP, BYTE bIDCmd, BYTE bDriveNum, PDWORD lpcbBytesReturned) {
+
+	// Set up data structures for IDENTIFY command.
+	pSCIP->cBufferSize = IDENTIFY_BUFFER_SIZE;
+	pSCIP->irDriveRegs.bFeaturesReg = 0;
+	pSCIP->irDriveRegs.bSectorCountReg = 1;
+	//pSCIP -> irDriveRegs.bSectorNumberReg = 1;
+	pSCIP->irDriveRegs.bCylLowReg = 0;
+	pSCIP->irDriveRegs.bCylHighReg = 0;
+
+	// Compute the drive number.
+	pSCIP->irDriveRegs.bDriveHeadReg = 0xA0 | ((bDriveNum & 1) << 4);
+
+	// The command can either be IDE identify or ATAPI identify.
+	pSCIP->irDriveRegs.bCommandReg = bIDCmd;
+	pSCIP->bDriveNumber = bDriveNum;
+	pSCIP->cBufferSize = IDENTIFY_BUFFER_SIZE;
+
+	return !!(DeviceIoControl(
+		hPhysicalDriveIOCTL, 
+		DFP_RECEIVE_DRIVE_DATA,
+		static_cast<LPVOID>(pSCIP),
+		sizeof(SENDCMDINPARAMS) - 1,
+		static_cast<LPVOID>(pSCOP),
+		sizeof(SENDCMDOUTPARAMS) + IDENTIFY_BUFFER_SIZE - 1,
+		lpcbBytesReturned, NULL));
 }
 
 bool file_interface_save(const std::string &module, const std::string &name, bool detected) {

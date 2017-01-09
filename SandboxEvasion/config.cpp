@@ -20,6 +20,7 @@ namespace Config {
 		{ ConfigGlobalType::MAC, "mac" },
 		{ ConfigGlobalType::ADAPTER, "adapter" },
 		{ ConfigGlobalType::DISK, "disk" },
+		{ ConfigGlobalType::DRIVE_MODEL, "drive_model" },
 		{ ConfigGlobalType::FIRMWARE, "firmware" },
 		{ ConfigGlobalType::OBJECT, "object" },
 		{ ConfigGlobalType::CPUID, "cpuid" },
