@@ -103,7 +103,7 @@ extern "C" BOOL check_current_parent_folder_w(const wchar_t *);
 extern "C" BOOL enumerate_directory_w(const wchar_t *, SIZE_T, SIZE_T, FILE_ROUTINE, PVOID, const std::list<file_name_w_t> &);
 extern "C" LPCVOID inject_data(HANDLE, const data_t *, SIZE_T, DWORD protect = PAGE_READWRITE);
 extern "C" LPCVOID inject_code(HANDLE, const code_t *, SIZE_T);
-extern "C" BOOL execute_code(HANDLE, LPTHREAD_START_ROUTINE, LPVOID args, HANDLE *phThread);
+extern "C" BOOL execute_code(HANDLE, LPTHREAD_START_ROUTINE, LPVOID args, HANDLE *phThread, DWORD dwCreationFlags=0);
 extern "C" BOOL thread_context_execute_code(HANDLE, LPTHREAD_START_ROUTINE, LPVOID args, BOOL suspended);
 extern "C" DWORD align_down(DWORD val, DWORD align);
 extern "C" DWORD align_up(DWORD val, DWORD align);

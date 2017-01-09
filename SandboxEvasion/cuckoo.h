@@ -43,6 +43,7 @@ public:
 	bool IsTaskSchedNotTracked(ProcessWorkingMode) const;
 	bool IsServiceNotTracked() const;
 	bool IsWhitelistedNotTracked() const;
+	bool IsSuspendedThreadNotTracked() const;
 	bool IsAnalyzerDeadNotTracked(ProcessWorkingMode) const;
 	bool CheckExceptionsNumber(ProcessWorkingMode) const;
 

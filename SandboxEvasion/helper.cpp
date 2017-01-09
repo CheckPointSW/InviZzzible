@@ -402,7 +402,7 @@ extern "C" LPCVOID inject_code(HANDLE hProcess, const code_t *code, SIZE_T code_
 }
 
 
-extern "C" BOOL execute_code(HANDLE hProcess, LPTHREAD_START_ROUTINE start_addr, LPVOID args, HANDLE *phThread) {
+extern "C" BOOL execute_code(HANDLE hProcess, LPTHREAD_START_ROUTINE start_addr, LPVOID args, HANDLE *phThread, DWORD dwCreationFlags) {
 	HANDLE hThread;
 
 	// just use stupid method ever CreateRemoteThread
@@ -412,7 +412,7 @@ extern "C" BOOL execute_code(HANDLE hProcess, LPTHREAD_START_ROUTINE start_addr,
 		0,
 		start_addr,
 		args,
-		0,
+		dwCreationFlags,
 		NULL
 		);
 

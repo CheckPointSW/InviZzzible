@@ -274,6 +274,13 @@ void Cuckoo::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
+	ce_name = Config::cc2s[Config::ConfigCuckoo::SUSPENDED_THREAD];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsSuspendedThreadNotTracked();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cc2s[Config::ConfigCuckoo::DEAD_ANALYZER];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsAnalyzerDeadNotTracked(ProcessWorkingMode::MASTER);
@@ -702,6 +709,125 @@ bool Cuckoo::IsWhitelistedNotTracked() const {
 	}
 
 	EvasionMachineMode es = get_evasion_status(cp_mode, !wla_detected);
+
+	return es == EvasionMachineMode::SANDBOX_EVADED;
+}
+
+bool Cuckoo::IsSuspendedThreadNotTracked() const {
+	STARTUPINFOW si = {};
+	si.cb = sizeof(si);
+	GetStartupInfoW(&si);
+
+	PROCESS_INFORMATION pi = {};
+	bool st_detected = false;
+
+	LPCVOID inj_code, inj_data;
+	LPVOID section_code = NULL;
+	unsigned char *ppatch;
+	event_name_t event_name;
+	pchta pta_args = {};
+
+	SYSTEM_INFO sys_i = {};
+	GetSystemInfo(&sys_i);
+
+	DWORD section_va;
+	LPCVOID process_check_hooks_ep;
+
+	bool ok = true;
+
+	HANDLE hHelperThread = INVALID_HANDLE_VALUE;
+
+	bool cp_mode = CheckFunctionHooks();
+
+	// init function addresses
+
+	if (!resolve_func_addresses({
+		{ L"kernel32",{ "GetModuleHandleW", "GetProcAddress", "OpenEventW", "SetEvent", "CloseHandle", "ExitProcess", "ReadProcessMemory", "GetCurrentProcess" } },
+		{ L"ntdll",{ "ZwDelayExecution", "ZwCreateProcess", "ZwCreateThread", "ZwOpenThread" } }
+	}, &pta_args))
+		return false;
+
+	if (!run_self_susp(NULL, &pi))
+		return false;
+
+	do {
+		// if process was successfully created, then inject a stub there that will be responsible for checking if process is hooked
+		// in case is not hooked, then we are cool and cuckoo is evaded
+
+		// create event name used for communication with child process
+		event_name = GeneratePrintableBuffer(EVENT_NAME_MAX_LEN - 1, pi.dwProcessId);
+
+		// copy event name to structure
+		memset(pta_args.event_name, 0x0, sizeof(pta_args.event_name));
+		if (wcscpy_s(pta_args.event_name, EVENT_NAME_MAX_LEN, event_name.c_str())) {
+			ok = false;
+			break;
+		}
+
+		// patch code that will be responsible for testing if functions are hooked, prepare a stub that will be responsible for checking
+
+		inj_data = inject_data(pi.hProcess, reinterpret_cast<const data_t *>(&pta_args), sizeof(pta_args));
+
+		// patch address of argument for the thread
+		section_code = calloc(sys_i.dwPageSize, sizeof(code_t));
+		if (!section_code) {
+			ok = false;
+			break;
+		}
+
+		// find virtual address where section is loaded
+		section_va = align_down(reinterpret_cast<DWORD>(process_check_hooks), sys_i.dwPageSize);
+
+		memcpy(section_code, reinterpret_cast<const void*>(section_va), sys_i.dwPageSize);
+
+		ppatch = __memmem(reinterpret_cast<const code_t*>(section_code), sys_i.dwPageSize, reinterpret_cast<const unsigned char *>(&SandboxEvasion::MAGIC_WHTL_PROC_ARGS), sizeof(SandboxEvasion::MAGIC_WHTL_PROC_ARGS));
+
+		if (!ppatch) {
+			ok = false;
+			break;
+		}
+
+		memcpy(ppatch, &inj_data, sizeof(SandboxEvasion::MAGIC_WHTL_PROC_ARGS));
+
+		process_check_hooks_ep = __memmem(reinterpret_cast<const code_t*>(section_va), sys_i.dwPageSize, SandboxEvasion::I_magic, sizeof(SandboxEvasion::I_magic));
+
+		inj_code = inject_code(pi.hProcess, reinterpret_cast<const code_t*>(section_code), sys_i.dwPageSize);
+
+		// align process_check_hooks_ep as far as it is copied to another address in another process
+		process_check_hooks_ep = reinterpret_cast<LPCVOID>(reinterpret_cast<DWORD>(process_check_hooks_ep) + (reinterpret_cast<DWORD>(inj_code) - section_va) + sizeof(SandboxEvasion::I_magic));
+
+		if (!inj_data || !inj_code || !process_check_hooks_ep) {
+			ok = false;
+			break;
+		}
+
+		// create a new thread that will not be tracked
+		if (!execute_code(pi.hProcess, reinterpret_cast<LPTHREAD_START_ROUTINE>(process_check_hooks_ep), const_cast<LPVOID>(inj_data), &hHelperThread, CREATE_SUSPENDED)) {
+			ok = false;
+			break;
+		}
+
+		// FIXME: should timeout be configurable?
+		st_detected = WaitForNotificationFromSlaveUsingEvent(event_name, pi.hProcess, hHelperThread, 100);
+
+	} while (false);
+
+	// clean
+
+	TerminateProcess(pi.hProcess, 0);
+	CloseHandle(pi.hThread);
+	CloseHandle(hHelperThread);
+	CloseHandle(pi.hProcess);
+
+	if (section_code) {
+		free(section_code);
+		section_code = NULL;
+	}
+
+	if (!ok)
+		return false;
+
+	EvasionMachineMode es = get_evasion_status(cp_mode, !st_detected);
 
 	return es == EvasionMachineMode::SANDBOX_EVADED;
 }

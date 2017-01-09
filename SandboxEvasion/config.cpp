@@ -46,6 +46,7 @@ namespace Config {
 		{ ConfigCuckoo::TASK_SCHED_PROCESS, "TaskSchedulerProcess" },
 		{ ConfigCuckoo::PID_REUSE, "PidReuse" },
 		{ ConfigCuckoo::AGENT_LISTENER, "AgentListener" },
+		{ ConfigCuckoo::SUSPENDED_THREAD, "SuspendedThread" },
 		{ ConfigCuckoo::DEAD_ANALYZER, "DeadAnalyzer" }
 	};
 
