@@ -13,7 +13,7 @@ namespace Config {
 	enum class ConfigArgsRegCheckType { EXISTS, CONTAINS, ENUM_KEYS, ENUM_VALUES };
 	enum class ConfigArgsFirmwareCheckType { FIRMBIOS, RSMBBIOS };
 	enum class ConfigArgsWindowCheckType { CLASS, WINDOW };
-	enum class ConfigVMWare { HYPERVISOR_PORT, HYPERVISOR_BIT };
+	enum class ConfigVMWare { HYPERVISOR_PORT, HYPERVISOR_PORT_ENUM, HYPERVISOR_BIT };
 	enum class ConfigGeneric { SYSTEM_UPTIME, RAM, DISK_SIZE, DRIVE_SIZE, DEVICE_NPF_NDIS, MOUSE_ACTIVE, SLEEP_DUMMY, PROCESSORS_COUNT, DNS_RESPONSE, TIME_TAMPERING };
 	
 	extern std::map<ConfigGlobal, std::string> cg2s;

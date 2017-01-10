@@ -20,6 +20,7 @@ public:
 
 	// custom methods
 	bool CheckHypervisorPort() const;
+	bool CheckHypervisorPortEnum() const;
 	bool IsHypervisor() const;
 };
 

@@ -73,6 +73,7 @@ namespace Config {
 
 	std::map<ConfigVMWare, std::string> cvm2s = {
 		{ ConfigVMWare::HYPERVISOR_PORT, "HypervisorPort" },
+		{ ConfigVMWare::HYPERVISOR_PORT_ENUM, "HypervisorPortEnum" },
 		{ ConfigVMWare::HYPERVISOR_BIT,  "HypervisorBit" }
 	};
 
