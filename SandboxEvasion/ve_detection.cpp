@@ -30,10 +30,10 @@ namespace SandboxEvasion {
 		// if file interface is enabled, then use it
 		if (file_interface) {
 			bool b = file_interface_save(module_name, name, detected);
+		}
 
-			if (dns_interface) {
-				bool b = dns_interface_save(module_name, name, detected);
-			}
+		if (dns_interface) {
+			bool b = dns_interface_save(module_name, name, detected);
 		}
 
 		return std::pair<std::string, std::string>(ostream_html.str(), ostream_debug.str());

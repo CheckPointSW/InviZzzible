@@ -17,6 +17,7 @@
 #include "nt.h"
 #include <iostream>
 #include <unordered_map>
+#include <stdio.h>
 
 
 #pragma comment(lib, "Shlwapi")
@@ -2427,16 +2428,37 @@ bool file_interface_save(const std::string &module, const std::string &name, boo
 }
 
 bool dns_interface_save(const std::string &module, const std::string &name, bool detected) {
-	std::stringstream dnsn;
-	dnsn << module << '.' << name << '.' << (detected ? "detected" : "notdetected");
 
-	std::string domain_name = remove_whitespaces(dnsn.str());
+	std::string domain_name = compose_domain(module, name, detected);
 
 	PDNS_RECORD dns_records;
 
 	DnsQuery_A(domain_name.c_str(), DNS_TYPE_A, DNS_QUERY_BYPASS_CACHE, NULL, &dns_records, NULL);
 
 	return true;
+}
+
+std::string compose_domain(const std::string &module, const std::string &name, bool detected) {
+	std::stringstream domain;
+	std::string::const_iterator ci, cend;
+
+	cend = module.cend();
+
+	for (ci = module.cbegin(); ci != cend; ++ci)
+		if (isalnum(*ci))
+			domain << *ci;
+
+	domain << '.';
+
+	cend = name.cend();
+
+	for (ci = name.cbegin(); ci != cend; ++ci)
+		if (isalnum(*ci))
+			domain << *ci;
+
+	domain << '.' << (detected ? "detected" : "notdetected");
+
+	return domain.str();
 }
 
 EvasionMachineMode get_evasion_status(bool parent_hooked, bool child_hooked) {

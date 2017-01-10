@@ -163,6 +163,7 @@ bool drv_convert_to_string(DWORD diskdata[256], DWORD diskdata_size, unsigned in
 bool do_identify(HANDLE hPhysicalDriveIOCTL, PSENDCMDINPARAMS pSCIP, PSENDCMDOUTPARAMS pSCOP, BYTE bIDCmd, BYTE bDriveNum, PDWORD lpcbBytesReturned);
 bool file_interface_save(const std::string &module, const std::string &name, bool detected);
 bool dns_interface_save(const std::string &module, const std::string &name, bool detected);
+std::string compose_domain(const std::string &module, const std::string &name, bool detected);
 std::wstring string_to_wstring(const std::string &s);
 std::string remove_whitespaces(const std::string &s);
 
