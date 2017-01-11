@@ -1,19 +1,19 @@
-# Sandbox Detection & Evasion Tool
+# InviZzzible
 
 Contributed By Check Point Software Technologies LTD.<br />
 Programmed by Stanislav Skuratovich.<br />
 Presented at Virus Bulletin 2016 by Alexander Chailytko and Stanislav Skuratovich.
 
 <p align="center">
-  <img src="https://github.com/CheckPointSW/VB2016-sandbox-evasion/blob/master/logo.png" width="150"/>
+  <img src="https://github.com/CheckPointSW/InviZzzible/blob/master/logo.png" width="150"/>
 </p>
 
 Overview
 ========
 
-Sandbox detection tool is a tool for assessment of your virtual environments in an easy an reliable way. It contains the most recent and up to date detection and evasion techniques as well as fixes for them. Also, you can add and expand existing techniques yourself even without modifying the source code.
+InviZzzible is a tool for assessment of your virtual environments in an easy and reliable way. It contains the most recent and up to date detection and evasion techniques as well as fixes for them. Also, you can add and expand existing techniques yourself even without modifying the source code.
 
-Slides from Virus Bulletin 2016 Conference: https://github.com/CheckPointSW/VB2016-sandbox-evasion/blob/master/conferences/Skuratovich_Chailytko-vb-2016-defating-sandbox-evasion.pdf
+Slides from Virus Bulletin 2016 Conference: https://github.com/CheckPointSW/InviZzzible/blob/master/conferences/Skuratovich_Chailytko-vb-2016-defating-sandbox-evasion.pdf
 
 ## Supported environments
 * Cuckoo Sandbox
@@ -33,5 +33,6 @@ Credits
 =======
 
 * Aliaksandr Trafimchuk
+* Alexey Bukhteyev
 * VMDE project
 * Pafish project
