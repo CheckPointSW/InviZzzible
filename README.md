@@ -2,7 +2,11 @@
 
 Contributed By Check Point Software Technologies LTD.<br />
 Programmed by Stanislav Skuratovich.<br />
-Presented at Virus Bulletin 2016 by Alexander Chailytko and Stanislav Skuratovich.
+Presented at:
+- ShmooCon 2017 by Alexander Chailytko and Stanislav Skuratovich.
+- Virus Bulletin 2016 by Alexander Chailytko and Stanislav Skuratovich.
+
+Slides: https://github.com/CheckPointSW/InviZzzible/blob/master/conferences/Skuratovich_Chailytko-DefeatingSandboxEvasion.pdf
 
 <p align="center">
   <img src="https://github.com/CheckPointSW/InviZzzible/blob/master/logo.png" width="150"/>
@@ -12,8 +16,6 @@ Overview
 ========
 
 InviZzzible is a tool for assessment of your virtual environments in an easy and reliable way. It contains the most recent and up to date detection and evasion techniques as well as fixes for them. Also, you can add and expand existing techniques yourself even without modifying the source code.
-
-Slides from Virus Bulletin 2016 Conference: https://github.com/CheckPointSW/InviZzzible/blob/master/conferences/Skuratovich_Chailytko-DefeatingSandboxEvasion.pdf
 
 ## Supported environments
 * Cuckoo Sandbox
