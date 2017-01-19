@@ -13,6 +13,8 @@
 #include <WinInet.h>
 #include <iostream>
 #include "config.h"
+#include "nt.h"
+#include <math.h>
 
 
 #define SLAVE_EXIT_CODE_SUCCESS 0
@@ -23,6 +25,14 @@
 #define TASK_HOOKS_DETECTED		0x40035001
 
 #define LOCALHOST				0x0100007f
+
+#ifndef KI_USER_SHARED_DATA
+#define KI_USER_SHARED_DATA         0x7FFE0000
+#endif
+
+#ifndef SharedUserData
+#define SharedUserData  ((KUSER_SHARED_DATA * const) KI_USER_SHARED_DATA)
+#endif
 
 #pragma comment(lib, "wininet.lib")
 
@@ -204,6 +214,20 @@ void Cuckoo::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
+	ce_name = Config::cc2s[Config::ConfigCuckoo::DELAY_INTERVAL];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsDelayIntervalModified();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
+	ce_name = Config::cc2s[Config::ConfigCuckoo::TICK_COUNT];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckTickCountIntegrity();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cc2s[Config::ConfigCuckoo::FUNCTION_HOOKS];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckFunctionHooks();
@@ -277,13 +301,6 @@ void Cuckoo::CheckAllCustom() {
 	ce_name = Config::cc2s[Config::ConfigCuckoo::SUSPENDED_THREAD];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsSuspendedThreadNotTracked();
-		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
-	}
-
-	ce_name = Config::cc2s[Config::ConfigCuckoo::DELAY_INTERVAL];
-	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
-		d = IsDelayIntervalModified();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
@@ -882,9 +899,29 @@ bool Cuckoo::IsDelayIntervalModified() const {
 }
 
 bool Cuckoo::CheckTickCountIntegrity() const {
-	// TODO: implement
+	DWORD tick_count_f, tick_count_ku;
+	DWORD tick_count_diff;
+	const uint32_t delay_ms = 4000; // timeout in milliseconds
+	KUSER_SHARED_DATA * t = SharedUserData;
+	DWORD major_version;
 
-	return false;
+	// sleep before applying GetTickCount check
+	SleepEx(delay_ms, FALSE);
+
+	major_version = static_cast<DWORD>(LOBYTE(LOWORD(GetVersion())));
+
+	// check both tick count & kuser_shared_data
+	tick_count_f = GetTickCount();
+
+	if (major_version == 5)
+		tick_count_ku = static_cast<ULONG>((static_cast<ULONGLONG>(SharedUserData->TickCountLowDeprecated * SharedUserData->TickCountMultiplier)) >> 24);
+	else if (major_version > 5)
+		tick_count_ku = SharedUserData->TickCountMultiplier * (SharedUserData->TickCount.High1Time << 8) + 
+		(SharedUserData->TickCount.LowPart * (unsigned __int64)SharedUserData->TickCountMultiplier >> 24);
+
+	tick_count_diff = abs(static_cast<long>(tick_count_ku - tick_count_f));
+
+	return tick_count_diff > 100;
 }
 
 

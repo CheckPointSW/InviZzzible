@@ -49,6 +49,7 @@ namespace Config {
 		{ ConfigCuckoo::AGENT_LISTENER, "AgentListener" },
 		{ ConfigCuckoo::SUSPENDED_THREAD, "SuspendedThread" },
 		{ ConfigCuckoo::DELAY_INTERVAL, "DelayInterval" },
+		{ ConfigCuckoo::TICK_COUNT, "TickCount" },
 		{ ConfigCuckoo::DEAD_ANALYZER, "DeadAnalyzer" }
 	};
 

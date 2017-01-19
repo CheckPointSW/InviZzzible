@@ -1,4 +1,5 @@
 January 19th, 2017:
+	[+] Cuckoo: TickCount integrity check implemented
 	[+] Cuckoo: DelayInterval detection technique implemented
 
 January 9th, 2017:
