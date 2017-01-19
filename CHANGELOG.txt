@@ -1,3 +1,6 @@
+January 19th, 2017:
+	[+] Cuckoo: DelayInterval detection technique implemented
+
 January 9th, 2017:
 	[+] Cuckoo: SuspendedThread evasion technique implemented
 	[+] VEDetection: generic interface for drive model implemented

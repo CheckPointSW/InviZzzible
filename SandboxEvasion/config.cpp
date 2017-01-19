@@ -48,6 +48,7 @@ namespace Config {
 		{ ConfigCuckoo::PID_REUSE, "PidReuse" },
 		{ ConfigCuckoo::AGENT_LISTENER, "AgentListener" },
 		{ ConfigCuckoo::SUSPENDED_THREAD, "SuspendedThread" },
+		{ ConfigCuckoo::DELAY_INTERVAL, "DelayInterval" },
 		{ ConfigCuckoo::DEAD_ANALYZER, "DeadAnalyzer" }
 	};
 

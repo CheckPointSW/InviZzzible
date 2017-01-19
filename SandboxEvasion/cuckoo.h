@@ -46,6 +46,8 @@ public:
 	bool IsSuspendedThreadNotTracked() const;
 	bool IsAnalyzerDeadNotTracked(ProcessWorkingMode) const;
 	bool CheckExceptionsNumber(ProcessWorkingMode) const;
+	bool IsDelayIntervalModified() const;
+	bool CheckTickCountIntegrity() const;
 
 	static const event_name_t GeneratePrintableBuffer(SIZE_T length, DWORD seed = SEED_DEFAULT);
 	static ULARGE_INTEGER CompareDatetime(SYSTEMTIME *st_1, SYSTEMTIME *st_2);

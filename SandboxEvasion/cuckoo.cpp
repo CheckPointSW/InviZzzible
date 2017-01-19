@@ -281,6 +281,13 @@ void Cuckoo::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
+	ce_name = Config::cc2s[Config::ConfigCuckoo::DELAY_INTERVAL];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsDelayIntervalModified();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cc2s[Config::ConfigCuckoo::DEAD_ANALYZER];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsAnalyzerDeadNotTracked(ProcessWorkingMode::MASTER);
@@ -854,6 +861,30 @@ bool Cuckoo::CheckExceptionsNumber(ProcessWorkingMode wm) const {
 	default:
 		return false;
 	}
+}
+
+bool Cuckoo::IsDelayIntervalModified() const {
+	LARGE_INTEGER DelayInterval = { 0 };
+	LARGE_INTEGER cDelayInterval = { 0 };
+
+	cDelayInterval.QuadPart = 0xFFFFFFFFFD8F0000ll;
+
+	NTSTATUS (NTAPI *lpZwDelayExecution)(BOOLEAN, PLARGE_INTEGER) = reinterpret_cast<NTSTATUS(NTAPI *)(BOOLEAN, PLARGE_INTEGER)>(GetProcAddress(GetModuleHandleW(L"ntdll"), "ZwDelayExecution"));
+
+	if (!lpZwDelayExecution)
+		return false;
+
+	DelayInterval = cDelayInterval;
+
+	lpZwDelayExecution(FALSE, &DelayInterval);
+
+	return !!memcmp(&DelayInterval, &cDelayInterval, sizeof(LARGE_INTEGER));;
+}
+
+bool Cuckoo::CheckTickCountIntegrity() const {
+	// TODO: implement
+
+	return false;
 }
 
 
