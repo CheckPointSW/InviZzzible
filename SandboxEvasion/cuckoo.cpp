@@ -914,7 +914,7 @@ bool Cuckoo::CheckTickCountIntegrity() const {
 	tick_count_f = GetTickCount();
 
 	if (major_version == 5)
-		tick_count_ku = static_cast<ULONG>((static_cast<ULONGLONG>(SharedUserData->TickCountLowDeprecated * SharedUserData->TickCountMultiplier)) >> 24);
+		tick_count_ku = static_cast<ULONG>((static_cast<ULONGLONG>(SharedUserData->TickCountLowDeprecated) * SharedUserData->TickCountMultiplier) >> 24);
 	else if (major_version > 5)
 		tick_count_ku = SharedUserData->TickCountMultiplier * (SharedUserData->TickCount.High1Time << 8) + 
 		(SharedUserData->TickCount.LowPart * (unsigned __int64)SharedUserData->TickCountMultiplier >> 24);
