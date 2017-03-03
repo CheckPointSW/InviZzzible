@@ -1804,12 +1804,9 @@ bool Cuckoo::KillSuspiciousProcesses() const {
 	for (const auto &pc : pc_proc) {
 
 		// kill all child processes
-		if ((hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pc.second)) == INVALID_HANDLE_VALUE)
-			continue;
-
-		if (TerminateProcess(hProcess, 0xDEAD) == FALSE) {
+		if ((hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pc.second)) != NULL) {
+			TerminateProcess(hProcess, 0xDEAD);
 			CloseHandle(hProcess);
-			continue;
 		}
 	}
 
