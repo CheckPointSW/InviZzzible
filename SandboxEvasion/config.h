@@ -14,7 +14,7 @@ namespace Config {
 	enum class ConfigArgsFirmwareCheckType { FIRMBIOS, RSMBBIOS };
 	enum class ConfigArgsWindowCheckType { CLASS, WINDOW };
 	enum class ConfigVMWare { HYPERVISOR_PORT, HYPERVISOR_PORT_ENUM, HYPERVISOR_BIT };
-	enum class ConfigGeneric { SYSTEM_UPTIME, RAM, DISK_SIZE, DRIVE_SIZE, DEVICE_NPF_NDIS, MOUSE_ACTIVE, SLEEP_DUMMY, PROCESSORS_COUNT, DNS_RESPONSE, TIME_TAMPERING, SOCKET_TIMEOUT };
+	enum class ConfigGeneric { SYSTEM_UPTIME, RAM, DISK_SIZE, DRIVE_SIZE, DEVICE_NPF_NDIS, MOUSE_ACTIVE, SLEEP_DUMMY, PROCESSORS_COUNT, DNS_RESPONSE, TIME_TAMPERING, PERFORMANCE_COUNTER };
 	
 	extern std::map<ConfigGlobal, std::string> cg2s;
 	extern std::map<ConfigGlobalType, std::string> cgt2s;

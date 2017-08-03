@@ -1,4 +1,6 @@
 August 3rd, 2017:
+	[*] Generic: DNS response check servers changed
+	[+] Generic: PerformanceCounter detection technique implemented
 	[+] Cuckoo: SocketTimeout detection technique implemented
 	[*] VEDetection: generic interface for drive model vendor added
 

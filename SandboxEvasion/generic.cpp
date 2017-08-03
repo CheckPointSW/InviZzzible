@@ -11,6 +11,20 @@ void Generic::CheckAllCustom() {
 	std::pair<std::string, std::string> report;
 	std::string ce_name;
 
+	ce_name = Config::cgen2s[Config::ConfigGeneric::SLEEP_DUMMY];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckSleepDummyPatch();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
+	ce_name = Config::cgen2s[Config::ConfigGeneric::PERFORMANCE_COUNTER];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckPerformanceCounter();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cgen2s[Config::ConfigGeneric::DISK_SIZE];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckDiskSize();
@@ -49,13 +63,6 @@ void Generic::CheckAllCustom() {
 	ce_name = Config::cgen2s[Config::ConfigGeneric::SYSTEM_UPTIME];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckSystemUptime();
-		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
-		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
-	}
-
-	ce_name = Config::cgen2s[Config::ConfigGeneric::SLEEP_DUMMY];
-	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
-		d = CheckSleepDummyPatch();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
@@ -148,25 +155,69 @@ bool Generic::CheckNDISFile() const {
 
 bool Generic::CheckMouseActive() const {
 	POINT pos_f, pos_s;
-	const uint32_t timeout = 3000; // timeout in milliseconds
+	const uint32_t timeout = 1000; // timeout in milliseconds
+	const uint8_t tries = 5;
 
-	GetCursorPos(&pos_f);
-	Sleep(timeout);
-	GetCursorPos(&pos_s);
+	for (uint8_t i = 0; i < tries; ++i) {
+		GetCursorPos(&pos_f);
+		Sleep(timeout);
+		GetCursorPos(&pos_s);
 
-	return !(pos_s.x - pos_f.x) && !(pos_s.y - pos_f.y);
+		if ((pos_s.x - pos_f.x) || (pos_s.y - pos_f.y))
+			return false;
+	}
+
+	return true;
+}
+
+bool Generic::CheckMouseRawActive() const {
+	POINT pos_f, pos_s;
+	const uint32_t timeout = 1000; // timeout in milliseconds
+	const uint8_t tries = 5;
+
+	// TODO: implement
+
+	for (uint8_t i = 0; i < tries; ++i) {
+		
+	}
+
+	return false;
 }
 
 bool Generic::CheckSleepDummyPatch() const {
 	DWORD tick_count_f, tick_count_s;
 	DWORD tick_count_diff;
-	const uint32_t delay_ms = 900; // timeout in milliseconds
+	const DWORD delay_ms = 900; // timeout in milliseconds
 
 	tick_count_f = GetTickCount();
 	SleepEx(delay_ms, FALSE);
 	tick_count_s = GetTickCount();
 
 	return (tick_count_s - tick_count_f) < (delay_ms - 50);
+}
+
+bool Generic::CheckPerformanceCounter() const {
+	LARGE_INTEGER Frequency = { 0 };
+	LARGE_INTEGER StartingTime = { 0 };
+	LARGE_INTEGER EndingTime = { 0 };
+	LARGE_INTEGER ElapsedTimeMs = { 0 };
+
+	const DWORD delay_ms = 10000;	// timeout in milliseconds
+	const DWORD max_delta = 50;		// delay in milliseconds
+
+	QueryPerformanceFrequency(&Frequency);
+	QueryPerformanceCounter(&StartingTime);
+
+	// Activity to be timed
+	Sleep(delay_ms);
+
+	QueryPerformanceCounter(&EndingTime);
+
+	ElapsedTimeMs.QuadPart = 1000ll * (EndingTime.QuadPart - StartingTime.QuadPart) / Frequency.QuadPart;
+
+	// printf("Elapsed: %u. Waited: %u\n", ElapsedTimeMs.LowPart, delay_ms);
+
+	return abs(static_cast<long>(ElapsedTimeMs.LowPart) - static_cast<long>(delay_ms)) > max_delta;
 }
 
 bool Generic::CheckNumberOfProcessors() const {
@@ -186,9 +237,9 @@ bool Generic::CheckDNSResponse() const {
 	std::list<IP4_ADDRESS> ips;
 	// FIXME: should it be configurable?
 	std::map<std::string, size_t> dns_r = {
-		{ "google.com",		6 },
+		{ "microsoft.com",	3 },
 		{ "bbc.com",		3 },
-		{ "twitter.com",	3 }
+		{ "amazon.com",		3 }
 	};
 	bool sandbox_detected = false;
 	unsigned char ip_addr[4];

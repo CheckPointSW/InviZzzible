@@ -28,7 +28,9 @@ protected:
 	bool CheckDriveSize() const;
 	bool CheckNDISFile() const;
 	bool CheckMouseActive() const;
+	bool CheckMouseRawActive() const;
 	bool CheckSleepDummyPatch() const;
+	bool CheckPerformanceCounter() const;
 	bool CheckNumberOfProcessors() const;
 	bool CheckDNSResponse() const;
 	bool CheckTimeTamperingMaster() const;
