@@ -48,6 +48,7 @@ public:
 	bool CheckExceptionsNumber(ProcessWorkingMode) const;
 	bool IsDelayIntervalModified() const;
 	bool CheckTickCountIntegrity() const;
+	bool CheckSocketTimeout();
 
 	static const event_name_t GeneratePrintableBuffer(SIZE_T length, DWORD seed = SEED_DEFAULT);
 	static ULARGE_INTEGER CompareDatetime(SYSTEMTIME *st_1, SYSTEMTIME *st_2);
@@ -98,6 +99,8 @@ private:
 	DWORD WINAPI ThreadDelaysAccumulationSlave(LPVOID);
 	DWORD WINAPI ThreadCheckEventNameMaster(LPVOID);
 	DWORD WINAPI ThreadCheckEventNameSlave(LPVOID);
+	DWORD WINAPI ThreadCheckSocketTimeoutMaster(LPVOID);
+	DWORD WINAPI ThreadCheckSocketTimeoutSlave(LPVOID);
 
 	volatile DWORD dwThreadMasterSlaveBarrier;
 };

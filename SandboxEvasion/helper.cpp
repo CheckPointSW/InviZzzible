@@ -2112,7 +2112,8 @@ bool get_drive_print_names(std::list<std::string> &disks) {
 }
 
 bool get_drive_models(std::list<std::string> &drive_models) {
-	std::string drive_model;
+	std::list<std::string> drive_model_names;
+
 	const char fmt_device_name[] = "\\\\.\\PhysicalDrive%u";
 	char device_name[256] = { 0 };
 
@@ -2121,28 +2122,28 @@ bool get_drive_models(std::list<std::string> &drive_models) {
 
 		snprintf(device_name, _countof(device_name), fmt_device_name, i);
 
-		if (get_drive_model(device_name, SMART_RCV_DRIVE_DATA, i, drive_model)) {
-			drive_models.push_back(drive_model);
-			drive_model.clear();
+		if (get_drive_model(device_name, SMART_RCV_DRIVE_DATA, i, drive_model_names)) {
+			std::copy(drive_model_names.begin(), drive_model_names.end(), std::back_insert_iterator<std::list<std::string>>(drive_models));
+			drive_model_names.clear();
 		}
 
-		if (get_drive_model(device_name, IOCTL_STORAGE_QUERY_PROPERTY, i, drive_model)) {
-			drive_models.push_back(drive_model);
-			drive_model.clear();
+		if (get_drive_model(device_name, IOCTL_STORAGE_QUERY_PROPERTY, i, drive_model_names)) {
+			std::copy(drive_model_names.begin(), drive_model_names.end(), std::back_insert_iterator<std::list<std::string>>(drive_models));
+			drive_model_names.clear();
 		}
 	}
 
 	return true;
 }
 
-bool get_drive_model(const std::string &device, ULONG ioctl, unsigned int drive, std::string &drive_model) {
+bool get_drive_model(const std::string &device, ULONG ioctl, unsigned int drive, std::list<std::string>& drive_model_names) {
 
 	switch (ioctl)
 	{
 	case SMART_RCV_DRIVE_DATA:
-		return get_drive_model_st_q(device, drive_model);
+		return get_drive_model_drv_d(device, drive, drive_model_names);
 	case IOCTL_STORAGE_QUERY_PROPERTY: 
-		return get_drive_model_drv_d(device, drive, drive_model);
+		return get_drive_model_st_q(device, drive_model_names);
 	default:
 		return false;
 	}
@@ -2153,7 +2154,7 @@ bool get_drive_model(const std::string &device, ULONG ioctl, unsigned int drive,
 /*
  * the following source code was used: http://codexpert.ro/blog/2013/10/26/get-physical-drive-serial-number-part-1/
  */
-bool get_drive_model_st_q(const std::string &device, std::string &drive_model) {
+bool get_drive_model_st_q(const std::string &device, std::list<std::string>& drive_model_names) {
 	// Get a handle to physical drive
 	HANDLE hDevice = CreateFileA(
 		device.c_str(),
@@ -2220,41 +2221,19 @@ bool get_drive_model_st_q(const std::string &device, std::string &drive_model) {
 
 		STORAGE_DEVICE_DESCRIPTOR* pDeviceDescriptor = (STORAGE_DEVICE_DESCRIPTOR*)pOutBuffer;
 		// const DWORD dwSerialNumberOffset = pDeviceDescriptor->SerialNumberOffset;
-		// const DWORD dwVendorIdOffset = pDeviceDescriptor->VendorIdOffset;
+		const DWORD dwVendorIdOffset = pDeviceDescriptor->VendorIdOffset;
 		const DWORD dwProdIdOffset = pDeviceDescriptor->ProductIdOffset;
 		UCHAR *strSerialNumber, *strVendorId, *strProdId;
 
-		if (dwProdIdOffset == 0) {
-			ok = false;
-			break;
-		}
-
-		strProdId = pOutBuffer + dwProdIdOffset;
-		drive_model = reinterpret_cast<char *>(strProdId);
-
-		// FIXME: delete rest
-		/*
-		if (dwSerialNumberOffset != 0)
-		{
-			// Finally, get the serial number
-			strSerialNumber = pOutBuffer + dwSerialNumberOffset;
-			printf_s("Serial number: %s\n", strSerialNumber);
-		}
-
-
-		if (dwVendorIdOffset != 0)
-		{
-			strVendorId = pOutBuffer + dwVendorIdOffset;
-			printf_s("Vendor id: %s\n", strVendorId);
-		}
-
-		if (dwProdIdOffset != 0)
-		{
+		if (dwProdIdOffset > 0) {
 			strProdId = pOutBuffer + dwProdIdOffset;
-			printf_s("Prod id: %s\n", strProdId);
+			drive_model_names.push_back(reinterpret_cast<char *>(strProdId));
 		}
-		*/
 
+		if (dwVendorIdOffset > 0) {
+			strVendorId = pOutBuffer + dwVendorIdOffset;
+			drive_model_names.push_back(reinterpret_cast<char *>(strVendorId));
+		}
 	} while (false);
 	
 	CloseHandle(hDevice);
@@ -2267,7 +2246,7 @@ bool get_drive_model_st_q(const std::string &device, std::string &drive_model) {
 	return ok;
 }
 
-bool get_drive_model_drv_d(const std::string &device, unsigned int drive, std::string &drive_model) {
+bool get_drive_model_drv_d(const std::string &device, unsigned int drive, std::list<std::string>& drive_model_names) {
 	// Get a handle to physical drive
 	HANDLE hDevice = CreateFileA(
 		device.c_str(),
@@ -2282,6 +2261,7 @@ bool get_drive_model_drv_d(const std::string &device, unsigned int drive, std::s
 	if (hDevice == INVALID_HANDLE_VALUE)
 		return false;
 
+	std::string drive_model;
 	GETVERSIONOUTPARAMS VersionParams;
 	DWORD               cbBytesReturned = 0;
 	BYTE IdOutCmd[sizeof(SENDCMDOUTPARAMS) + IDENTIFY_BUFFER_SIZE - 1];
@@ -2334,8 +2314,11 @@ bool get_drive_model_drv_d(const std::string &device, unsigned int drive, std::s
 		diskdata[ijk] = pIdSector[ijk];
 
 	// get drive model
+	bool r = drv_convert_to_string(diskdata, _countof(diskdata), 27, 46, drive_model);
+	if (r)
+		drive_model_names.push_back(drive_model);
 
-	return drv_convert_to_string(diskdata, _countof(diskdata), 27, 46, drive_model);
+	return r;
 }
 
 bool drv_convert_to_string(DWORD diskdata[256], DWORD diskdata_size, unsigned int firstIndex, unsigned int lastIndex, std::string &buffer) {

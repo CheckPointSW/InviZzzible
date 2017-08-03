@@ -37,6 +37,7 @@ namespace Config {
 		{ ConfigCuckoo::UNBALANCED_STACK, "UnbalancedStack" },
 		{ ConfigCuckoo::INFINITE_DELAY, "InfiniteDelay" },
 		{ ConfigCuckoo::DELAYS_ACCUMULATION, "DelaysAccumulation" },
+		{ ConfigCuckoo::SOCKET_TIMEOUT, "SocketTimeout" },
 		{ ConfigCuckoo::FUNCTION_HOOKS, "FunctionHooks" },
 		{ ConfigCuckoo::AGENT_ARTIFACTS, "AgentArtifacts" },
 		{ ConfigCuckoo::CUCKOOMON_CONFIGURATION, "CuckoomonConfiguration" },
@@ -99,7 +100,8 @@ namespace Config {
 		{ ConfigGeneric::SLEEP_DUMMY, "SleepDummyPatch" },
 		{ ConfigGeneric::PROCESSORS_COUNT, "ProcessorsCount" },
 		{ ConfigGeneric::DNS_RESPONSE, "DnsResponse" },
-		{ ConfigGeneric::TIME_TAMPERING, "TimeTampering" }
+		{ ConfigGeneric::TIME_TAMPERING, "TimeTampering" },
+		{ ConfigGeneric::SOCKET_TIMEOUT, "SocketTimeout" }
 	};
 
 } // Config

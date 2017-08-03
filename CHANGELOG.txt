@@ -1,3 +1,7 @@
+August 3rd, 2017:
+	[+] Cuckoo: SocketTimeout detection technique implemented
+	[*] VEDetection: generic interface for drive model vendor added
+
 January 19th, 2017:
 	[+] Cuckoo: TickCount integrity check implemented
 	[+] Cuckoo: DelayInterval detection technique implemented

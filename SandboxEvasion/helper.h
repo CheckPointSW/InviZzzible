@@ -156,9 +156,9 @@ bool perform_dns_request(const std::string &domain_name, std::list<IP4_ADDRESS> 
 bool get_disk_friendly_name(HDEVINFO hDevs, DWORD i, std::list<std::string> &disk_names);
 bool get_drive_print_names(std::list<std::string> &disks);
 bool get_drive_models(std::list<std::string> &drive_models);
-bool get_drive_model(const std::string &device, ULONG ioctl, unsigned int drive, std::string &drive_model);
-bool get_drive_model_st_q(const std::string &device, std::string &drive_model);
-bool get_drive_model_drv_d(const std::string &device, unsigned int drive, std::string &drive_model);
+bool get_drive_model(const std::string &device, ULONG ioctl, unsigned int drive, std::list<std::string>& drive_model_names);
+bool get_drive_model_st_q(const std::string &device, std::list<std::string>& drive_model_names);
+bool get_drive_model_drv_d(const std::string &device, unsigned int drive, std::list<std::string>& drive_model_names);
 bool drv_convert_to_string(DWORD diskdata[256], DWORD diskdata_size, unsigned int firstIndex, unsigned int lastIndex, std::string &buffer);
 bool do_identify(HANDLE hPhysicalDriveIOCTL, PSENDCMDINPARAMS pSCIP, PSENDCMDOUTPARAMS pSCOP, BYTE bIDCmd, BYTE bDriveNum, PDWORD lpcbBytesReturned);
 bool file_interface_save(const std::string &module, const std::string &name, bool detected);

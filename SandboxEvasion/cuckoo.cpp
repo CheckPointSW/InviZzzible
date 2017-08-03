@@ -207,6 +207,13 @@ void Cuckoo::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
+	ce_name = Config::cc2s[Config::ConfigCuckoo::SOCKET_TIMEOUT];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckSocketTimeout();
+		report = GenerateReportEntry(ce_name + std::string("_probe1"), json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cc2s[Config::ConfigCuckoo::INFINITE_DELAY];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckInfiniteSleep();
@@ -302,6 +309,13 @@ void Cuckoo::CheckAllCustom() {
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsSuspendedThreadNotTracked();
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
+	ce_name = Config::cc2s[Config::ConfigCuckoo::SOCKET_TIMEOUT];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckSocketTimeout();
+		report = GenerateReportEntry(ce_name + std::string("_probe2"), json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
@@ -401,6 +415,13 @@ bool Cuckoo::CheckInfiniteSleep() {
  */
 bool Cuckoo::CheckDelaysAccumulation() {
 	return RunMasterSlaveThreads(&Cuckoo::ThreadDelaysAccumulationMaster, &Cuckoo::ThreadDelaysAccumulationSlave);
+}
+
+/*
+ * Check if socket timeout equals to the normal delay sleep
+ */
+bool Cuckoo::CheckSocketTimeout() {
+	return RunMasterSlaveThreads(&Cuckoo::ThreadCheckSocketTimeoutMaster, &Cuckoo::ThreadCheckSocketTimeoutSlave);
 }
 
 
@@ -1659,6 +1680,133 @@ DWORD Cuckoo::ThreadCheckEventNameMaster(LPVOID thread_params) {
 	}
 
 	return TRUE;
+}
+
+
+DWORD WINAPI Cuckoo::ThreadCheckSocketTimeoutMaster(LPVOID thread_params) {
+	ptpsi p_thread_params_en = static_cast<ptpsi>(thread_params);
+	DWORD tick_start, tick_end, time_elapsed_ms;
+	const DWORD timeout = 20000; // should be multiple of 1000! The same as in slave thread
+	const DWORD max_error = 100;	// max error is 100 ms
+	DWORD thread_max_wait = timeout << 1;
+	DWORD thread_slave_wait_state;
+	DWORD thread_slave_exit_code;
+
+	if (!p_thread_params_en)
+		return FALSE;
+
+	// barrier sync
+	InterlockedIncrement(&dwThreadMasterSlaveBarrier);
+	while (p_thread_params_en->threads_count != dwThreadMasterSlaveBarrier);
+
+	tick_start = GetTickCount();
+
+	// puts("Sleep...");
+	Sleep(timeout);	// on normal systems should sleep around timeout
+	// puts("Sleep finished");
+
+	thread_slave_wait_state = WaitForSingleObject(p_thread_params_en->h_slave_thread, thread_max_wait);
+	if (thread_slave_exit_code != WAIT_OBJECT_0)
+		return FALSE;
+
+	if (GetExitCodeThread(p_thread_params_en->h_slave_thread, &thread_slave_exit_code) == FALSE)
+		return FALSE;
+
+	if (thread_slave_exit_code == FALSE)
+		return FALSE;
+
+	// normally we should receive a notification just after sleep, because delay is the same as for socket
+	// however in the Cuckoo the delays must probably will be skipped, thus time flow will not be the same
+	tick_end = GetTickCount();
+
+	time_elapsed_ms = tick_end - tick_start;
+
+	// printf("\tRequested %d elapsed %d\n", timeout, time_elapsed_ms);
+
+	p_thread_params_en->detected = abs(static_cast<long>(time_elapsed_ms) - static_cast<long>(timeout)) > max_error;
+
+	return TRUE;
+}
+
+
+DWORD WINAPI Cuckoo::ThreadCheckSocketTimeoutSlave(LPVOID thread_params) {
+	ptpsi p_thread_params_en = static_cast<ptpsi>(thread_params);
+
+	if (!p_thread_params_en)
+		return FALSE;
+
+	// barrier sync
+	InterlockedIncrement(&dwThreadMasterSlaveBarrier);
+	while (p_thread_params_en->threads_count != dwThreadMasterSlaveBarrier);
+
+	int iResult;
+	DWORD timeout = 20000; // should be multiple of 1000!
+	DWORD OK = TRUE;
+
+	SOCKADDR_IN sa = { 0 };
+	SOCKET sock = INVALID_SOCKET;
+
+	// this code snippet should take around lTimeout milliseconds, take a look on Master thread for the better understanding
+	do {
+		memset(&sa, 0, sizeof(sa));
+		sa.sin_family = AF_INET;
+		// sa.sin_addr.s_addr = inet_addr("132.249.0.22");	// TODO: how to choose IP address ?
+		sa.sin_addr.s_addr = inet_addr("8.8.4.3");	// WARNING: we should have a route to this IP address, however we should not be able to connect to it
+		sa.sin_port = htons(64523);
+		
+		sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (sock == INVALID_SOCKET) {
+			// wprintf(L"socket function failed with error: %ld\n", WSAGetLastError());
+			OK = FALSE;
+			break;
+		}
+
+		// setting socket timeout
+		unsigned long iMode = 1;
+		iResult = ioctlsocket(sock, FIONBIO, &iMode);
+
+		iResult = connect(sock, (SOCKADDR*)&sa, sizeof(sa));
+		if (iResult == false) {
+			// wprintf(L"\tconnect failed with error: %d\n", WSAGetLastError());
+			OK = FALSE;
+			break;
+		}
+
+		// restart the socket mode
+		iMode = 0;
+		iResult = ioctlsocket(sock, FIONBIO, &iMode);
+		if (iResult != NO_ERROR) {
+			// printf("ioctlsocket failed with error: %ld\n", iResult);
+			OK = FALSE;
+			break;
+		}
+
+		// fd set data
+		fd_set Write, Err;
+		FD_ZERO(&Write);
+		FD_ZERO(&Err);
+		FD_SET(sock, &Write);
+		FD_SET(sock, &Err);
+		timeval tv = { 0 };
+		tv.tv_sec = timeout / 1000;
+
+		// check if the socket is ready, this call should take lTimeout milliseconds
+		// puts("select...");
+		select(0, NULL, &Write, &Err, &tv);
+		// puts("select finished");
+
+		if (FD_ISSET(sock, &Err)) {
+			// printf("Last socket error: %d\n", WSAGetLastError());
+			OK = FALSE;
+			break;
+		}
+
+	} while (false);
+
+	if (sock != INVALID_SOCKET)
+		closesocket(sock);
+
+	return OK;
 }
 
 
