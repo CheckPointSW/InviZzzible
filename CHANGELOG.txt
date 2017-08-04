@@ -1,3 +1,6 @@
+August 4th, 2017:
+	[+] Generic: raw mouse activity check implemented
+
 August 3rd, 2017:
 	[*] Generic: DNS response check servers changed
 	[+] Generic: PerformanceCounter detection technique implemented

@@ -87,6 +87,13 @@ void Generic::CheckAllCustom() {
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
+
+	ce_name = Config::cgen2s[Config::ConfigGeneric::MOUSE_RAW_ACTIVE];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckMouseRawActive(ProcessWorkingMode::MASTER);
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
 }
 
 bool Generic::CheckSystemUptime() const {
@@ -115,7 +122,7 @@ bool Generic::CheckDiskSize() const {
 	DWORD dwReturned;
 	uint32_t min_disk_size_gb = 60; 	// FIXME: make it configurable ?
 
-	hDrive = CreateFile("\\\\.\\PhysicalDrive0", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	hDrive = CreateFileA("\\\\.\\PhysicalDrive0", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 	if (hDrive == INVALID_HANDLE_VALUE)
 		return false;
 
@@ -170,19 +177,6 @@ bool Generic::CheckMouseActive() const {
 	return true;
 }
 
-bool Generic::CheckMouseRawActive() const {
-	POINT pos_f, pos_s;
-	const uint32_t timeout = 1000; // timeout in milliseconds
-	const uint8_t tries = 5;
-
-	// TODO: implement
-
-	for (uint8_t i = 0; i < tries; ++i) {
-		
-	}
-
-	return false;
-}
 
 bool Generic::CheckSleepDummyPatch() const {
 	DWORD tick_count_f, tick_count_s;
@@ -305,7 +299,7 @@ bool Generic::CheckTimeTamperingMaster() const {
 	CloseHandle(pi.hThread);
 	CloseHandle(pi.hProcess);
 
-	return !!ec;
+	return ec == 1;
 }
 
 
@@ -347,6 +341,184 @@ bool Generic::CheckTimeTamperingSlave() const {
 			sandboxDetected = true;
 	}
 	return sandboxDetected;
+}
+
+
+bool Generic::CheckMouseRawActive(ProcessWorkingMode wm) {
+	switch (wm) {
+	case ProcessWorkingMode::MASTER:
+		return CheckMouseRawActiveMaster();
+	case ProcessWorkingMode::SLAVE:
+		return CheckMouseRawActiveSlave();
+	default:
+		return false;
+	}
+}
+
+
+bool Generic::CheckMouseRawActiveMaster() {
+	wchar_t app_params[] = L"--action --mra";
+	PROCESS_INFORMATION pi = {};
+
+	if (!run_self_susp(app_params, &pi))
+		return false;
+
+	// resume thread
+	ResumeThread(pi.hThread);
+
+	// wait process for finish
+	DWORD ec;
+	do {
+		if (!GetExitCodeProcess(pi.hProcess, &ec)) {
+			TerminateProcess(pi.hProcess, 0xFF);
+			CloseHandle(pi.hThread);
+			CloseHandle(pi.hProcess);
+			return false;
+		}
+		Sleep(100);
+	} while (ec == STILL_ACTIVE);
+
+	CloseHandle(pi.hThread);
+	CloseHandle(pi.hProcess);
+
+	return ec == 1;
+}
+
+
+bool Generic::CheckMouseRawActiveSlave() {
+	MSG msg;
+	HINSTANCE hInstance = GetModuleHandleA(NULL);
+
+	if (MouseRawActiveRegisterClass(hInstance) == NULL)
+		return FALSE;
+
+	if (MouseRawActiveInitInstance(hInstance) == FALSE)
+		return FALSE;
+
+	while (GetMessage(&msg, NULL, 0, 0)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	return false;
+}
+
+
+ATOM Generic::MouseRawActiveRegisterClass(HINSTANCE hInstance) {
+	WNDCLASSEXA wcex;
+
+	wcex.cbSize = sizeof(WNDCLASSEXA);
+
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = Generic::MouseRawWndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = NULL;
+	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = NULL;
+	wcex.lpszClassName = mouse_raw_wnd_class.c_str();
+	wcex.hIconSm = NULL;
+
+	return RegisterClassExA(&wcex);
+}
+
+
+BOOL Generic::MouseRawActiveInitInstance(HINSTANCE hInstance) {
+	HWND hWnd;
+
+	// hWnd = CreateWindowExA(WS_EX_TOOLWINDOW, mouse_raw_wnd_class.c_str(), "ABCD", 0, 0, 0, 680, 480, NULL, NULL, hInstance, NULL);
+	hWnd = CreateWindowExA(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, mouse_raw_wnd_class.c_str(), "ABCD", 0, 0, 0, 640, 480, NULL, NULL, hInstance, NULL);
+
+	if (!hWnd)
+		return FALSE;
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+
+	// register raw input device
+	RAWINPUTDEVICE Rid[1];
+
+	Rid[0].usUsagePage = 0x01;
+	Rid[0].usUsage = 0x02;
+	Rid[0].dwFlags = RIDEV_NOLEGACY;   // adds HID mouse and also ignores legacy mouse messages
+	Rid[0].hwndTarget = hWnd;
+
+	return RegisterRawInputDevices(Rid, 1, sizeof(Rid[0]));
+}
+
+
+LRESULT CALLBACK Generic::MouseRawWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	int wmId, wmEvent;
+	PAINTSTRUCT ps;
+	HDC hdc;
+	const uint8_t total_tries = 20;
+	const uint8_t real_after = 5;
+
+	switch (message) {
+	case WM_INPUT: {
+		
+		UINT dwSize;
+
+		// puts("WM_INPUT");
+
+		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+		LPBYTE lpb = new BYTE[dwSize];
+
+		if (lpb == NULL)
+			return 0;
+
+		if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize) {
+			delete[] lpb;
+			lpb = NULL;
+
+			return 0;
+		}
+
+		RAWINPUT *raw = (RAWINPUT*)lpb;
+
+		if (raw->header.dwType == RIM_TYPEMOUSE) {
+			static LONG lastX = 0;
+			static LONG lastY = 0;
+			static uint8_t count = 0;
+			static uint8_t tries = 0;
+
+			++tries;
+
+			if (lastX != raw->data.mouse.lLastX && lastY != raw->data.mouse.lLastY)
+				++count;
+
+			lastX = raw->data.mouse.lLastX;
+			lastY = raw->data.mouse.lLastY;
+
+			// not detected
+			if (count >= real_after) {
+				ExitProcess(0);
+			}
+
+			// detected
+			if (tries >= total_tries) {
+				ExitProcess(1);
+			}
+		}
+
+		delete[] lpb;
+		lpb = NULL;
+
+		break;
+	}
+	case WM_PAINT:
+		hdc = BeginPaint(hWnd, &ps);
+		EndPaint(hWnd, &ps);
+		break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
 }
 
 } // SandboxEvasion

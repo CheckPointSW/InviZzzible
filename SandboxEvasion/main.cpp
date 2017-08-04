@@ -43,6 +43,7 @@ static args_t k_args = {
 
 void perform_action(const char *action) {
 	Cuckoo cuckoo = Cuckoo(json_tiny());
+	Generic gen = Generic(json_tiny());
 
 	/*
 	 * Cuckoo actions
@@ -76,9 +77,12 @@ void perform_action(const char *action) {
 	 * Generic actions
 	 */
 	else if (!strncmp(action, "--dtt", 5)) {
-		Generic gen = Generic(json_tiny());
 		bool d = gen.CheckTimeTampering(ProcessWorkingMode::SLAVE);
-		ExitProcess(d);
+		ExitProcess(1 ? d : 0);
+	}
+	else if (!strncmp(action, "--mra", 5)) {
+		bool d = gen.CheckMouseRawActive(ProcessWorkingMode::SLAVE);
+		ExitProcess(1 ? d : 0);
 	}
 }
 

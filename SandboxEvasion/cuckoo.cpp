@@ -1688,7 +1688,7 @@ DWORD WINAPI Cuckoo::ThreadCheckSocketTimeoutMaster(LPVOID thread_params) {
 	DWORD tick_start, tick_end, time_elapsed_ms;
 	const DWORD timeout = 20000; // should be multiple of 1000! The same as in slave thread
 	const DWORD max_error = 100;	// max error is 100 ms
-	DWORD thread_max_wait = timeout << 1;
+	// DWORD thread_max_wait = timeout << 1;
 	DWORD thread_slave_wait_state;
 	DWORD thread_slave_exit_code;
 
@@ -1705,8 +1705,8 @@ DWORD WINAPI Cuckoo::ThreadCheckSocketTimeoutMaster(LPVOID thread_params) {
 	Sleep(timeout);	// on normal systems should sleep around timeout
 	// puts("Sleep finished");
 
-	thread_slave_wait_state = WaitForSingleObject(p_thread_params_en->h_slave_thread, thread_max_wait);
-	if (thread_slave_exit_code != WAIT_OBJECT_0)
+	thread_slave_wait_state = WaitForSingleObject(p_thread_params_en->h_slave_thread, INFINITE);
+	if (thread_slave_wait_state != WAIT_OBJECT_0)
 		return FALSE;
 
 	if (GetExitCodeThread(p_thread_params_en->h_slave_thread, &thread_slave_exit_code) == FALSE)

@@ -101,7 +101,8 @@ namespace Config {
 		{ ConfigGeneric::PROCESSORS_COUNT,		"ProcessorsCount" },
 		{ ConfigGeneric::DNS_RESPONSE,			"DnsResponse" },
 		{ ConfigGeneric::TIME_TAMPERING,		"TimeTampering" },
-		{ ConfigGeneric::PERFORMANCE_COUNTER,	"PerformanceCounter" }
+		{ ConfigGeneric::PERFORMANCE_COUNTER,	"PerformanceCounter" },
+		{ ConfigGeneric::MOUSE_RAW_ACTIVE,		"MouseRawActive" }
 	};
 
 } // Config
