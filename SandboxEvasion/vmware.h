@@ -1,4 +1,4 @@
-#ifndef  _VMWARE_H
+#ifndef _VMWARE_H
 #define _VMWARE_H
 
 #include "ve_detection.h"

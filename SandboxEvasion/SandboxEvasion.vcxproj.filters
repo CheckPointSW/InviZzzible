@@ -45,6 +45,36 @@
     <ClCompile Include="generic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="parallels.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="virtualpc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sandboxie.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qemu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bochs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="joebox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hyperv.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="misc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ve_detection.h">
@@ -75,6 +105,36 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="generic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="parallels.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="virtualpc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sandboxie.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qemu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bochs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="joebox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hyperv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="misc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

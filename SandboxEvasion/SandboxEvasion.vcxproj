@@ -61,28 +61,48 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bochs.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="cuckoo.cpp" />
     <ClCompile Include="generic.cpp" />
     <ClCompile Include="helper.cpp" />
+    <ClCompile Include="hyperv.cpp" />
+    <ClCompile Include="joebox.cpp" />
     <ClCompile Include="json.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="misc.cpp" />
+    <ClCompile Include="parallels.cpp" />
+    <ClCompile Include="qemu.cpp" />
     <ClCompile Include="report.cpp" />
+    <ClCompile Include="sandboxie.cpp" />
     <ClCompile Include="vbox.cpp" />
     <ClCompile Include="ve_detection.cpp" />
+    <ClCompile Include="virtualpc.cpp" />
     <ClCompile Include="vmware.cpp" />
+    <ClCompile Include="wine.cpp" />
+    <ClCompile Include="xen.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bochs.h" />
     <ClInclude Include="generic.h" />
+    <ClInclude Include="hyperv.h" />
+    <ClInclude Include="joebox.h" />
+    <ClInclude Include="misc.h" />
+    <ClInclude Include="parallels.h" />
+    <ClInclude Include="qemu.h" />
     <ClInclude Include="report.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="cuckoo.h" />
     <ClInclude Include="helper.h" />
     <ClInclude Include="json.h" />
     <ClInclude Include="nt.h" />
+    <ClInclude Include="sandboxie.h" />
     <ClInclude Include="vbox.h" />
     <ClInclude Include="ve_detection.h" />
+    <ClInclude Include="virtualpc.h" />
     <ClInclude Include="vmware.h" />
+    <ClInclude Include="wine.h" />
+    <ClInclude Include="xen.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="bootstrap.css" />

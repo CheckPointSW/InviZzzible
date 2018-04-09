@@ -1,43 +1,90 @@
-#include <WinSock2.h>
+#include <WinSock2.h>  // must be before <Windows.h>
 #include <Windows.h>
-#include "cuckoo.h"
-#include "vmware.h"
-#include "vbox.h"
+
 #include "generic.h"
-#include <conio.h>
-#include <iostream>
+
+#include "cuckoo.h"
+#include "joebox.h"
+
 #include "ve_detection.h"
-#include <map>
-#include <sstream>
+#include "bochs.h"
+#include "hyperv.h"
+#include "parallels.h"
+#include "qemu.h"
+#include "sandboxie.h"
+#include "vbox.h"
+#include "virtualpc.h"
+#include "vmware.h"
+#include "xen.h"
+#include "wine.h"
+
+#include "misc.h"
+
 #include "report.h"
 
+#include <iostream>
+#include <map>
+#include <sstream>
 
 #if defined(_WIN32) && defined(_WIN64)
 #error "Only Win32 is supported"
 #endif // _WIN32
 
+using SandboxEvasion::Generic;
+
+using SandboxEvasion::Cuckoo;
+using SandboxEvasion::Joebox;
 
 using SandboxEvasion::VEDetection;
-using SandboxEvasion::Cuckoo;
-using SandboxEvasion::VMWare;
+using SandboxEvasion::BOCHS;
+using SandboxEvasion::HyperV;
+using SandboxEvasion::Parallels;
+using SandboxEvasion::QEMU;
+using SandboxEvasion::Sandboxie;
 using SandboxEvasion::VBOX;
-using SandboxEvasion::Generic;
+using SandboxEvasion::VirtualPC;
+using SandboxEvasion::VMWare;
+using SandboxEvasion::Xen;
+using SandboxEvasion::Wine;
+
+using SandboxEvasion::Misc;
+
 using std::iostream;
 
 typedef VEDetection* (*fact_meth)(const json_tiny &);
 
 static std::map<std::string, fact_meth> k_fm = {
-	{ "--cuckoo",	Cuckoo::create_instance		},
-	{ "--vmware",	VMWare::create_instance		},
-	{ "--vbox",		VBOX::create_instance		},
-	{ "--generic",	Generic::create_instance	}
+	{ "--generic",	 Generic::create_instance   },
+	{ "--cuckoo",	 Cuckoo::create_instance	},
+	{ "--joebox",	 Joebox::create_instance	},
+	{ "--bochs",	 BOCHS::create_instance     },
+	{ "--hyperv",	 HyperV::create_instance	},
+	{ "--parallels", Parallels::create_instance },
+	{ "--qemu",		 QEMU::create_instance	    },
+	{ "--sandboxie", Sandboxie::create_instance },
+	{ "--virtualpc", VirtualPC::create_instance },
+	{ "--vbox",		 VBOX::create_instance	    },
+	{ "--vmware",	 VMWare::create_instance	},
+	{ "--xen",		 Xen::create_instance       },
+	{ "--wine",		 Wine::create_instance      },
+	{ "--misc",		 Misc::create_instance      }
 };
 
 static args_t k_args = {
-	{ "--cuckoo",	NULL },
-	{ "--generic",	NULL },
-	{ "--vmware",	NULL },
-	{ "--vbox",		NULL }
+	{ "--generic",	 NULL },
+	{ "--cuckoo",	 NULL },
+	{ "--joebox",	 NULL },
+	{ "--bochs",	 NULL },
+	{ "--hyperv",	 NULL },
+	{ "--parallels", NULL },
+	{ "--qemu",		 NULL },
+	{ "--sandboxie", NULL },
+	{ "--virtualpc", NULL },
+	{ "--vbox",		 NULL },
+	{ "--vmware",	 NULL },
+	{ "--xen",		 NULL },
+	{ "--wine",		 NULL },
+	{ "--misc",		 NULL }
 };
 
 
@@ -235,11 +282,8 @@ int main(int argc, char **argv, char **env) {
 	for (auto &j : jsons)
 		delete[]j;
 
-	// FIXME: should be removed
-	log_message(LogMessageLevel::INFO, module_name, std::string("Press key to exit..."));
-	_getch();
-
 	dtors(dtors_r, _countof(dtors_r));
+	system("pause");
 
 	return 0;
 }

@@ -1,27 +1,24 @@
-#ifndef _VBOX_H
-#define _VBOX_H
+#ifndef _QEMU_H
+#define _QEMU_H
 
 #include "ve_detection.h"
 
 namespace SandboxEvasion {
 
-class VBOX : VEDetection {
+class QEMU : VEDetection {
 public:
-	VBOX(const json_tiny &j) :
-        VEDetection(j) {
-		module_name = std::string("VBOX");
+	QEMU(const json_tiny &j) :
+		VEDetection(j) {
+		module_name = std::string("QEMU");
 	}
-	virtual ~VBOX() {}
+	virtual ~QEMU() {}
 
 	static VEDetection* create_instance(const json_tiny &j);
 
 	// overriden
 	virtual void CheckAllCustom();
-
 };
 
 } // SandboxEvasion
 
-
-#endif // !_VBOX_H
-
+#endif // ! _QEMU_H

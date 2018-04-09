@@ -19,8 +19,17 @@ InviZzzible is a tool for assessment of your virtual environments in an easy and
 
 ## Supported environments
 * Cuckoo Sandbox
+* Joe Sandbox
 * VMWare virtualization products
 * VirtualBox
+* Hyper-V
+* Parallels
+* QEMU
+* BOCHS
+* Xen
+* VirtualPC
+* Sandboxie
+* Wine
 
 Features
 ========
@@ -36,5 +45,6 @@ Credits
 
 * Aliaksandr Trafimchuk
 * Alexey Bukhteyev
+* Raman Ladutska
 * VMDE project
 * Pafish project

@@ -359,6 +359,8 @@ bool Generic::CheckMouseRawActive(ProcessWorkingMode wm) {
 bool Generic::CheckMouseRawActiveMaster() {
 	wchar_t app_params[] = L"--action --mra";
 	PROCESS_INFORMATION pi = {};
+	const uint32_t timeout = 1000; // timeout in milliseconds
+	const uint8_t tries = 10;
 
 	if (!run_self_susp(app_params, &pi))
 		return false;
@@ -368,20 +370,18 @@ bool Generic::CheckMouseRawActiveMaster() {
 
 	// wait process for finish
 	DWORD ec;
-	do {
-		if (!GetExitCodeProcess(pi.hProcess, &ec)) {
-			TerminateProcess(pi.hProcess, 0xFF);
-			CloseHandle(pi.hThread);
-			CloseHandle(pi.hProcess);
-			return false;
-		}
-		Sleep(100);
-	} while (ec == STILL_ACTIVE);
+	for (uint8_t i = 0; i < tries; ++i) {
+		GetExitCodeProcess(pi.hProcess, &ec);
+		if (ec != STILL_ACTIVE)
+			break;
+		Sleep(timeout);
+	} 
 
+	TerminateProcess(pi.hProcess, 0xFF);
 	CloseHandle(pi.hThread);
 	CloseHandle(pi.hProcess);
 
-	return ec == 1;
+	return ec != 0;
 }
 
 

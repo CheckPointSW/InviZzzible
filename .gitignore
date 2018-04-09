@@ -4,3 +4,8 @@
 /*.sdf
 /*.opendb
 /Debug
+*_notdetected
+*_detected
+*.html
+*.css
+*.db

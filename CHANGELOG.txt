@@ -1,3 +1,32 @@
+April 9th, 2018:
+	[+] Vbox: added virtual devices to be checked as means of detection
+	[+] Vbox: added MAC address to be checked as means of detection
+	[+] VMware: added file names to be checked as means of detection
+	[+] VMware: added registry paths and values to be checked as means of detection
+	[+] VMware: added running processes to be checked as means of detection
+	[+] BOCHS: implementation of detection techniques using VEDetection interface
+	[+] Hyper-V: implementation of detection techniques using VEDetection interface
+	[+] JoeBox: implementation of detection techniques using VEDetection interface
+	[+] Parallels: implementation of detection techniques using VEDetection interface
+	[+] QEMU: implementation of detection techniques using VEDetection interface
+	[+] Sandboxie: implementation of detection techniques using VEDetection interface
+	[+] VirtualPC: implementation of detection techniques using VEDetection interface
+	[+] Wine: implementation of detection techniques using VEDetection interface
+	[+] Xen: implementation of detection techniques using VEDetection interface
+	[+] Miscellaneous sandboxes: implementation of detection techniques using VEDetection interface
+	[+] Added config for BOCHS evasions: checking registry
+	[+] Added config for Hyper-V evasions: checking registry, global objects in OS
+	[+] Added config for JoeBox evasions: checking registry, running processes
+	[+] Added config for Parallels evasions: checking filesystem, registry, firmware tables, running processes, global objects in OS
+	[+] Added config for QEMU evasions: checking registry, disk name
+	[+] Added config for Sandboxie evasions: checking registry, global objects in OS
+	[+] Added config for VirtualPC evasions: checking registry, firmware tables, disk name, running processes, global devices in OS
+	[+] Added config for Wine evasions: checking registry
+	[+] Added config for Xen evasions: checking registry, running processes
+	[+] Added config for miscellaneous VM and sandboxes evasions
+	[*] Generic: fixed bug in raw mouse activity check
+	[*] gitignore: updated
+
 August 4th, 2017:
 	[+] Generic: raw mouse activity check implemented
 

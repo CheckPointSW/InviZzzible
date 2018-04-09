@@ -1,27 +1,24 @@
-#ifndef _VBOX_H
-#define _VBOX_H
+#ifndef _JOEBOX_H
+#define _JOEBOX_H
 
 #include "ve_detection.h"
 
 namespace SandboxEvasion {
 
-class VBOX : VEDetection {
+class Joebox : VEDetection {
 public:
-	VBOX(const json_tiny &j) :
-        VEDetection(j) {
-		module_name = std::string("VBOX");
+	Joebox(const json_tiny &j) :
+		VEDetection(j) {
+		module_name = std::string("JOEBOX");
 	}
-	virtual ~VBOX() {}
+	virtual ~Joebox() {}
 
 	static VEDetection* create_instance(const json_tiny &j);
 
 	// overriden
 	virtual void CheckAllCustom();
-
 };
 
 } // SandboxEvasion
 
-
-#endif // !_VBOX_H
-
+#endif // ! _JOEBOX_H
