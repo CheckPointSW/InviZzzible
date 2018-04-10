@@ -1,3 +1,6 @@
+April 10th, 2018:
+	[+] Cuckoo: ResultserverConnection detection technique implemented
+
 April 9th, 2018:
 	[+] Vbox: added virtual devices to be checked as means of detection
 	[+] Vbox: added MAC address to be checked as means of detection

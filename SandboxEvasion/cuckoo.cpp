@@ -319,6 +319,13 @@ void Cuckoo::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
+	ce_name = Config::cc2s[Config::ConfigCuckoo::RESULTSERVER_CONNECTION];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsResultserverConnected();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cc2s[Config::ConfigCuckoo::DEAD_ANALYZER];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = IsAnalyzerDeadNotTracked(ProcessWorkingMode::MASTER);
@@ -445,7 +452,7 @@ bool Cuckoo::IsAgentPresent() const {
 		return false;
 
 	// retrieve all LISTENING sockets information
-	get_tcp_entries(p_tcp_table, net_endpoints, MIB_TCP_STATE_LISTEN);
+	get_tcp_entries(p_tcp_table, net_endpoints, MIB_TCP_STATE_LISTEN, false);
 	free(const_cast<MIB_TCPTABLE *>(p_tcp_table));
 
 	/*
@@ -463,6 +470,29 @@ bool Cuckoo::IsAgentPresent() const {
 
 		// check if received response belongs to agent
 		if (CheckResponseIsAgent(agent_response, http_resp_size))
+			return true;
+	}
+
+	return false;
+}
+
+
+bool Cuckoo::IsResultserverConnected() const {
+	// TODO: add support for IPv6, GetTcp6Table
+
+	// get all current IPv4 TCP connections
+	const MIB_TCPTABLE *p_tcp_table = reinterpret_cast<const MIB_TCPTABLE *>(get_tcp_table());
+	network_endpoints_t net_endpoints;
+	
+	if (!p_tcp_table)
+		return false;
+
+	// retrieve all ESTABLISHED connections
+	get_tcp_entries(p_tcp_table, net_endpoints, MIB_TCP_STATE_ESTAB, true);
+	free(const_cast<MIB_TCPTABLE *>(p_tcp_table));
+
+	for (auto & ne : net_endpoints) {
+		if(ntohs(static_cast<INTERNET_PORT>(ne.second)) == 2042)
 			return true;
 	}
 

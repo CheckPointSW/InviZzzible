@@ -51,6 +51,7 @@ namespace Config {
 		{ ConfigCuckoo::SUSPENDED_THREAD,			"SuspendedThread" },
 		{ ConfigCuckoo::DELAY_INTERVAL,				"DelayInterval" },
 		{ ConfigCuckoo::TICK_COUNT,					"TickCount" },
+		{ ConfigCuckoo::RESULTSERVER_CONNECTION,	"ResultserverConnection" },
 		{ ConfigCuckoo::DEAD_ANALYZER,				"DeadAnalyzer" }
 	};
 

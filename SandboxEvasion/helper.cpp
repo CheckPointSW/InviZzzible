@@ -731,7 +731,7 @@ bool string_replace_substring(std::string &s, const std::string &what, const std
 	return true;
 }
 
-void get_tcp_entries(const MIB_TCPTABLE *p_tcp_table, network_endpoints_t &net_endpoints, DWORD state) {
+void get_tcp_entries(const MIB_TCPTABLE *p_tcp_table, network_endpoints_t &net_endpoints, DWORD state, bool remote) {
 	size_t i;
 
 	if (!p_tcp_table)
@@ -739,7 +739,10 @@ void get_tcp_entries(const MIB_TCPTABLE *p_tcp_table, network_endpoints_t &net_e
 
 	for (i = 0; i < p_tcp_table->dwNumEntries; ++i) {
 		if (p_tcp_table->table[i].dwState == state) {
-			net_endpoints.push_back(network_endpoint_t(p_tcp_table->table[i].dwLocalAddr, p_tcp_table->table[i].dwLocalPort));
+			if(remote)
+				net_endpoints.push_back(network_endpoint_t(p_tcp_table->table[i].dwRemoteAddr, p_tcp_table->table[i].dwRemotePort));
+			else
+				net_endpoints.push_back(network_endpoint_t(p_tcp_table->table[i].dwLocalAddr, p_tcp_table->table[i].dwLocalPort));
 		}
 	}
 
