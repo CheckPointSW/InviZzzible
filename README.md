@@ -7,6 +7,8 @@ Presented at:
 - Virus Bulletin 2016 by Alexander Chailytko and Stanislav Skuratovich.
 
 Slides: https://github.com/CheckPointSW/InviZzzible/blob/master/conferences/Skuratovich_Chailytko-DefeatingSandboxEvasion.pdf
+<br />
+Video: https://archive.org/details/ShmooCon2017/ShmooCon2017+-+Defeating+Sandbox+Evasion.mp4
 
 <p align="center">
   <img src="https://github.com/CheckPointSW/InviZzzible/blob/master/logo.png" width="150"/>
