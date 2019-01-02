@@ -39,6 +39,8 @@ protected:
 	void CheckAllSharedFolders() const;
 	void CheckAllDiskNames() const;
 	void CheckAllDriveModels() const;
+	void CheckAllLoadedModules() const;
+	void CheckAllFilePathPatterns() const;
 
 	virtual void CheckAllCustom() = 0;
 
@@ -61,7 +63,8 @@ protected:
 	bool CheckFirmwareTableFIRM(const std::string &vendor) const;
 	bool CheckFirmwareTableRSMB(const std::string &vendor) const;
 	bool CheckDirectoryObject(const std::string &directory, const std::string &object) const;
-	bool CheckCpuid(const std::string &cpuid_s) const;
+	bool CheckCpuHypervisorId(const std::string &cpuid_s) const;
+	bool GetCpuVendorId(std::string &cpuid_s) const;
 	bool CheckWindowWindowName(const std::string &wname) const;
 	bool CheckWindowClassName(const std::string &cname) const;
 	bool CheckSharedFolder(const std::string &name) const;

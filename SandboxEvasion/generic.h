@@ -22,12 +22,14 @@ public:
 
 	bool CheckTimeTampering(ProcessWorkingMode wm) const;
 	bool CheckMouseRawActive(ProcessWorkingMode wm);
+	bool CheckUserInputActivity(ProcessWorkingMode wm);
 
 	static LRESULT CALLBACK MouseRawWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 protected:
 	bool CheckSystemUptime() const;
 	bool CheckRAM() const;
+	bool CheckBigRAMAllocate() const;
 	bool CheckDiskSize() const;
 	bool CheckDriveSize() const;
 	bool CheckNDISFile() const;
@@ -40,6 +42,8 @@ protected:
 	bool CheckTimeTamperingSlave() const;
 	bool CheckMouseRawActiveMaster();
 	bool CheckMouseRawActiveSlave();
+	bool CheckUserInputActivityMaster();
+	bool CheckUserInputActivitySlave();
 
 private:
 	std::string mouse_raw_wnd_class;

@@ -1,5 +1,6 @@
 #include "ve_detection.h"
 #include <iostream>
+#include <regex>
 #include <Shlwapi.h>
 #include <boost\foreach.hpp>
 
@@ -54,6 +55,8 @@ namespace SandboxEvasion {
 		CheckAllSharedFolders();
 		CheckAllDiskNames();
 		CheckAllDriveModels();
+		CheckAllLoadedModules();
+		CheckAllFilePathPatterns();
 
 		if (p_report) {
 			p_report->flush(module_name);
@@ -258,25 +261,68 @@ namespace SandboxEvasion {
 
 	void VEDetection::CheckAllProcessRunning() const {
 		bool detected;
-		std::pair<std::string, std::string> report;
 		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::PROCESS]);
-		json_tiny jt;
-		std::list<std::string> procnames;
 
-		// check for the presence of devices
+		std::list<std::wstring> runningProcesses;
+
+		// check for the presence of processes
 		for each (auto &o in jl) {
-			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
-
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
-			procnames = jt.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
-			for (auto &pn : procnames) {
-				detected = CheckProcessIsRunning(pn);
+			const json_tiny &arguments = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (runningProcesses.empty() && !get_running_process_list(runningProcesses)) {
+				log_message(LogMessageLevel::ERR, module_name, "get_running_process_set() failed", RED);
+				return;
+			}
+			for (auto pn : arguments.get_entries(Config::ca2s[Config::ConfigArgs::NAME])) {
+				std::wstring wprocToCheck(pn.begin(), pn.end());
+				//std::transform(wprocToCheck.begin(), wprocToCheck.end(), wprocToCheck.begin(), towlower);
+				detected = std::find_if(runningProcesses.begin(), runningProcesses.end(), [wprocToCheck](const std::wstring &w) {
+					return !StrCmpIW(wprocToCheck.c_str(), w.c_str());
+				}) != runningProcesses.end();
 				if (detected) break;
 			}
 
-			report = GenerateReportEntry(o.first, o.second, detected);
+			const auto &report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+
+		// check for max processes number
+		jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::MAX_PROCS_NUMBER]);
+		for (const auto &o : jl) {
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			const json_tiny &arguments = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+			const int maxProcesses = arguments.get<int>(Config::ca2s[Config::ConfigArgs::NUMBER], 499);
+
+			if (runningProcesses.empty() && !get_running_process_list(runningProcesses)) {
+				log_message(LogMessageLevel::ERR, module_name, "get_running_process_set() failed", RED);
+				return;
+			}
+
+			detected = static_cast<int>(runningProcesses.size()) > maxProcesses;
+
+			const auto &report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+
+		// check for process with name longer than predefined one
+		jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::PROC_WITH_LONG_NAME]);
+		for (const auto &o : jl) {
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			const json_tiny &arguments = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+			const int maxProcessLen = arguments.get<int>(Config::ca2s[Config::ConfigArgs::NUMBER], 65);
+
+			detected = std::find_if(runningProcesses.begin(), runningProcesses.end(), [maxProcessLen](const std::wstring &w) {
+				return w.length() >= maxProcessLen;
+			}) != runningProcesses.end();
+
+			const auto &report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}
 	}
@@ -387,27 +433,51 @@ namespace SandboxEvasion {
 	}
 
 	void VEDetection::CheckAllCpuid() const {
-		bool detected;
+		bool detected = false;
 		std::pair<std::string, std::string> report;
-		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::CPUID]);
+		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::CPUID_H]);
 		json_tiny jt;
 		std::list<std::string> vendors;
 
 		// check for the presence of specific directory objects
-		for each (auto &o in jl) {
+		for (const auto &o : jl) {
 			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
 
 			if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
 				continue;
 
 			vendors = jt.get_entries(Config::ca2s[Config::ConfigArgs::VENDOR]);
-			for (auto &v : vendors) {
-				detected = CheckCpuid(v);
+			for (const auto &v : vendors) {
+				detected = CheckCpuHypervisorId(v);
 				if (detected) break;
 			}
 
 			report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+
+		detected = false;
+		jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::CPUID_V]);
+		if (!jl.empty()) {
+			std::string vendor;
+			if (GetCpuVendorId(vendor)) {
+				for (const auto &o : jl) {
+					jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+					if (!IsEnabled(o.first, conf.get<std::string>(o.first + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+						continue;
+
+					vendors = jt.get_entries(Config::ca2s[Config::ConfigArgs::VENDOR]);
+					for (const auto &v : vendors) {
+						detected = vendor.find(v) != vendor.npos;
+						if (detected)
+							break;
+					}
+
+					report = GenerateReportEntry(o.first, o.second, detected);
+					log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+				}
+			}
 		}
 	}
 
@@ -516,6 +586,70 @@ namespace SandboxEvasion {
 		}
 	}
 
+	void VEDetection::CheckAllLoadedModules() const {
+		const auto& jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::HAS_LOADED_MOD]);
+		if (jl.empty())
+			return;
+
+		for (const auto &o : jl) {
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			const json_tiny& arguments = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			const auto &moduleNames = arguments.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			bool detected = false;
+			for (const auto &moduleName : moduleNames) {
+				detected = is_module_loaded(moduleName);
+				if (detected)
+					break;
+			}
+
+			const auto &report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+	}
+
+	void VEDetection::CheckAllFilePathPatterns() const {
+		const auto& jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::EXE_PATH_PATTERN]);
+		if (jl.empty())
+			return;
+
+		std::wstring wFullPath;
+		if (!get_module_wfilename(wFullPath))
+			return;
+
+		for (const auto &o : jl) {
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			const json_tiny& arguments = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+			const auto &patterns = arguments.get_entries(Config::ca2s[Config::ConfigArgs::PATTERN]);
+			bool detected = false;
+			for (const auto &pattern : patterns) {
+				try
+				{
+					std::wstring wpattern;
+					wpattern.assign(pattern.begin(), pattern.end());
+
+					std::wregex re(wpattern, std::regex::icase);
+
+					detected = std::regex_match(wFullPath, re);
+					if (detected)
+						break;
+				}
+				catch (const std::regex_error &e) {
+					log_message(LogMessageLevel::ERR, module_name, "regex error: " + std::string(e.what()), RED);
+				}
+				catch (...) {
+					log_message(LogMessageLevel::ERR, module_name, "unknown error occurred", RED);
+				}
+			}
+			const auto &report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+	}
+
 	bool VEDetection::CheckRegKeyExists(const std::string &key_root, const std::string &key) const {
 		HKEY hRootKey = get_hkey(key_root);
 		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
@@ -610,13 +744,22 @@ namespace SandboxEvasion {
 		return !!check_system_objects(directory_w, object_w);
 	}
 
-	bool VEDetection::CheckCpuid(const std::string &cpuid_s) const {
+	bool VEDetection::CheckCpuHypervisorId(const std::string &cpuid_s) const {
 		char cpuid_[sizeof(DWORD) * 3] = {};
 		size_t s = cpuid_s.length() > _countof(cpuid_) ? _countof(cpuid_) : cpuid_s.length();
 
-		get_cpuid_vendor(cpuid_);
+		get_cpu_hypevisor_id(cpuid_);
 
 		return !strncmp(cpuid_, cpuid_s.c_str(), s);
+	}
+
+	bool VEDetection::GetCpuVendorId(std::string &cpuid_s) const {
+		char cpuid_[sizeof(DWORD) * 3 + 1] = {};
+
+		get_cpu_vendor_id(cpuid_);
+		cpuid_s = cpuid_;
+
+		return !cpuid_s.empty();
 	}
 
 	bool VEDetection::CheckWindowClassName(const std::string &cname) const {
@@ -633,7 +776,7 @@ namespace SandboxEvasion {
 		if (WNetGetProviderNameA(WNNC_NET_RDR2SAMPLE, provider, &provider_size) != NO_ERROR)
 			return false;
 
-		return StrStrIA(provider, name.c_str());
+		return !!StrStrIA(provider, name.c_str());
 	}
 
 	bool VEDetection::CheckDiskName(const std::string &name) const {
