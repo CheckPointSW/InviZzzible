@@ -60,6 +60,13 @@ void Generic::CheckAllCustom() {
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
 
+	ce_name = Config::cgen2s[Config::ConfigGeneric::BIG_RAM_ALLOC];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckBigRAMAllocate();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cgen2s[Config::ConfigGeneric::SYSTEM_UPTIME];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckSystemUptime();
@@ -94,6 +101,13 @@ void Generic::CheckAllCustom() {
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
+
+	ce_name = Config::cgen2s[Config::ConfigGeneric::USER_INPUT_ACTIVITY];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckUserInputActivity(ProcessWorkingMode::MASTER);
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
 }
 
 bool Generic::CheckSystemUptime() const {
@@ -114,6 +128,18 @@ bool Generic::CheckRAM() const {
 		return false;
 
 	return ms.ullTotalPhys < min_ram;
+}
+
+bool Generic::CheckBigRAMAllocate() const
+{
+	void* mem = VirtualAllocEx(GetCurrentProcess(), nullptr, 0x279C6A13, MEM_COMMIT, PAGE_READWRITE);
+	const bool rv = !mem;
+	if (mem)
+	{
+		memset(mem, 0xBD, 0x279C6A13);
+		VirtualFreeEx(GetCurrentProcess(), mem, 0, MEM_RELEASE);
+	}
+	return rv;
 }
 
 bool Generic::CheckDiskSize() const {
@@ -180,7 +206,6 @@ bool Generic::CheckMouseActive() const {
 
 bool Generic::CheckSleepDummyPatch() const {
 	DWORD tick_count_f, tick_count_s;
-	DWORD tick_count_diff;
 	const DWORD delay_ms = 900; // timeout in milliseconds
 
 	tick_count_f = GetTickCount();
@@ -281,7 +306,6 @@ bool Generic::CheckTimeTamperingMaster() const {
 	if (!run_self_susp(app_params, &pi))
 		return false;
 
-	// resume thread
 	ResumeThread(pi.hThread);
 
 	// wait process for finish
@@ -365,7 +389,6 @@ bool Generic::CheckMouseRawActiveMaster() {
 	if (!run_self_susp(app_params, &pi))
 		return false;
 
-	// resume thread
 	ResumeThread(pi.hThread);
 
 	// wait process for finish
@@ -390,10 +413,10 @@ bool Generic::CheckMouseRawActiveSlave() {
 	HINSTANCE hInstance = GetModuleHandleA(NULL);
 
 	if (MouseRawActiveRegisterClass(hInstance) == NULL)
-		return FALSE;
+		return false;
 
 	if (MouseRawActiveInitInstance(hInstance) == FALSE)
-		return FALSE;
+		return false;
 
 	while (GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
@@ -401,6 +424,73 @@ bool Generic::CheckMouseRawActiveSlave() {
 	}
 
 	return false;
+}
+
+
+bool Generic::CheckUserInputActivity(ProcessWorkingMode wm)
+{
+	switch (wm) {
+	case ProcessWorkingMode::MASTER:
+		return CheckUserInputActivityMaster();
+	case ProcessWorkingMode::SLAVE:
+		return CheckUserInputActivitySlave();
+	default:
+		return false;
+	}
+}
+
+
+bool Generic::CheckUserInputActivityMaster() {
+	wchar_t app_params[] = L"--action --user-input";
+	PROCESS_INFORMATION pi = {};
+	const uint32_t timeout = 1000; // timeout in milliseconds
+	const uint8_t tries = 10;
+
+	if (!run_self_susp(app_params, &pi))
+		return false;
+
+	ResumeThread(pi.hThread);
+
+	// wait process for finish
+	DWORD ec;
+	for (uint8_t i = 0; i < tries; ++i) {
+		GetExitCodeProcess(pi.hProcess, &ec);
+		if (ec != STILL_ACTIVE)
+			break;
+		Sleep(timeout);
+	}
+
+	TerminateProcess(pi.hProcess, 0xFF);
+	CloseHandle(pi.hThread);
+	CloseHandle(pi.hProcess);
+
+	return ec != 0;
+}
+
+
+bool Generic::CheckUserInputActivitySlave() {
+	int tries = 0xFFFAF99;
+	LASTINPUTINFO lii = {};
+	int okTries = 0;
+	DWORD lastTime = 0;
+	while (1)
+	{
+		lii.cbSize = 8;
+		lii.dwTime = 0;
+		if (!GetLastInputInfo(&lii))
+			return true;
+		if (lii.dwTime - lastTime >= 0x1F2)
+		{
+			++okTries;
+			lastTime = lii.dwTime;
+		}
+		SleepEx(0x11Bu, 0);
+		if (okTries > 5)
+			return false;
+		if (!--tries)
+			return true;
+	}
+	return true;
 }
 
 
@@ -450,7 +540,6 @@ BOOL Generic::MouseRawActiveInitInstance(HINSTANCE hInstance) {
 
 
 LRESULT CALLBACK Generic::MouseRawWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	int wmId, wmEvent;
 	PAINTSTRUCT ps;
 	HDC hdc;
 	const uint8_t total_tries = 20;

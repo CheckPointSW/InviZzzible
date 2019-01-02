@@ -69,6 +69,7 @@
     <ClCompile Include="hyperv.cpp" />
     <ClCompile Include="joebox.cpp" />
     <ClCompile Include="json.cpp" />
+    <ClCompile Include="kvm.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="parallels.cpp" />
@@ -87,6 +88,7 @@
     <ClInclude Include="generic.h" />
     <ClInclude Include="hyperv.h" />
     <ClInclude Include="joebox.h" />
+    <ClInclude Include="kvm.h" />
     <ClInclude Include="misc.h" />
     <ClInclude Include="parallels.h" />
     <ClInclude Include="qemu.h" />

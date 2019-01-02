@@ -140,6 +140,7 @@ bool check_device_exists(const file_name_t &fname);
 bool disable_wow64_fs_redirection(PVOID pOld);
 bool revert_wow64_fs_redirection(PVOID pOld);
 bool check_process_is_running(const process_name_t &proc_name);
+bool get_running_process_list(std::list<std::wstring> &procList);
 bool check_mac_vendor(const std::string &ven_id);
 bool check_adapter_name(const std::string &adapter_name);
 PIP_ADAPTER_ADDRESSES get_adapters_addresses();
@@ -148,7 +149,8 @@ extern "C" BOOL enable_privilege(DWORD PrivilegeName, BOOL fEnable);
 extern "C" BOOL scan_mem(CHAR *Data, ULONG dwDataSize, CHAR *lpFindData, ULONG dwFindDataSize);
 extern "C" BOOL check_system_objects(const std::wstring &directory, const std::wstring &name);
 bool is_hypervisor();
-void get_cpuid_vendor(char *vendor_id);
+void get_cpu_hypevisor_id(char *vendor_id);
+void get_cpu_vendor_id(char *vendor_id);
 DWORD get_number_of_processors();
 bool get_web_time(const std::string &net_resource, FILETIME &rv);
 int64_t operator-(const FILETIME &endTime, const FILETIME &startTime);
@@ -166,6 +168,8 @@ bool dns_interface_save(const std::string &module, const std::string &name, bool
 std::string compose_domain(const std::string &module, const std::string &name, bool detected);
 std::wstring string_to_wstring(const std::string &s);
 std::string remove_whitespaces(const std::string &s);
+bool is_module_loaded(const std::string &module);
+bool get_module_wfilename(std::wstring &result);
 
 bool pipe_server_get_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD *pid);
 bool pipe_server_send_pid(const wchar_t *pipe_name, uint32_t wait_timeout, DWORD pid);
