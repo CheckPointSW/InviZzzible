@@ -1523,6 +1523,24 @@ bool check_process_is_running(const process_name_t &proc_name) {
 	return present;
 }
 
+bool get_running_process_list(std::list<std::wstring> &procList) {
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnapshot == INVALID_HANDLE_VALUE)
+		return false;
+
+	PROCESSENTRY32W pe = {sizeof(PROCESSENTRY32W), };
+	if (Process32FirstW(hSnapshot, &pe)) {
+		do {
+			std::wstring wproc = pe.szExeFile;
+			std::transform(wproc.begin(), wproc.end(), wproc.begin(), towlower);
+			procList.emplace_back(wproc);
+		} while (Process32NextW(hSnapshot, &pe));
+	}
+
+	CloseHandle(hSnapshot);
+	return true;
+}
+
 
 bool check_mac_vendor(const std::string &ven_id) {
 	// vendor id contains 3 bytes => 
@@ -1923,7 +1941,7 @@ bool is_hypervisor() {
 }
 
 __declspec(naked)
-void get_cpuid_vendor(char *vendor_id) {
+void get_cpu_hypevisor_id(char *vendor_id) {
 	__asm {
 		push ebp;
 		mov ebp, esp;
@@ -1948,6 +1966,34 @@ void get_cpuid_vendor(char *vendor_id) {
 		pop ebp;
 		retn;
 	}
+}
+
+__declspec(naked)
+void get_cpu_vendor_id(char* vendor_id) {
+    __asm {
+        push ebp;
+        mov ebp, esp;
+        push ebx;
+        push ecx;
+        push edx;
+        xor ebx, ebx;
+        xor ecx, ecx;
+        xor edx, edx;
+        xor eax, eax; // eax = 0
+        cpuid;
+        mov eax, ebx;
+        mov edi, vendor_id;
+        stosd;
+        mov eax, edx;
+        stosd;
+        mov eax, ecx;
+        stosd;
+        pop ebx;
+        pop ecx;
+        pop edx;
+        pop ebp;
+        retn;
+    }
 }
 
 __declspec(naked)
@@ -2226,7 +2272,7 @@ bool get_drive_model_st_q(const std::string &device, std::list<std::string>& dri
 		// const DWORD dwSerialNumberOffset = pDeviceDescriptor->SerialNumberOffset;
 		const DWORD dwVendorIdOffset = pDeviceDescriptor->VendorIdOffset;
 		const DWORD dwProdIdOffset = pDeviceDescriptor->ProductIdOffset;
-		UCHAR *strSerialNumber, *strVendorId, *strProdId;
+		UCHAR *strVendorId, *strProdId;
 
 		if (dwProdIdOffset > 0) {
 			strProdId = pOutBuffer + dwProdIdOffset;
@@ -2471,4 +2517,15 @@ std::string remove_whitespaces(const std::string &s) {
 			sw += s[i];
 
 	return sw;
+}
+
+bool is_module_loaded(const std::string &module) {
+	return !!GetModuleHandle(module.c_str());
+}
+
+bool get_module_wfilename(std::wstring &result) {
+	wchar_t wbuff[MAX_PATH + 1] = {};
+	const auto len = GetModuleFileNameW(nullptr, wbuff, MAX_PATH);
+	result.assign(wbuff, len);
+	return !result.empty();
 }

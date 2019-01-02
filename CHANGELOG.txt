@@ -1,3 +1,22 @@
+December 19th, 2018:
+	[+] KVM: CPU Hypervisor and Vendor IDs check implemented
+	[+] Generic: BigRamAlloc has been added - tries to allocate big amount of RAM
+	[+] Generic: UserInputActivity has been added - evasion which utilizes `GetLastInputInfo` API function
+	[+] Generic: DiskEnum Registry Key chech has been added - checks `System\CurrentControlSet\Services\Disk\Enum' reg key for value `0`=`*virtual`
+	[+] Generic: Sandbox-like filename check has been added - checks if current file has any of the following patterns in its path: `C:\SELF.EXE`, `.*self\.*`, `.*sample.*`, `.*sandbox.*`, `.*virus.*`, `.*malware.*`
+	[+] Generic: Processes of AV and research tools check has been added - checks if any of the following processes are running: `avgui.exe`, `avastsvc.exe`, `avastui.exe`, `procmon.exe`, `procmon64.exe`, `procexp.exe`, `procexp64.exe`, `ollydbg.exe`, `windbg.exe`, `avp.exe`, `bdagent.exe`, `bdwtxag.exe`, `dwengine.exe`
+	[+] Generic: Max Processes number check has been added (disabled)
+	[+] Generic: Process with a long name check has been added
+	[+] Hyper-V: CPU HypervisorID check has been added
+	[+] Parallels: CPU HypervisorID check has been added
+	[+] QEMU: QEMU DiskEnum Registry Key has been added
+	[+] Sandboxie: Injected sbiedll module check has been added
+	[+] VMware: VMWare DiskEnum Registry Key check has been added
+	[+] Xen: CPU VendorID check has been added
+	[+] Xen: CPU HypervisorID check has been added
+	[+] Xen: DiskEnum Registry Key check has been added
+	[-] Some build warnings have been fixed
+
 April 10th, 2018:
 	[+] Cuckoo: ResultserverConnection detection technique implemented
 

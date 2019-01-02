@@ -9,6 +9,7 @@
 #include "ve_detection.h"
 #include "bochs.h"
 #include "hyperv.h"
+#include "kvm.h"
 #include "parallels.h"
 #include "qemu.h"
 #include "sandboxie.h"
@@ -38,6 +39,7 @@ using SandboxEvasion::Joebox;
 using SandboxEvasion::VEDetection;
 using SandboxEvasion::BOCHS;
 using SandboxEvasion::HyperV;
+using SandboxEvasion::KVM;
 using SandboxEvasion::Parallels;
 using SandboxEvasion::QEMU;
 using SandboxEvasion::Sandboxie;
@@ -59,6 +61,7 @@ static std::map<std::string, fact_meth> k_fm = {
 	{ "--joebox",	 Joebox::create_instance	},
 	{ "--bochs",	 BOCHS::create_instance     },
 	{ "--hyperv",	 HyperV::create_instance	},
+	{ "--kvm",		 KVM::create_instance		},
 	{ "--parallels", Parallels::create_instance },
 	{ "--qemu",		 QEMU::create_instance	    },
 	{ "--sandboxie", Sandboxie::create_instance },
@@ -76,6 +79,7 @@ static args_t k_args = {
 	{ "--joebox",	 NULL },
 	{ "--bochs",	 NULL },
 	{ "--hyperv",	 NULL },
+	{ "--kvm",		 NULL },
 	{ "--parallels", NULL },
 	{ "--qemu",		 NULL },
 	{ "--sandboxie", NULL },
@@ -125,11 +129,15 @@ void perform_action(const char *action) {
 	 */
 	else if (!strncmp(action, "--dtt", 5)) {
 		bool d = gen.CheckTimeTampering(ProcessWorkingMode::SLAVE);
-		ExitProcess(1 ? d : 0);
+		ExitProcess(d);
 	}
 	else if (!strncmp(action, "--mra", 5)) {
 		bool d = gen.CheckMouseRawActive(ProcessWorkingMode::SLAVE);
-		ExitProcess(1 ? d : 0);
+		ExitProcess(d);
+	}
+	else if (!strncmp(action, "--user-input", 12)) {
+		bool d = gen.CheckUserInputActivity(ProcessWorkingMode::SLAVE);
+		ExitProcess(d);
 	}
 }
 
@@ -253,7 +261,7 @@ int main(int argc, char **argv, char **env) {
 	}
 
 	// in case if no class checks parametres were not specified, then use default execution mode
-	if (!detects.size()) {
+	if (detects.empty()) {
 		apply_default_mode(detects, jsons, bfile, bdns);
 	}
 

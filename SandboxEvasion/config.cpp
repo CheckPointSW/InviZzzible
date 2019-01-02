@@ -12,20 +12,25 @@ namespace Config {
 	};
 
 	std::map<ConfigGlobalType, std::string> cgt2s = {
-		{ ConfigGlobalType::CUSTOM,			"custom" },
-		{ ConfigGlobalType::FILE,			"file" },
-		{ ConfigGlobalType::REGISTRY,		"registry" },
-		{ ConfigGlobalType::DEVICE,			"device" },
-		{ ConfigGlobalType::PROCESS,		"process" },
-		{ ConfigGlobalType::MAC,			"mac" },
-		{ ConfigGlobalType::ADAPTER,		"adapter" },
-		{ ConfigGlobalType::DISK,			"disk" },
-		{ ConfigGlobalType::DRIVE_MODEL,	"drive_model" },
-		{ ConfigGlobalType::FIRMWARE,		"firmware" },
-		{ ConfigGlobalType::OBJECT,			"object" },
-		{ ConfigGlobalType::CPUID,			"cpuid" },
-		{ ConfigGlobalType::WINDOW,			"window" },
-		{ ConfigGlobalType::SHARED,			"shared" }
+		{ ConfigGlobalType::CUSTOM,					"custom" },
+		{ ConfigGlobalType::FILE,					"file" },
+		{ ConfigGlobalType::REGISTRY,				"registry" },
+		{ ConfigGlobalType::DEVICE,					"device" },
+		{ ConfigGlobalType::PROCESS,				"process" },
+		{ ConfigGlobalType::MAC,					"mac" },
+		{ ConfigGlobalType::ADAPTER,				"adapter" },
+		{ ConfigGlobalType::DISK,					"disk" },
+		{ ConfigGlobalType::DRIVE_MODEL,			"drive_model" },
+		{ ConfigGlobalType::FIRMWARE,				"firmware" },
+		{ ConfigGlobalType::OBJECT,					"object" },
+		{ ConfigGlobalType::CPUID_H,				"cpuid_h" },
+		{ ConfigGlobalType::WINDOW,					"window" },
+		{ ConfigGlobalType::SHARED,					"shared" },
+		{ ConfigGlobalType::CPUID_V,				"cpuid_v" },
+		{ ConfigGlobalType::HAS_LOADED_MOD,			"has_loaded_mod" },
+		{ ConfigGlobalType::EXE_PATH_PATTERN,		"exe_path_pattern"},
+		{ ConfigGlobalType::MAX_PROCS_NUMBER,		"max_processes_number" },
+		{ ConfigGlobalType::PROC_WITH_LONG_NAME,	"process_with_long_name" },
 	};
 
 	std::map<ConfigGlobalEnabled, std::string> cge2s = {
@@ -65,7 +70,9 @@ namespace Config {
 		{ ConfigArgs::NAME,			"name" },
 		{ ConfigArgs::VENDOR,		"vendor" },
 		{ ConfigArgs::DIRECTORY,	"directory" },
-		{ ConfigArgs::RECURSIVE,	"recursive" }
+		{ ConfigArgs::RECURSIVE,	"recursive" },
+		{ ConfigArgs::PATTERN,		"pattern" },
+		{ ConfigArgs::NUMBER,		"number" },
 	};
 
 	std::map<ConfigArgsRegCheckType, std::string> carct2s = {
@@ -103,7 +110,9 @@ namespace Config {
 		{ ConfigGeneric::DNS_RESPONSE,			"DnsResponse" },
 		{ ConfigGeneric::TIME_TAMPERING,		"TimeTampering" },
 		{ ConfigGeneric::PERFORMANCE_COUNTER,	"PerformanceCounter" },
-		{ ConfigGeneric::MOUSE_RAW_ACTIVE,		"MouseRawActive" }
+		{ ConfigGeneric::MOUSE_RAW_ACTIVE,		"MouseRawActive" },
+		{ ConfigGeneric::BIG_RAM_ALLOC,			"BigRamAlloc" },
+		{ ConfigGeneric::USER_INPUT_ACTIVITY,	"UserInputActivity" },
 	};
 
 } // Config

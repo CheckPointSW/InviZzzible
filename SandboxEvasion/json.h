@@ -30,7 +30,7 @@ public:
 		try {
 			return _get<T>(field);
 		}
-		catch (const pt::ptree_bad_path &e) {
+		catch (const pt::ptree_bad_path &) {
 			return _def;
 		}
 	}
@@ -40,7 +40,7 @@ public:
 		try {
 			return _get_child(field);
 		}
-		catch (const pt::ptree_bad_path &e) {
+		catch (const pt::ptree_bad_path &) {
 			return _def;
 		}
 	}
@@ -58,12 +58,12 @@ public:
 	}
 	*/
 
-	const std::list<std::string> get_entries(const std::string &field) {
+	const std::list<std::string> get_entries(const std::string &field) const {
 		std::string fe = get<std::string>(field, "");
-		if (fe == "") 
+		if (fe.empty()) 
 			return get_array(field);
-		else 
-			return { fe };
+
+		return { fe };
 	}
 
 	const std::list<std::string> get_array(const std::string &field) const {
@@ -72,7 +72,7 @@ public:
 		try {
 			r = root.get_child(field);
 		}
-		catch (const pt::ptree_bad_path &e) {
+		catch (const pt::ptree_bad_path &) {
 			return jl;
 		}
 

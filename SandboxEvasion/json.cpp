@@ -8,7 +8,7 @@ json_tiny* json_tiny::load(const char *pfn) {
 		pt::read_json(pfn, jroot);
 		return new(std::nothrow) json_tiny(jroot);
 	}
-	catch (const pt::json_parser::json_parser_error &e) {
+	catch (const pt::json_parser::json_parser_error &) {
 		return nullptr;
 	}
 }
@@ -20,7 +20,7 @@ json_tiny* json_tiny::load(std::stringstream &ss) {
 		pt::read_json(ss, jroot);
 		return new(std::nothrow) json_tiny(jroot);
 	}
-	catch (const pt::json_parser::json_parser_error &e) {
+	catch (const pt::json_parser::json_parser_error &) {
 		return nullptr;
 	}
 }

@@ -503,12 +503,29 @@ bool Cuckoo::IsResultserverConnected() const {
 bool Cuckoo::CheckFunctionHooks() const {
 	// return True if functions are hooked
 	// TODO: make this configurable ???
-	func_hooked_t func_hooked = {
-		{ 
-			lib_name_t(L"ntdll"), {	func_name_t("ZwDelayExecution"), 
-									func_name_t("ZwCreateProcess"),
-									func_name_t("ZwCreateThread"),
-									func_name_t("ZwOpenThread") } 
+	func_hooked_t func_hooked = {{
+			lib_name_t(L"ntdll"), {
+				func_name_t("ZwDelayExecution"),
+				func_name_t("ZwCreateProcess"),
+				func_name_t("ZwCreateThread"),
+				func_name_t("ZwOpenThread"),
+				func_name_t("NtOpenProcess"),
+				func_name_t("NtTerminateProcess"),
+				func_name_t("NtCreateSection"),
+				func_name_t("NtMapViewOfSection"),
+				func_name_t("NtUnmapViewOfSection"),
+				func_name_t("NtClose"),
+				func_name_t("NtAllocateVirtualMemory"),
+				func_name_t("NtFreeVirtualMemory"),
+				func_name_t("NtWriteVirtualMemory"),
+				func_name_t("LdrLoadDll"),
+				func_name_t("RtlInitUnicodeString"),
+				func_name_t("RtlDecompressBuffer"),
+				func_name_t("RtlMoveMemory"),
+				func_name_t("RtlZeroMemory"),
+				func_name_t("strstr"),
+				func_name_t("tolower")
+			}
 		}
 	};
 
@@ -1359,8 +1376,9 @@ bool Cuckoo::IsCodeTrampoline(const BYTE *code, SIZE_T code_size) const {
 	while (i < code_size && code[i] == 0x90)
 		++i;
 
-	// check jmp opcodes
-	return (i < code_size) && (code[i] == 0xe9 || code[i] == 0xeb);
+	// check `jmp xxx` opcodes and `jmp dword ptr [xxx]`
+	return ((i < code_size) && (code[i] == 0xe9 || code[i] == 0xeb))
+		|| (i + 1 < code_size && *LPWORD(code) == 0x25FF);
 }
 
 
@@ -1968,8 +1986,6 @@ bool Cuckoo::KillSuspiciousProcesses() const {
 	HANDLE hProcess;
 	char proc_name[MAX_PATH + 1] = { 0 };
 	char proc_args[0x80] = { 0 };
-	char *filename;
-	DWORD ec;
 
 	if (get_parent_child_proc_pair(pc_proc, proc_names) == FALSE)
 		return false;
