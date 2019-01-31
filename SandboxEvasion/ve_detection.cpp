@@ -57,6 +57,9 @@ namespace SandboxEvasion {
 		CheckAllDriveModels();
 		CheckAllLoadedModules();
 		CheckAllFilePathPatterns();
+		CheckAllUserNames();
+		CheckAllComputerNames();
+		CheckAllHostNames();
 
 		if (p_report) {
 			p_report->flush(module_name);
@@ -645,6 +648,78 @@ namespace SandboxEvasion {
 					log_message(LogMessageLevel::ERR, module_name, "unknown error occurred", RED);
 				}
 			}
+			const auto &report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+	}
+
+	void VEDetection::CheckAllUserNames() const {
+		const auto& jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::USER_NAME]);
+		if (jl.empty())
+			return;
+
+		for (const auto &o : jl) {
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			const json_tiny& arguments = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			const auto &userNames = arguments.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			bool detected = false;
+			for (const auto &userName : userNames) {
+				detected = is_user_name_match(userName);
+				if (detected)
+					break;
+			}
+
+			const auto &report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+	}
+
+	void VEDetection::CheckAllComputerNames() const {
+		const auto& jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::COMPUTER_NAME]);
+		if (jl.empty())
+			return;
+
+		for (const auto &o : jl) {
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			const json_tiny& arguments = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			const auto &computerNames = arguments.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			bool detected = false;
+			for (const auto &computerName : computerNames) {
+				detected = is_computer_name_match(computerName);
+				if (detected)
+					break;
+			}
+
+			const auto &report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+	}
+
+	void VEDetection::CheckAllHostNames() const {
+		const auto& jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::HOST_NAME]);
+		if (jl.empty())
+			return;
+
+		for (const auto &o : jl) {
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			const json_tiny& arguments = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			const auto &hostNames = arguments.get_entries(Config::ca2s[Config::ConfigArgs::NAME]);
+			bool detected = false;
+			for (const auto &hostName : hostNames) {
+				detected = is_computer_name_match(hostName);
+				if (detected)
+					break;
+			}
+
 			const auto &report = GenerateReportEntry(o.first, o.second, detected);
 			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
 		}

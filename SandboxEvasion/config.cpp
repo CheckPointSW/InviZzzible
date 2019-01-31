@@ -31,6 +31,9 @@ namespace Config {
 		{ ConfigGlobalType::EXE_PATH_PATTERN,		"exe_path_pattern"},
 		{ ConfigGlobalType::MAX_PROCS_NUMBER,		"max_processes_number" },
 		{ ConfigGlobalType::PROC_WITH_LONG_NAME,	"process_with_long_name" },
+		{ ConfigGlobalType::USER_NAME,				"user_name" },
+		{ ConfigGlobalType::COMPUTER_NAME,			"computer_name" },
+		{ ConfigGlobalType::HOST_NAME,				"host_name" },
 	};
 
 	std::map<ConfigGlobalEnabled, std::string> cge2s = {

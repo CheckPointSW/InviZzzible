@@ -178,6 +178,10 @@ bool get_parent_child_proc_pair(std::list<cp_pids> &pc_proc, const std::list<std
 
 EvasionMachineMode get_evasion_status(bool parent_hooked, bool child_hooked);
 
+bool is_user_name_match(const std::string &s);
+bool is_computer_name_match(const std::string &s);
+bool is_host_name_match(const std::string &s);
+
 
 template <typename T> bool match_regexp(const std::basic_string<T> &regexp, const std::basic_string<T> &str, std::vector<std::basic_string<T>> *matches = NULL);
 template bool match_regexp<char>(const std::basic_string<char> &, const std::basic_string<char> &, std::vector<std::basic_string<char>> *);

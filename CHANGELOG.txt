@@ -1,3 +1,9 @@
+January 31st, 2019:
+	[+] VEDetection: added user names to be checked as means of detection
+	[+] VEDetection: added computer names to be checked as means of detection
+	[+] VEDetection: added host names to be checked as means of detection
+	[+] VEDetection: added specific files to be checked for their presence as means of detection
+
 December 19th, 2018:
 	[+] KVM: CPU Hypervisor and Vendor IDs check has been implemented
 	[+] Generic: BigRamAlloc has been added - tries to allocate big amount of RAM

@@ -41,6 +41,10 @@ protected:
 	void CheckAllDriveModels() const;
 	void CheckAllLoadedModules() const;
 	void CheckAllFilePathPatterns() const;
+	void CheckAllUserNames() const;
+	void CheckAllComputerNames() const;
+	void CheckAllHostNames() const;
+
 
 	virtual void CheckAllCustom() = 0;
 

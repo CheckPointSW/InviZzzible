@@ -2529,3 +2529,27 @@ bool get_module_wfilename(std::wstring &result) {
 	result.assign(wbuff, len);
 	return !result.empty();
 }
+
+bool is_user_name_match(const std::string &s) {
+	auto out_length = MAX_PATH;
+	std::vector<uint8_t> user_name(out_length, 0);
+	::GetUserNameA((LPSTR)user_name.data(), (LPDWORD)&out_length);
+
+	return (!lstrcmpiA((LPCSTR)user_name.data(), s.c_str()));
+}
+
+bool is_computer_name_match(const std::string &s) {
+	auto out_length = MAX_PATH;
+	std::vector<uint8_t> comp_name(out_length, 0);
+	::GetComputerNameA((LPSTR)comp_name.data(), (LPDWORD)&out_length);
+
+	return (!lstrcmpiA((LPCSTR)comp_name.data(), s.c_str()));
+}
+
+bool is_host_name_match(const std::string &s) {
+	auto out_length = MAX_PATH;
+	std::vector<uint8_t> dns_host_name(out_length, 0);
+	::GetComputerNameExA(ComputerNameDnsHostname, (LPSTR)dns_host_name.data(), (LPDWORD)&out_length);
+
+	return (!lstrcmpiA((LPCSTR)dns_host_name.data(), s.c_str()));
+}
