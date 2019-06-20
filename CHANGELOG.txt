@@ -1,3 +1,6 @@
+July 9th, 2019:
+	[+] Config: added scoring attribute to evasion techniques based on their prevalence and severity
+
 January 31st, 2019:
 	[+] VEDetection: added user names to be checked as means of detection
 	[+] VEDetection: added computer names to be checked as means of detection

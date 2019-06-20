@@ -5,7 +5,7 @@
 
 namespace SandboxEvasion {
 namespace Config {
-	enum class ConfigGlobal { DESCRIPTION, COUNTERMEASURES, TYPE, ENABLED, ARGUMENTS };
+	enum class ConfigGlobal { DESCRIPTION, COUNTERMEASURES, TYPE, ENABLED, ARGUMENTS, SCORE };
 	enum class ConfigGlobalType {
 		CUSTOM,
 		REGISTRY,

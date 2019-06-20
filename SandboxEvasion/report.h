@@ -19,7 +19,7 @@ class Report {
 public:
 	Report(const std::string &html_template = std::string("report.html"), std::string &_bootstrap = std::string("bootstrap.css")):
 		bootstrap_f(_bootstrap), report_f(html_template), bootstrap_s("%BOOTSTRAP%"), module_s("%MODULE%") {
-		column_names = { "Detection Name", "Type", "Description", "Detected", "Countermeasures" };
+		column_names = { "Detection Name", "Type", "Description", "Detected", "Countermeasures", "Score" };
 	}
 	virtual ~Report() {}
 

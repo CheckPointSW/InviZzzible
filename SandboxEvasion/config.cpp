@@ -8,7 +8,8 @@ namespace Config {
 		{ ConfigGlobal::COUNTERMEASURES,	"countermeasures" },
 		{ ConfigGlobal::TYPE,				"type" },
 		{ ConfigGlobal::ENABLED,			"enabled" },
-		{ ConfigGlobal::ARGUMENTS,			"arguments" }
+		{ ConfigGlobal::ARGUMENTS,			"arguments" },
+		{ ConfigGlobal::SCORE,				"score" }
 	};
 
 	std::map<ConfigGlobalType, std::string> cgt2s = {

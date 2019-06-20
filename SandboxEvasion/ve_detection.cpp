@@ -20,12 +20,13 @@ namespace SandboxEvasion {
 		std::string dtype = j.get<std::string>(Config::cg2s[Config::ConfigGlobal::TYPE], "");
 		if (dtype == "")
 			dtype = Config::cgt2s[Config::ConfigGlobalType::CUSTOM];
+		std::string scr = j.get<std::string>(Config::cg2s[Config::ConfigGlobal::SCORE], "");
 
 		ostream_debug << name  << "> " << desc << ": " << detected << std::endl;
 		
 		// add entry to report
 		if (p_report) {
-			p_report->add_entry({ name, dtype, desc, detected ? "YES" : "NO", wtd });
+			p_report->add_entry({ name, dtype, desc, detected ? "YES" : "NO", wtd, scr });
 		}
 
 		// if file interface is enabled, then use it
