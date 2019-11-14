@@ -48,5 +48,6 @@ Credits
 * Aliaksandr Trafimchuk
 * Alexey Bukhteyev
 * Raman Ladutska
+* Yaraslau Harakhavik
 * VMDE project
 * Pafish project

@@ -51,7 +51,8 @@ namespace Config {
 		PERFORMANCE_COUNTER,
 		MOUSE_RAW_ACTIVE,
 		BIG_RAM_ALLOC,
-		USER_INPUT_ACTIVITY
+		USER_INPUT_ACTIVITY,
+		AUDIO_DEVICE_ABSENCE
 	};
 	
 	extern std::map<ConfigGlobal, std::string> cg2s;
