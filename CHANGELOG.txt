@@ -1,3 +1,6 @@
+November 14th, 2019:
+	[+] Generic: AudioDeviceAbsence has been added - checks if an audio recording device is attached to the PC
+
 July 9th, 2019:
 	[+] Config: added scoring attribute to evasion techniques based on their prevalence and severity
 

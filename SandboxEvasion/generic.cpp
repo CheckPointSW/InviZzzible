@@ -108,6 +108,13 @@ void Generic::CheckAllCustom() {
 		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
 		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
 	}
+
+	ce_name = Config::cgen2s[Config::ConfigGeneric::AUDIO_DEVICE_ABSENCE];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = CheckAudioDeviceAbsence();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
 }
 
 bool Generic::CheckSystemUptime() const {
@@ -491,6 +498,11 @@ bool Generic::CheckUserInputActivitySlave() {
 			return true;
 	}
 	return true;
+}
+
+
+bool Generic::CheckAudioDeviceAbsence() const {
+	return is_audio_device_absent();
 }
 
 

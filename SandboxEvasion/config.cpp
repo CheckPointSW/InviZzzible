@@ -117,6 +117,7 @@ namespace Config {
 		{ ConfigGeneric::MOUSE_RAW_ACTIVE,		"MouseRawActive" },
 		{ ConfigGeneric::BIG_RAM_ALLOC,			"BigRamAlloc" },
 		{ ConfigGeneric::USER_INPUT_ACTIVITY,	"UserInputActivity" },
+		{ ConfigGeneric::AUDIO_DEVICE_ABSENCE,  "AudioDeviceAbsence"},
 	};
 
 } // Config
