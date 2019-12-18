@@ -44,6 +44,7 @@ protected:
 	bool CheckMouseRawActiveSlave();
 	bool CheckUserInputActivityMaster();
 	bool CheckUserInputActivitySlave();
+	bool CheckAudioDeviceAbsence() const;
 
 private:
 	std::string mouse_raw_wnd_class;

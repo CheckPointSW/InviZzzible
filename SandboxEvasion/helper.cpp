@@ -11,6 +11,7 @@
 #include <Winreg.h>
 #include <Iphlpapi.h>
 #include <Ntsecapi.h>
+#include <Dshow.h>
 #include <sstream>
 #include <WinInet.h>
 #include <winioctl.h>
@@ -29,6 +30,7 @@
 #pragma comment(lib, "Dnsapi.lib")
 #pragma comment(lib, "Mpr.lib")
 #pragma comment(lib, "SetupAPI.lib")
+#pragma comment(lib, "Strmiids.lib")
 
 
 #define  MAX_IDE_DRIVES  16
@@ -2552,4 +2554,71 @@ bool is_host_name_match(const std::string &s) {
 	::GetComputerNameExA(ComputerNameDnsHostname, (LPSTR)dns_host_name.data(), (LPDWORD)&out_length);
 
 	return (!lstrcmpiA((LPCSTR)dns_host_name.data(), s.c_str()));
+}
+
+/*
+* Source code taken from Joe Security blog: https://www.joesecurity.org/blog/6933341622592617830
+*/
+bool is_audio_device_absent() {
+	PCWSTR wszfilterName = L"audio_device_random_name";
+
+	if (FAILED(CoInitialize(NULL)))
+		return false;
+
+	IGraphBuilder *pGraph = nullptr;
+	if (FAILED(CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&pGraph)))
+		return false;
+
+	// First anti-emulation check: If AddFilter is called with NULL as a first argument it should return the E_POINTER error code. 
+	// Some emulators may implement unknown COM interfaces in a generic way, so they will probably fail here.
+	if (E_POINTER != pGraph->AddFilter(NULL, wszfilterName))
+		return true;
+
+	// Initializes a simple Audio Renderer, error code is not checked, 
+	// but pBaseFilter will be set to NULL upon failure and the code will eventually fail later.
+	IBaseFilter *pBaseFilter = nullptr;
+	CoCreateInstance(CLSID_AudioRender, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pBaseFilter);
+	
+	// Adds the previously created Audio Renderer to the Filter Graph, no error checks
+	pGraph->AddFilter(pBaseFilter, wszfilterName);
+
+	// Tries to find the filter that was just added; in case of any previously not checked error (or wrong emulation) 
+	// this function won't find the filter and the sandbox/emulator will be successfully detected.
+	IBaseFilter *pBaseFilter2 = nullptr;
+	pGraph->FindFilterByName(wszfilterName, &pBaseFilter2);
+	if (nullptr == pBaseFilter2)
+		return true;
+
+	// Checks if info.achName is equal to the previously added filterName, if not - poor API emulation
+	FILTER_INFO info = { 0 };
+	pBaseFilter2->QueryFilterInfo(&info);
+	if (0 != wcscmp(info.achName, wszfilterName))
+		return false;
+
+	// Checks if the API sets a proper IReferenceClock pointer
+	IReferenceClock *pClock = nullptr;
+	if (0 != pBaseFilter2->GetSyncSource(&pClock))
+		return false;
+	if (0 != pClock)
+		return false;
+
+	// Checks if CLSID is different from 0
+	CLSID clsID = { 0 };
+	pBaseFilter2->GetClassID(&clsID);
+	if (clsID.Data1 == 0)
+		return true;
+
+	if (nullptr == pBaseFilter2)
+		return true;
+
+	// Just checks if the call was successful
+	IEnumPins *pEnum = nullptr;
+	if (0 != pBaseFilter2->EnumPins(&pEnum))
+		return true;
+
+	// The reference count returned by AddRef has to be higher than 0
+	if (0 == pBaseFilter2->AddRef())
+		return true;
+
+	return false;
 }
