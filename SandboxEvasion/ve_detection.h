@@ -44,6 +44,7 @@ protected:
 	void CheckAllUserNames() const;
 	void CheckAllComputerNames() const;
 	void CheckAllHostNames() const;
+	void CheckAllDisplayAdapters() const;
 
 
 	virtual void CheckAllCustom() = 0;
@@ -59,6 +60,7 @@ protected:
 	bool CheckRegKeyEnumKeys(const std::string &key_root, const std::string &key, const std::string &subkey) const;
 	bool CheckRegKeyEnumValues(const std::string &key_root, const std::string &key, const std::string &value) const;
 
+	bool CheckDisplayAdapterSettings(const std::string &value_name, const std::string &value_data) const;
 	bool CheckFileExists(const file_name_t &file_name) const;
 	bool CheckDeviceExists(const file_name_t &dev_name) const;
 	bool CheckProcessIsRunning(const process_name_t &proc_name) const;

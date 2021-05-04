@@ -1,3 +1,6 @@
+May 3rd, 2021:
+	[+] VMware: added check of physical display adapter
+
 November 14th, 2019:
 	[+] Generic: AudioDeviceAbsence has been added - checks if an audio device is attached to the PC
 

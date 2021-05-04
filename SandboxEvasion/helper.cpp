@@ -16,6 +16,7 @@
 #include <WinInet.h>
 #include <winioctl.h>
 #include "nt.h"
+#include <d3d9.h>
 #include <iostream>
 #include <unordered_map>
 #include <stdio.h>
@@ -1460,6 +1461,43 @@ bool check_regkey_enum_values(HKEY h_key, const std::string &key, const std::str
 	return false;
 }
 
+bool get_display_adapter_settings(std::map<std::string, std::string> &settings) {
+		typedef IDirect3D9* (WINAPI* PtrDirect3DCreate9)(UINT);
+
+	HMODULE d3d9lib = ::LoadLibraryA("d3d9");
+	if (!d3d9lib)
+		return false;
+
+	PtrDirect3DCreate9 direct3DCreate9 = (PtrDirect3DCreate9)GetProcAddress(d3d9lib, "Direct3DCreate9");
+	if (!direct3DCreate9)
+		return false;
+
+	IDirect3D9* direct3D9 = direct3DCreate9(D3D_SDK_VERSION);
+	if (!direct3D9)
+		return false;
+
+	D3DADAPTER_IDENTIFIER9 adapterIdentifier;
+	const HRESULT hr = direct3D9->GetAdapterIdentifier(0, 0, &adapterIdentifier);
+	direct3D9->Release();
+
+	if (SUCCEEDED(hr)) {
+		std::stringstream vendorIdStr;
+		vendorIdStr << "0x" << std::hex << adapterIdentifier.VendorId;
+		settings["VendorId"] = vendorIdStr.str();
+
+		std::stringstream deviceIdStr;
+		deviceIdStr << "0x" << std::hex << adapterIdentifier.DeviceId;
+		settings["DeviceId"] = deviceIdStr.str();
+
+		settings["Driver"] = adapterIdentifier.Driver;
+		settings["Description"] = adapterIdentifier.Description;
+
+		return true;
+	}
+
+	return false;
+}
+
 bool check_file_exists(const file_name_t &fname) {
 	if (!is_wow64())
 		return GetFileAttributesA(fname.c_str()) != INVALID_FILE_ATTRIBUTES;
@@ -2621,4 +2659,12 @@ bool is_audio_device_absent() {
 		return true;
 
 	return false;
+}
+
+std::string make_lowercase(const std::string &in)
+{
+	std::string out;
+	std::transform(in.begin(), in.end(), std::back_inserter(out), ::tolower);
+
+	return out;
 }

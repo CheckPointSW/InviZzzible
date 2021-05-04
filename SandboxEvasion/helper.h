@@ -135,6 +135,7 @@ bool check_regkey_subkey_value_nrec(HKEY h_key, const std::string &regkey, const
 bool check_regkey_subkey_value_rec(HKEY h_key, const std::string &regkey, const std::string &value_name, const std::string &value_data);
 bool check_regkey_enum_keys(HKEY h_key, const std::string & key, const std::string & subkey);
 bool check_regkey_enum_values(HKEY h_key, const std::string & key, const std::string & subkey);
+bool get_display_adapter_settings(std::map<std::string, std::string> &settings);
 bool check_file_exists(const file_name_t &fname);
 bool check_device_exists(const file_name_t &fname);
 bool disable_wow64_fs_redirection(PVOID pOld);
@@ -188,5 +189,7 @@ bool is_audio_device_absent();
 template <typename T> bool match_regexp(const std::basic_string<T> &regexp, const std::basic_string<T> &str, std::vector<std::basic_string<T>> *matches = NULL);
 template bool match_regexp<char>(const std::basic_string<char> &, const std::basic_string<char> &, std::vector<std::basic_string<char>> *);
 template bool match_regexp<wchar_t>(const std::basic_string<wchar_t> &, const std::basic_string<wchar_t> &, std::vector<std::basic_string<wchar_t>> *);
+
+std::string make_lowercase(const std::string& in);
 
 #endif

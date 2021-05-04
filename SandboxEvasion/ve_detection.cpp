@@ -61,6 +61,7 @@ namespace SandboxEvasion {
 		CheckAllUserNames();
 		CheckAllComputerNames();
 		CheckAllHostNames();
+		CheckAllDisplayAdapters();
 
 		if (p_report) {
 			p_report->flush(module_name);
@@ -726,6 +727,37 @@ namespace SandboxEvasion {
 		}
 	}
 
+	void VEDetection::CheckAllDisplayAdapters() const {
+		std::list<std::pair<std::string, json_tiny>> jl = conf.get_objects(Config::cg2s[Config::ConfigGlobal::TYPE], Config::cgt2s[Config::ConfigGlobalType::DISPLAY_ADAPTER]);
+
+		bool detected;
+		std::pair<std::string, std::string> report;
+		json_tiny jt;
+		std::list<std::string> vn;
+		std::list<std::string> vd;
+
+		for each (auto &o in jl) {
+			jt = o.second.get(Config::cg2s[Config::ConfigGlobal::ARGUMENTS], pt::ptree());
+
+			if (!IsEnabled(o.first, conf.get<std::string>(o.first + "." + Config::cg2s[Config::ConfigGlobal::ENABLED], "")))
+				continue;
+
+			vn = jt.get_entries(Config::ca2s[Config::ConfigArgs::VALUE_NAME]);
+			vd = jt.get_entries(Config::ca2s[Config::ConfigArgs::VALUE_DATA]);
+			for (auto &vd_entry : vd) {
+				detected = false;
+				for (auto &vn_entry : vn) {
+					detected = CheckDisplayAdapterSettings(vn_entry, vd_entry);
+					if (detected) break;
+				}
+				if (detected) break;
+			}
+
+			report = GenerateReportEntry(o.first, o.second, detected);
+			log_message(LogMessageLevel::INFO, module_name, report.second, detected ? RED : GREEN);
+		}
+	}
+
 	bool VEDetection::CheckRegKeyExists(const std::string &key_root, const std::string &key) const {
 		HKEY hRootKey = get_hkey(key_root);
 		if (hRootKey == reinterpret_cast<HKEY>(INVALID_HKEY))
@@ -756,6 +788,22 @@ namespace SandboxEvasion {
 			return false;
 		
 		return check_regkey_enum_values(hRootKey, key, value);
+	}
+
+	bool VEDetection::CheckDisplayAdapterSettings(const std::string &value_name, const std::string &value_data) const {
+		std::map<std::string, std::string> settings;
+		if (!get_display_adapter_settings(settings))
+			return false;
+
+        auto value_name_lower_case = make_lowercase(value_name);
+        auto value_data_lower_case = make_lowercase(value_data);
+
+		for (auto &val : settings) {
+			if (value_name_lower_case == make_lowercase(val.first) && value_data_lower_case == make_lowercase(val.second))
+				return true;
+		}
+
+		return false;
 	}
 
 	bool VEDetection::CheckFileExists(const file_name_t &file_name) const {

@@ -35,6 +35,7 @@ namespace Config {
 		{ ConfigGlobalType::USER_NAME,				"user_name" },
 		{ ConfigGlobalType::COMPUTER_NAME,			"computer_name" },
 		{ ConfigGlobalType::HOST_NAME,				"host_name" },
+		{ ConfigGlobalType::DISPLAY_ADAPTER,		"display_adapter" },
 	};
 
 	std::map<ConfigGlobalEnabled, std::string> cge2s = {
