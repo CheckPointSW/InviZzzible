@@ -193,6 +193,20 @@ void Cuckoo::CheckAllCustom() {
 	std::pair<std::string, std::string> report;
 	std::string ce_name;
 
+	ce_name = Config::cc2s[Config::ConfigCuckoo::INVALID_HOOK];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsInvalidHook();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
+	ce_name = Config::cc2s[Config::ConfigCuckoo::LACK_ARGCHECKS];
+	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
+		d = IsLackArgChecks();
+		report = GenerateReportEntry(ce_name, json_tiny(conf.get(ce_name, pt::ptree())), d);
+		log_message(LogMessageLevel::INFO, module_name, report.second, d ? RED : GREEN);
+	}
+
 	ce_name = Config::cc2s[Config::ConfigCuckoo::UNBALANCED_STACK];
 	if (IsEnabled(ce_name, conf.get<std::string>(ce_name + std::string(".") + Config::cg2s[Config::ConfigGlobal::ENABLED], ""))) {
 		d = CheckUnbalancedStack();
@@ -1188,6 +1202,68 @@ bool Cuckoo::IsAnalyzerDeadNotTrackedMaster() const {
 
 bool Cuckoo::IsAnalyzerDeadNotTrackedSlave() const {
 	return NotifyFunctionHooks();
+}
+
+bool Cuckoo::IsInvalidHook() const {
+	DWORD old_esp, new_esp;
+
+	NTSTATUS(NTAPI *NtLoadKeyEx)(POBJECT_ATTRIBUTES, POBJECT_ATTRIBUTES, ULONG, HANDLE, HANDLE, DWORD, PHKEY, PVOID) =
+		reinterpret_cast<NTSTATUS(NTAPI *)(POBJECT_ATTRIBUTES, POBJECT_ATTRIBUTES, ULONG, HANDLE, HANDLE, DWORD, PHKEY, PVOID)>(GetProcAddress(GetModuleHandleW(L"ntdll"), "NtLoadKeyEx"));
+	if (!NtLoadKeyEx)
+		return false;
+
+	__try
+	{
+		_asm mov old_esp, esp
+		NtLoadKeyEx(nullptr, nullptr, 0, nullptr, nullptr, 0, nullptr, nullptr);
+		_asm mov new_esp, esp
+		_asm mov esp, old_esp
+		if (old_esp != new_esp)
+			return true;
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool Cuckoo::IsLackArgChecks() const {
+	DWORD tick_start, time_elapsed_ms;
+	__declspec(align(8)) BYTE aligned[sizeof(LARGE_INTEGER) * 2];
+	PLARGE_INTEGER DelayInterval = reinterpret_cast<PLARGE_INTEGER>(aligned + 1); //unaligned
+
+	DelayInterval->QuadPart = 1000 * (-10000LL);
+
+	NTSTATUS (NTAPI *NtDelayExecution)(BOOLEAN, PLARGE_INTEGER) =
+		reinterpret_cast<NTSTATUS(NTAPI *)(BOOLEAN, PLARGE_INTEGER)>(GetProcAddress(GetModuleHandleW(L"ntdll"), "NtDelayExecution"));
+	if (!NtDelayExecution)
+		return false;
+
+	__try
+	{
+		if (NtDelayExecution(FALSE, nullptr) != STATUS_ACCESS_VIOLATION)
+			return true;
+
+		if (NtDelayExecution(FALSE, reinterpret_cast<PLARGE_INTEGER>(0xFFDF0000)) != STATUS_ACCESS_VIOLATION)
+			return true;
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		return true;
+	}
+
+	tick_start = GetTickCount();
+	if (NtDelayExecution(FALSE, DelayInterval) != STATUS_DATATYPE_MISALIGNMENT)
+		return true;
+	
+	// If the pointer is not aligned the delay should not be performed
+	time_elapsed_ms = GetTickCount() - tick_start;
+	if (time_elapsed_ms > 500)
+		return true;
+
+	return false;
 }
 
 bool Cuckoo::RunMasterSlaveThreads(	DWORD(WINAPI SandboxEvasion::Cuckoo::*thread_master)(LPVOID),

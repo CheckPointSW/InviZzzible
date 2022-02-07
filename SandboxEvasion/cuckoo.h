@@ -29,6 +29,8 @@ public:
 	// overriden
 	virtual void CheckAllCustom();
 
+	bool IsInvalidHook() const;
+	bool IsLackArgChecks() const;
 	bool CheckUnbalancedStack() const;
 	bool CheckInfiniteSleep();
 	bool CheckDelaysAccumulation();

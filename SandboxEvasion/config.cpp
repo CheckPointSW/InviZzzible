@@ -44,6 +44,8 @@ namespace Config {
 	};
 
 	std::map<ConfigCuckoo, std::string> cc2s = {
+		{ ConfigCuckoo::INVALID_HOOK,				"InvalidHook" },
+		{ ConfigCuckoo::LACK_ARGCHECKS,				"LackOfArgumentChecks" },
 		{ ConfigCuckoo::UNBALANCED_STACK,			"UnbalancedStack" },
 		{ ConfigCuckoo::INFINITE_DELAY,				"InfiniteDelay" },
 		{ ConfigCuckoo::DELAYS_ACCUMULATION,		"DelaysAccumulation" },

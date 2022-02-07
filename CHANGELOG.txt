@@ -1,3 +1,7 @@
+February 7th, 2022:
+	[+] Cuckoo: check for invalid hook of NtLoadKeyEx added
+	[+] Cuckoo: lack of argument checks in NtDelayExecution evasion added
+
 May 3rd, 2021:
 	[+] VMware: added check of physical display adapter
 
