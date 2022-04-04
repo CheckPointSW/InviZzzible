@@ -2209,7 +2209,7 @@ bool get_drive_models(std::list<std::string> &drive_models) {
 	for (BYTE i = 0; i < MAX_IDE_DRIVES; ++i) {
 		memset(device_name, 0, _countof(device_name));
 
-		snprintf(device_name, _countof(device_name), fmt_device_name, i);
+		_snprintf_s(device_name, _countof(device_name), fmt_device_name, i);
 
 		if (get_drive_model(device_name, SMART_RCV_DRIVE_DATA, i, drive_model_names)) {
 			std::copy(drive_model_names.begin(), drive_model_names.end(), std::back_insert_iterator<std::list<std::string>>(drive_models));

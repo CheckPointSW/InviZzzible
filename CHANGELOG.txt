@@ -1,3 +1,8 @@
+April 5th, 2022:
+	[+] Added flexible build configurations to enable running without command line
+	[-] Removed configuration file for the HTML report template
+	[*] Scripts migrated to Python 3
+
 February 7th, 2022:
 	[+] Cuckoo: check for invalid hook of NtLoadKeyEx added
 	[+] Cuckoo: lack of argument checks in NtDelayExecution evasion added

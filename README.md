@@ -39,8 +39,25 @@ Features
 * Generic tool that covers a lot of different virtual environment detection techniques and proposes fixes for that.
 * Easily extendable; support for new virtual environments can be added quickly.
 * As Cuckoo Sandbox is the most prevalent tool used for automated malware analysis, we include the detections of it as well.
-*	Ability to introduce new detection techniques not through modifying the source code, but using the JSON configuration files, so the whole community can contribute towards the development of that tool.
+* Ability to introduce new detection techniques not through modifying the source code, but using the JSON configuration files, so the whole community can contribute towards the development of that tool.
 * User-friendly reports about the checked environment that can be shared within the organization among the purely technical guys as well as higher management.
+
+Configurations
+==============
+
+You can build InviZzzible with a built-in set of default configurations to make it work without command line arguments.
+We added two examples of build configurations for your convenience:
+* vmware
+* cuckoo vmware generic
+
+To build InviZzzible with your own custom set of configurations, open Project Properties -> Configuration Properties -> 
+Build Events -> Pre-Build Event, and change the list of evasion configuration names in the Command Line property after 
+`python gen_default_data.py`. Example:
+```shell
+python gen_default_data.py generic vmware misc
+```
+
+You can find the list of available configurations [here](config).
 
 Credits
 =======

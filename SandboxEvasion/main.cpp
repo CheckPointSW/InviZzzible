@@ -144,22 +144,24 @@ void perform_action(const char *action) {
 
 void apply_default_mode(std::list<VEDetection*> &detects, std::list<json_tiny *> &jsons, bool &bfile, bool &bdns) {
 	// as for now default mode executes only cuckoo checks
-	json_tiny *pj;
-
-	#include "code_cuckoo.conf"
-
-	std::stringstream ss;
-	ss << cuckoo_conf;
-
-	pj = json_tiny::load(ss);
-	if (pj) {
-		detects.push_back(k_fm[std::string("--cuckoo")](*pj));
-		jsons.push_back(pj);
+	#include "default_configs.h"
+		
+	for (auto &item : default_configs) {
+		json_tiny *pj;
+		std::stringstream ss;
+		ss << item.second;
+		
+		pj = json_tiny::load(ss);
+			
+		if (pj) {
+			detects.push_back(k_fm[std::string("--") + item.first](*pj));
+			jsons.push_back(pj);
+		}
+		else {
+			log_message(LogMessageLevel::ERR, "MAIN", std::string("Unable to load configuration for --" + item.first));
+		}
 	}
-	else {
-		log_message(LogMessageLevel::ERR, "MAIN", "Unable to load configuration for --cuckoo...");
-	}
-
+	
 	enable_verbose_mode();
 	bfile = true;
 	bdns = true;

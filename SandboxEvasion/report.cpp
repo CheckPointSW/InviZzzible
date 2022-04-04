@@ -9,7 +9,7 @@ bool Report::load() {
 	std::ifstream ifsb(bootstrap_f);
 	if (!ifsb.is_open()) {
 		// load from the pre generated file
-		#include "data_bootstrap.css"
+		#include "data_bootstrap_css.h"
 		bootstrap_content = std::string(bootstrap_data);
 	}
 	else {
@@ -18,7 +18,7 @@ bool Report::load() {
 
 	std::ifstream ifsr(report_f);
 	if (!ifsr.is_open()) {
-		#include "data_report.html"
+		#include "data_report_html.h"
 		report = std::string(report_data);
 	}
 	else {
